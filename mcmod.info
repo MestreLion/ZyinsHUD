@@ -2,9 +2,9 @@
 {
     "modid": "ZyinHUD",
     "name": "Zyin's HUD",
-    "description": "Displays your coordinates, a compass, your breaking equipment, measures distances, displays potion timers, fps, weapon swapper, eating/enderpearl aid, horse info, and displays unsafe areas",
+    "description": "Zyin's HUD adds useful information and hotkeys.",
     "mcversion": "1.6.2",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "url": "http://www.minecraftforum.net/topic/1851472-152forgesspsmp-zyins-hud/",
     "updateUrl": "",
     "authors": [

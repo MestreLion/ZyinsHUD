@@ -4,18 +4,18 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.EatingAid;
+import zyin.zyinhud.PotionAid;
 import zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class EatingAidKeyHandler extends KeyHandler
+public class PotionAidKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
 
-    public EatingAidKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public PotionAidKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -23,7 +23,7 @@ public class EatingAidKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Eating Aid Key Handler";
+        return "Potion Aid Key Handler";
     }
 
     @Override
@@ -39,9 +39,9 @@ public class EatingAidKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        if (ZyinHUD.EnableEatingAid)
+        if (ZyinHUD.EnablePotionAid)
         {
-            EatingAid.instance.Eat();
+            PotionAid.instance.Drink();
         }
     }
 

@@ -7,27 +7,14 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockAnvil;
-import net.minecraft.block.BlockBed;
-import net.minecraft.block.BlockButton;
-import net.minecraft.block.BlockCake;
-import net.minecraft.block.BlockContainer;
-import net.minecraft.block.BlockDoor;
-import net.minecraft.block.BlockFenceGate;
-import net.minecraft.block.BlockLever;
-import net.minecraft.block.BlockRedstoneLogic;
-import net.minecraft.block.BlockTrapDoor;
-import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumMovingObjectType;
-import net.minecraft.util.MovingObjectPosition;
 import zyin.zyinhud.util.InventoryUtil;
 import zyin.zyinhud.util.Localization;
+import zyin.zyinhud.util.ZyinHUDUtil;
 
 /**
  * Eating Helper allows the player to eat food in their inventory by calling its Eat() method.
@@ -68,36 +55,15 @@ public class EatingAid
     }
 
     /**
-     * Makes the player eat a food item on their hotbar.
+     * Makes the player eat a food item on their hotbar or in their inventory.
      */
     public void Eat()
     {
         //currentItemStack.onFoodEaten(mc.theWorld, mc.thePlayer);	//INSTANT EATING (single player only?)
+    	
         //make sure we're not about to click on a right-clickable thing
-        MovingObjectPosition objectMouseOver = mc.thePlayer.rayTrace(5, 1);
-
-        if (objectMouseOver != null && objectMouseOver.typeOfHit == EnumMovingObjectType.TILE)
-        {
-            int blockId = mc.theWorld.getBlockId(objectMouseOver.blockX, objectMouseOver.blockY, objectMouseOver.blockZ);
-            Block block = Block.blocksList[blockId];
-
-            //couldn't find a way to see if a block is 'right click-able' without running the onBlockActivation() method
-            //which we don't want to do
-            if (block instanceof BlockContainer	//chests, hoppers, dispenser, jukebox, beacon, etc.
-                    || block instanceof BlockButton
-                    || block instanceof BlockLever
-                    || block instanceof BlockRedstoneLogic
-                    || block instanceof BlockDoor
-                    || block instanceof BlockAnvil
-                    || block instanceof BlockBed
-                    || block instanceof BlockCake
-                    || block instanceof BlockFenceGate
-                    || block instanceof BlockTrapDoor
-                    || block instanceof BlockWorkbench)
-            {
-                return;
-            }
-        }
+        if(ZyinHUDUtil.IsMouseoveredBlockRightClickable())
+        	return;
 
         if (isCurrentlyEating)
         {
@@ -232,7 +198,7 @@ public class EatingAid
     /**
      * Determines the best food that you can eat and returns its index in your inventory.
      * The best food is defined by not over eating (not wasting food), but still healing the most hunger.
-     * @return the index in your inventory that has the best food to eat (9-34)
+     * @return the index in your inventory that has the best food to eat (9-34), or -1 if no food found.
      */
     public int GetBestFoodItemIndexFromInventory()
     {

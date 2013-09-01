@@ -1,10 +1,17 @@
 package zyin.zyinhud;
 
+import java.util.List;
+
 import zyin.zyinhud.util.FontCodes;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemPotion;
+import net.minecraft.item.ItemStack;
+import net.minecraft.potion.PotionEffect;
 
 /**
  * The Info Line consists of everything that gets displayed in the top-left portion

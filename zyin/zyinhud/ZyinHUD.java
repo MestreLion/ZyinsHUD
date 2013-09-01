@@ -3,6 +3,7 @@
  * =====
  * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
  * //dont render other player's armor (or just helmet?) in multiplayer
+ * use the same code for Eating Aid for a "Healing Potion Aid"
  */
 
 package zyin.zyinhud;
@@ -22,6 +23,7 @@ import zyin.zyinhud.keyhandler.EatingAidKeyHandler;
 import zyin.zyinhud.keyhandler.EnderPearlAidKeyHandler;
 import zyin.zyinhud.keyhandler.HorseInfoKeyHandler;
 import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
+import zyin.zyinhud.keyhandler.PotionAidKeyHandler;
 import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
 import zyin.zyinhud.keyhandler.WeaponSwapperKeyHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
@@ -40,7 +42,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.9.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.0")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -66,6 +68,7 @@ public class ZyinHUD
     public static final String CATEGORY_HORSEINFO = "horseinfo";
     public static final String CATEGORY_ENDERPEARLAID = "enderpearlaid";
     public static final String CATEGORY_CLOCK = "clock";
+    public static final String CATEGORY_POTIONAID = "potionaid";
 
     //Configurable values - language
     public static String SupportedLanguages;
@@ -132,6 +135,10 @@ public class ZyinHUD
 
     //Configurable values - clock
     public static boolean ShowClock;
+
+    //Configurable values - potion aid
+    public static String PotionAidHotkey;
+    public static boolean EnablePotionAid;
     
     
     //Key bindings
@@ -142,6 +149,7 @@ public class ZyinHUD
     private static KeyBinding[] key_F;
     private static KeyBinding[] key_O;
     private static KeyBinding[] key_C;
+    private static KeyBinding[] key_V;
     
     
     //default hotkeys
@@ -152,6 +160,7 @@ public class ZyinHUD
     private static String DefaultWeaponSwapHotkey = "F";
     private static String DefaultHorseInfoHotkey = "O";
     private static String DefaultEnderPearlAidHotkey = "C";
+    private static String DefaultPotionAidHotkey = "V";
     
     
     //the current state of various mods (everything is turned off initially)
@@ -283,6 +292,11 @@ public class ZyinHUD
         p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
         p.comment = "Default: " + DefaultEnderPearlAidHotkey;
         p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_V[0].keyCode);
+        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", DefaultPotionAidHotkey);
+        p.comment = "Default: " + DefaultPotionAidHotkey;
+        p.set(hotkey);
 	}
     
 
@@ -296,7 +310,7 @@ public class ZyinHUD
         Property p;
         
 
-        config.addCustomCategoryComment(CATEGORY_LANGUAGE, "Language support for other languages");
+        config.addCustomCategoryComment(CATEGORY_LANGUAGE, "Language support for other languages (you probably wont ever need to change this)");
         config.addCustomCategoryComment(CATEGORY_INFOLINE, "Info Line displays the status of other features in the top left corner of the screen.");
         config.addCustomCategoryComment(CATEGORY_COORDINATES, "Coordinates displays your coordinates. Nuff said.");
         config.addCustomCategoryComment(CATEGORY_COMPASS, "Compass displays a text compass.");
@@ -311,11 +325,12 @@ public class ZyinHUD
         config.addCustomCategoryComment(CATEGORY_HORSEINFO, "Horse Info gives you information about horse stats, such as speed and jump height.");
         config.addCustomCategoryComment(CATEGORY_ENDERPEARLAID, "Ender Pearl Aid makes it easier to quickly throw ender pearls.");
         config.addCustomCategoryComment(CATEGORY_CLOCK, "Clock shows you time relevant to Minecraft time.");
+        config.addCustomCategoryComment(CATEGORY_POTIONAID, "Potion Aid helps you quickly drink potions based on your circumstance.");
         
         
         //CATEGORY_LANGUAGE
         p = config.get(CATEGORY_LANGUAGE, "SupportedLanguages", DefaultSupportedLanguages);
-        p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud/";
+        p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud/. Values are comma seperated.";
         SupportedLanguages = p.getString();
         
         
@@ -483,12 +498,25 @@ public class ZyinHUD
         
         //CATEGORY_CLOCK
         p = config.get(CATEGORY_CLOCK, "ShowClock", true);
-        p.comment = "Enable/Disable showing the in game time.";
+        p.comment = "Enable/Disable showing the clock.";
         ShowClock = p.getBoolean(true);
         
         p = config.get(CATEGORY_CLOCK, "ClockMode", 0);
-        p.comment = "0 = standard Minecraft time in game, 1 = countdown till morning/night.";
+        p.comment = "Set the clock mode:" + config.NEW_LINE +
+        			"0 = standard Minecraft time in game" + config.NEW_LINE +
+        			"1 = countdown timer till morning/night.";
         ClockMode = p.getInt(0);
+
+        
+        //CATEGORY_POTIONAID
+        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", "V");
+        p.comment = "Default: V";
+        PotionAidHotkey = p.getString();
+        
+        p = config.get(CATEGORY_POTIONAID, "EnablePotionAid", true);
+        p.comment = "Enables pressing a hotkey (default=V) to drink a potion even if it is  in your inventory and not your hotbar.";
+        EnablePotionAid = p.getBoolean(true);
+        
         
 
         config.save();
@@ -537,6 +565,11 @@ public class ZyinHUD
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEnderPearlAidHotkey) : hotkey;
         key_C = new KeyBinding[] {new KeyBinding("Ender Pearl Aid Hotkey", hotkey)};
         KeyBindingRegistry.registerKeyBinding(new EnderPearlAidKeyHandler(key_C, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(PotionAidHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultPotionAidHotkey) : hotkey;
+        key_V = new KeyBinding[] {new KeyBinding("Potion Aid Hotkey", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new PotionAidKeyHandler(key_V, repeatFalse));
     }
     
     /**

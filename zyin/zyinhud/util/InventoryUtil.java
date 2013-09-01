@@ -135,10 +135,8 @@ public class InventoryUtil
 	 */
 	private static boolean UseItemInHotbar(int itemSlotIndex)
 	{
-		System.out.println("using item in hotbar:"+itemSlotIndex);
 		if(itemSlotIndex < 36 || itemSlotIndex > 44)
 			return false;
-		System.out.println("using item ...");
 		
 		int itemToUseHotbarIndex = TranslateInventoryIndexToHotbarIndex(itemSlotIndex);
 		
@@ -228,17 +226,11 @@ public class InventoryUtil
 	    ItemStack handStack = mc.thePlayer.inventory.getItemStack();
 	    if(handStack != null)
 	    {
-	    	System.out.println("ITEM IN HAND: "+handStack.getDisplayName());
-
 	    	int emptyIndex = GetFirstEmptyIndex();
 	    	if(emptyIndex < 0)
-	    	{
-	    		System.out.println("full!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 	    		emptyIndex = 1;	//use the crafting area
-	    	}
-	    	System.out.println("Placing it at: "+emptyIndex);
+	    	
 	    	LeftClickInventorySlot(emptyIndex);
-	    	System.out.println("continuing as normal now");
 	    }
 	    
 	    //there are 4 cases we need to handle:
@@ -441,9 +433,7 @@ public class InventoryUtil
         		(rightClick) ? 1 : 0,
 				(shiftHold) ? 1 : 0,
 				mc.thePlayer);
-        
     }
-
     
     
     
