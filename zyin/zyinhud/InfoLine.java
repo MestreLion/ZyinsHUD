@@ -21,8 +21,9 @@ public class InfoLine
     public static final String SPACER = " ";
     
     
-    private static int notificationDuration = 95;
-    private static int notificationTimer = 0;
+    private static final int notificationDuration = 1000;	//measured in milliseconds
+    private static long notificationTimer = 0;				//timer that goes from notificationDuration to 0
+    private static long notificationStartTime;
     private static String notificationMessage = "";
     
     
@@ -30,7 +31,7 @@ public class InfoLine
      * Renders the on screen message consisting of everything that gets put into the top let message area,
      * including coordinates and the state of things that can be activated
      */
-    public static void Render()
+    public static void RenderOntoHUD()
     {
         //if the player is in the world
         //and not looking at a menu
@@ -44,9 +45,10 @@ public class InfoLine
             String distance = DistanceMeasurer.CalculateMessageForInfoLine();
             String safe = SafeOverlay.CalculateMessageForInfoLine();
             String locator = PlayerLocator.CalculateMessageForInfoLine();
+            String horse = HorseInfo.CalculateMessageForInfoLine();
             String fps = Fps.CalculateMessageForInfoLine();
             
-            String message = coordinates + compass + distance + safe + locator + fps;
+            String message = coordinates + compass + distance + safe + locator + horse + fps;
             mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
         }
         
@@ -54,7 +56,6 @@ public class InfoLine
         {
         	RenderNotification(notificationMessage);
         }
-        
     }
     
     /**
@@ -65,6 +66,7 @@ public class InfoLine
     {
         notificationMessage = message;
         notificationTimer = notificationDuration;
+        notificationStartTime = System.currentTimeMillis();
     }
     
     /**
@@ -96,7 +98,7 @@ public class InfoLine
             mc.fontRenderer.drawStringWithShadow(notificationMessage, x, y, color);
 		}
     	
-        notificationTimer--;
+        notificationTimer = notificationStartTime - System.currentTimeMillis() + notificationDuration;	//counts down from 1000 to 0
     }
     
     

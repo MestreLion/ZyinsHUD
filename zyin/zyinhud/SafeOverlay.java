@@ -152,20 +152,9 @@ public class SafeOverlay
     
     
     /**
-     * Event fired when the world gets rendered.
-     * We render any things that need to be rendered into the game world in this method
-     * (basically just the unsafe marks).
-     * @param event
-     */
-    @ForgeSubscribe
-    public void renderWorldLastEvent(RenderWorldLastEvent event)
-    {
-        //render unsafe positions (cache calculations are done from this render method)
-        RenderAllUnsafePositionsMultithreaded(event.partialTicks);
-    }
-    
-    /**
      * Event fired when the player interacts with another block.
+     * <p>
+     * This event only fires on single player worlds!
      * @param event
      */
     @ForgeSubscribe
@@ -215,6 +204,7 @@ public class SafeOverlay
      */
     public void onBlockPlaced(int blockId, int x, int y, int z)
     {
+    	//System.out.println("block placed at ("+x+","+y+","+z+")");
     	if(Block.lightValue[blockId] > 0)
     		onLightEmittingBlockPlaced(blockId, x, y, z);
     }
@@ -230,6 +220,7 @@ public class SafeOverlay
      */
     public void onLightEmittingBlockPlaced(int blockId, int x, int y, int z)
     {
+    	//System.out.println("light emitting block placed at ("+x+","+y+","+z+")");
     	RecalculateUnsafePositions();
     }
     
@@ -359,7 +350,7 @@ public class SafeOverlay
      * It will only recalculate the unsafe areas once every [updateFrequency] milliseconds
      * @param partialTickTime
      */
-    protected void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
+    public void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
     {
     	if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
         {

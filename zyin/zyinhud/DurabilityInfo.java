@@ -65,7 +65,7 @@ public class DurabilityInfo
 	/**
      * Renders the main durability icon and any damaged tools onto the screen.
      */
-    public static void Render()
+    public static void RenderOntoHUD()
     {
         //if the player is in the world
         //and not in a menu

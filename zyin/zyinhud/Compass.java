@@ -21,8 +21,10 @@ public class Compass
         if (ZyinHUD.ShowCompass)
         {
             int yaw = (int)mc.thePlayer.rotationYaw;
+            yaw += 22;	//+22 centers the compass (45degrees/2)
             yaw %= 360;
-            yaw = Math.abs(yaw) + 22;	//+22 centers the compass (45degrees/2)
+            if(yaw < 0)
+            	yaw += 360;
             
             int facing = yaw / 45; //  360degrees divided by 45 == 8 zones
             String compassDirection = "";

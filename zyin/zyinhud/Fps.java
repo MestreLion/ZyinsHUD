@@ -3,6 +3,8 @@ package zyin.zyinhud;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import zyin.zyinhud.tickhandler.HUDTickHandler;
+
 import net.minecraft.client.Minecraft;
 
 public class Fps

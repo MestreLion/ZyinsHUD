@@ -39,9 +39,9 @@ public class Coordinates
     {
         if (ZyinHUD.ShowCoordinates)
         {
-            int coordX = mc.thePlayer.getPlayerCoordinates().posX;
-            int coordY = mc.thePlayer.getPlayerCoordinates().posY;
-            int coordZ = mc.thePlayer.getPlayerCoordinates().posZ;
+        	int coordX = (int) Math.floor(mc.thePlayer.posX);
+        	int coordY = (int) Math.floor(mc.thePlayer.posY);
+        	int coordZ = (int) Math.floor(mc.thePlayer.posZ);
             
             String yColor = FontCodes.WHITE;
             

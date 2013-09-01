@@ -1,6 +1,13 @@
-package zyin.zyinhud;
+package zyin.zyinhud.tickhandler;
 
 import java.util.EnumSet;
+
+import zyin.zyinhud.DurabilityInfo;
+import zyin.zyinhud.HorseInfo;
+import zyin.zyinhud.InfoLine;
+import zyin.zyinhud.PlayerLocator;
+import zyin.zyinhud.PotionTimers;
+import zyin.zyinhud.helper.EntityTrackerHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -62,15 +69,17 @@ public class HUDTickHandler implements ITickHandler
     
     /**
      * Render any things that need to be rendered onto the user's HUD (on the screen, NOT in the game
-     * world - that is done in the renderWorldLastEvent() method in ZyinMod.java)
+     * world - that is done in the RenderWorldLastEvent of RenderTickHandler.java)
      */
     protected void onRenderTick()
     {
-        InfoLine.Render();
-        DurabilityInfo.Render();
-        PotionTimers.Render();
-        PlayerLocator.Render();
-        HorseInfo.Render();
+        InfoLine.RenderOntoHUD();
+        DurabilityInfo.RenderOntoHUD();
+        PotionTimers.RenderOntoHUD();
+        
+        HorseInfo.RenderOntoDebugMenu();
+        
+        EntityTrackerHelper.RenderAllEntityOverlays();	//PlayerLocator.RenderEntityOverlay(), HorseInfo.RenderEntityOverlay()
         
         renderTickCount++;
     }

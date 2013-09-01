@@ -24,7 +24,7 @@ public class PotionTimers
 	/**
 	 * Renders the duration any potion effects that the player currently has on the left side of the screen.
 	 */
-    public static void Render()
+    public static void RenderOntoHUD()
     {
     	//if the player is in the world
         //and not in a menu

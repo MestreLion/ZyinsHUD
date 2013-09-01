@@ -19,9 +19,12 @@ import org.lwjgl.input.Keyboard;
 
 import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
 import zyin.zyinhud.keyhandler.EatingHelperKeyHandler;
+import zyin.zyinhud.keyhandler.HorseInfoKeyHandler;
 import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
 import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
 import zyin.zyinhud.keyhandler.WeaponSwapKeyHandler;
+import zyin.zyinhud.tickhandler.HUDTickHandler;
+import zyin.zyinhud.tickhandler.RenderTickHandler;
 import cpw.mods.fml.client.registry.KeyBindingRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Instance;
@@ -34,7 +37,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.7.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.7.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -81,6 +84,7 @@ public class ZyinHUD
 
     //Configurable values - player locator
     public static boolean ShowDistanceToPlayers;
+    public static int PlayerLocatorMinViewDistance;
 
     //Configurable values - eating helper
     public static boolean EnableEatingHelper;
@@ -93,14 +97,16 @@ public class ZyinHUD
     //Configurable values - fps
     public static boolean ShowFPS;
     
-    //Configurable values - fps
-    public static boolean ShowHorseInfo;
+    //Configurable values - horse info
+    public static boolean ShowHorseStatsOnF3Menu;
+    public static int HorseInfoMaxViewDistance;
     
     
     
-    public static int PlayerLocatorMode = 0;	//0=off, 1=on
     public static int DistanceMeasurerMode = 0;	//0=off, 1=simple, 2=complex
     public static int SafeOverlayMode = 0;		//0=off, 1=on
+    public static int PlayerLocatorMode = 0;	//0=off, 1=on
+    public static int HorseInfoMode = 0;	//0=off, 1=on
     
 
     Minecraft mc = Minecraft.getMinecraft();
@@ -129,8 +135,8 @@ public class ZyinHUD
         proxy.registerRenderers();
         
         //needed for @ForgeSubscribe method subscriptions
-        MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
-        //MinecraftForge.EVENT_BUS.register(EatingHelper.instance);
+        //MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
+        MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);
         
         
         LoadTickHandlers();
@@ -178,6 +184,9 @@ public class ZyinHUD
         
         KeyBinding[] key_F = {new KeyBinding("Weapon Swap Hotkey", 			Keyboard.KEY_F)};
         KeyBindingRegistry.registerKeyBinding(new WeaponSwapKeyHandler(key_F, repeatFalse));
+        
+        KeyBinding[] key_O = {new KeyBinding("Horse Info Hotkey", 			Keyboard.KEY_O)};
+        KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
         
     }
 
@@ -271,6 +280,10 @@ public class ZyinHUD
         p = config.get(CATEGORY_PLAYERLOCATOR, "ShowDistanceToPlayers", false);
         p.comment = "Show how far away you are from the other players next to their name.";
         ShowDistanceToPlayers = p.getBoolean(false);
+        
+        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorMinViewDistance", 10);
+        p.comment = "Stop showing player names when they are this close (distance measured in blocks).";
+        PlayerLocatorMinViewDistance = p.getInt(10);
 
         
         //CATEGORY_EATINGHELPER
@@ -300,12 +313,27 @@ public class ZyinHUD
         
         
         //CATEGORY_HORSEINFO
-        p = config.get(CATEGORY_HORSEINFO, "ShowHorseInfo", true);
-        p.comment = "Enable/Disable showing your horse's stats on the F3 screen.";
-        ShowHorseInfo = p.getBoolean(true);
+        p = config.get(CATEGORY_HORSEINFO, "ShowHorseStatsOnF3Menu", true);
+        p.comment = "Enable/Disable showing the stats of the horse you're riding on the F3 screen.";
+        ShowHorseStatsOnF3Menu = p.getBoolean(true);
+        
+        p = config.get(CATEGORY_HORSEINFO, "HorseInfoMaxViewDistance", 8);
+        p.comment = "How far away horse stats will be rendered on the screen (distance measured in blocks).";
+        HorseInfoMaxViewDistance = p.getInt(8);
 
         
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
     
     
 }
