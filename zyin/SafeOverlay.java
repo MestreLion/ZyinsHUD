@@ -4,15 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCake;
 import net.minecraft.block.BlockFluid;
 import net.minecraft.block.BlockCactus;
+import net.minecraft.block.BlockHopper;
+import net.minecraft.block.BlockPistonBase;
+import net.minecraft.block.BlockPistonExtension;
+import net.minecraft.block.BlockPistonMoving;
+import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockAnvil;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.BlockWall;
 import net.minecraft.block.BlockBasePressurePlate;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockDoor;
-import net.minecraft.block.BlockEndPortalFrame;
 import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockPane;
@@ -46,7 +51,7 @@ class SafeOverlay
     private int updateFrequency;
     
     //calculate locations in a cube with this radius around the player
-    private int drawDistance; // actual area calculated: (drawDistance*2)^3
+    public int drawDistance; // actual area calculated: (drawDistance*2)^3
     
     //the transprancy of the "X" marks when rendered, between (0.1 and 1]
     private float unsafeOverlayTransparency;
@@ -138,11 +143,11 @@ class SafeOverlay
     }
     
     /**
-     * Renders an unsafe marker ("X" icon) at the position with (r,g,b) colors.
-     * It takes into account the block above this position and relocates it accordinely.
-     * It also takes into account if the block above dis-allows spawning on at position
-     * (such as half slabs, stairs, fences, etc.)
+     * Renders an unsafe marker ("X" icon) at the position with colors depending on the light levels.
+     * It takes into account the block above this position and relocates it vertically accordinely.
      * @param position
+     * @param lightLevel light level caused by other blocks
+     * @param lightLevelWithSky light level caused by the sky
      */
     public void RenderUnsafeMarker(Position position, int lightLevel, int lightLevelWithSky)
     {
@@ -157,11 +162,13 @@ class SafeOverlay
         block = (block == null) ? Block.stone :  block;
 
         //get bounding box data for this block
-    	double boundingBoxMinX = block.getBlockBoundsMinX();
-    	double boundingBoxMaxX = block.getBlockBoundsMaxX();
+        //don't bother for horizontal (X and Z) bounds because every hostile mob spawns on a 1.0 wide block
+        //some blocks, like rail/snow/farmland have a different vertical (Y) bound
+    	double boundingBoxMinX = 0;
+    	double boundingBoxMaxX = 1;
     	double boundingBoxMaxY = block.getBlockBoundsMaxY();
-    	double boundingBoxMinZ = block.getBlockBoundsMinZ();
-    	double boundingBoxMaxZ = block.getBlockBoundsMaxZ();
+    	double boundingBoxMinZ = 0;
+    	double boundingBoxMaxZ = 1;
 
         float r, g, b, alpha;
         
@@ -181,7 +188,8 @@ class SafeOverlay
         	b = 0f;
         	alpha = unsafeOverlayTransparency;
         }
-
+        
+        /*
     	//Minecraft bug: the Y-bounds for half slabs are wrong, so set them manually
     	if(block instanceof BlockHalfSlab)
     	{
@@ -197,6 +205,13 @@ class SafeOverlay
     	    else //normal half slab
     	    	return;
     	}
+    	//Minecraft bug: the X and Z bounds for stairs are wrong, so set them manually
+    	else if(block instanceof BlockStairs)
+    	{
+            boundingBoxMinX = 0;
+            boundingBoxMinZ = 0;
+    	}
+    	*/
     	
     	if(blockAbove != null)	//if block above is not an Air block
     	{
@@ -208,52 +223,25 @@ class SafeOverlay
         		//if so, then render the mark higher up
             	boundingBoxMaxY += blockAbove.getBlockBoundsMaxY();
         	}
-        	else if(!CanSpawnInBlock(blockAbove))
-        	{
-        		return;
-        	}
     	}
 
         double minX = position.x + boundingBoxMinX + 0.02;
         double maxX = position.x + boundingBoxMaxX - 0.02;
         
-        double maxY = position.y + boundingBoxMaxY + 0.02;//0.014;
+        double maxY = position.y + boundingBoxMaxY + 0.02;
         
         double minZ = position.z + boundingBoxMinZ + 0.02;
         double maxZ = position.z + boundingBoxMaxZ - 0.02;
         
         
-        //render the an X above the block
-        GL11.glColor4f(r, g, b, alpha);	//opacity must be > 0.1
+        //render an "X" slightly above the block
+        GL11.glColor4f(r, g, b, alpha);	//alpha must be > 0.1
         
         GL11.glVertex3d(maxX,maxY,maxZ); 
 		GL11.glVertex3d(minX,maxY,minZ);
 		
         GL11.glVertex3d(maxX,maxY,minZ); 
 		GL11.glVertex3d(minX,maxY,maxZ);
-    }
-    
-    /**
-     * Checks if mobs can spawn INSIDE OF the block
-     * @param block
-     * @return
-     */
-    public boolean CanSpawnInBlock(Block block)
-    {
-    	//mobs can not spawn INSIDE OF these blocks
-    	return !(block instanceof BlockDoor
-    			|| block instanceof BlockFluid
-    			|| block instanceof BlockChest
-    			|| block instanceof BlockGlass
-    			|| block instanceof BlockFence
-    			|| block instanceof BlockFenceGate
-    			|| block instanceof BlockLeaves
-    			|| block instanceof BlockWall
-    			|| block instanceof BlockPane
-    			|| block instanceof BlockWeb
-    			|| block instanceof BlockCactus
-    			|| block instanceof BlockAnvil
-    			|| block instanceof BlockBed);
     }
     
     /**
@@ -273,12 +261,13 @@ class SafeOverlay
         for (int z = -drawDistance; z < drawDistance; z++)
     	for (int y = -drawDistance; y < drawDistance; y++)
         {
+    		
             pos.x = playerPosition.x + x;
             pos.y = playerPosition.y + y;
             pos.z = playerPosition.z + z;
-            
-            boolean first = pos.CanMobsSpawnOn(0, 0, 0);
-            boolean second = pos.CanMobsSpawnOn(0, 1, 0);
+            /*
+            boolean first = pos.CanMobsSpawnOnBlock(0, 0, 0);
+            boolean second = pos.CanMobsSpawnOnBlock(0, 1, 0);
             
             if (first && !second)
                 unsafePositionCache.add(new Position(pos));
@@ -286,7 +275,11 @@ class SafeOverlay
             else if (!first && previous)
                 unsafePositionCache.add(new Position(pos, 0, -1, 0));
             
-            previous = second;
+            previous = second;*/
+
+            if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0))
+                unsafePositionCache.add(new Position(pos));
+    		
         }
         
         cachePosition = playerPosition;
@@ -353,7 +346,7 @@ class SafeOverlay
          * @param dz z location relative to this block
          * @return true if mobs can spawn ON this block
          */
-        public boolean CanMobsSpawnOn(int dx, int dy, int dz)
+        public boolean CanMobsSpawnOnBlock(int dx, int dy, int dz)
         {
             int blockId = GetBlockId(dx, dy, dz);
             Block block = Block.blocksList[blockId];
@@ -369,6 +362,51 @@ class SafeOverlay
                 return true;
             
             return false;
+        }
+        
+
+
+        /**
+         * Checks if mobs can spawn IN the block at a location.
+         * @param dx x location relative to this block
+         * @param dy y location relative to this block
+         * @param dz z location relative to this block
+         * @return true if mobs can spawn ON this block
+         */
+        public boolean CanMobsSpawnInBlock(int dx, int dy, int dz)
+        {
+            int blockId = GetBlockId(dx, dy, dz);
+            Block block = Block.blocksList[blockId];
+            
+            if(block == null)	//air block
+            	return true;
+            
+            if(block.isOpaqueCube())	//majority of blocks: dirt, stone, etc.
+            	return false;
+            
+            //list of blocks mobs can not spawn inside of
+            //(is the list shorter for blocks that mobs CAN spawn in? [lever, button, torches, reeds, rail, etc.])
+            return !(block instanceof BlockDoor
+        			|| block instanceof BlockHalfSlab
+        			|| block instanceof BlockStairs
+        			|| block instanceof BlockFluid
+        			|| block instanceof BlockChest
+        			|| block instanceof BlockGlass
+        			|| block instanceof BlockFence
+        			|| block instanceof BlockFenceGate
+        			|| block instanceof BlockLeaves
+        			|| block instanceof BlockWall
+        			|| block instanceof BlockPane
+        			|| block instanceof BlockWeb
+        			|| block instanceof BlockCactus
+        			|| block instanceof BlockAnvil
+        			|| block instanceof BlockBed
+        			|| block instanceof BlockFarmland
+        			|| block instanceof BlockHopper
+        			|| block instanceof BlockPistonBase
+        			|| block instanceof BlockPistonExtension
+        			|| block instanceof BlockPistonMoving
+        			|| block instanceof BlockCake);
         }
 
         /**

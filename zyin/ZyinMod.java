@@ -33,14 +33,14 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinMod", name = "Zyin's HUD", version = "0.4.0")
+@Mod(modid = "ZyinMod", name = "Zyin's HUD", version = "0.4.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinMod
 {
-	private static String CATEGORY_DISPLAY = "display";
-	private static String CATEGORY_COORDINATES = "coordinates";
-	private static String CATEGORY_DURABILITY = "durability";
-	private static String CATEGORY_SAFEOVERLAY = "safe overlay";
+	public static String CATEGORY_DISPLAY = "display";
+	public static String CATEGORY_COORDINATES = "coordinates";
+	public static String CATEGORY_DURABILITY = "durability";
+	public static String CATEGORY_SAFEOVERLAY = "safe overlay";
 	
 	
     //Configurable values - display
@@ -75,6 +75,7 @@ public class ZyinMod
     public static int SafeOverlayMode = 0;	//0=off, 1=on
     private static int renderTicks = 0;	//how  many ticks have been rendered so far. used as a counter/timer.
     
+    public static Configuration config = null;
     
     
     @Instance("ZyinMod")
@@ -136,6 +137,7 @@ public class ZyinMod
     {
         //load configuration settings
         Configuration config = new Configuration(configFile);
+        this.config = config;
         config.load();
         
         Property p;
@@ -160,7 +162,7 @@ public class ZyinMod
         p.comment = "Display when an item gets damaged more than this fraction of its durability";
         DurabilityDisplayThresholdForItem = p.getDouble(0.9);
         
-        p = config.get(CATEGORY_DURABILITY, "UpdateFrequency", 50);
+        p = config.get(CATEGORY_DURABILITY, "DurabilityUpdateFrequency", 50);
         p.comment = "Update the HUD every XX game ticks (~100 = 1 second)";
         DurabilityUpdateFrequency = p.getInt();
         
@@ -178,9 +180,9 @@ public class ZyinMod
         p.comment = "The time in milliseconds between re-calculations of safe areas.";
         SafeOverlayUpdateFrequency = p.getInt(250);
 
-        p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
+        p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 30);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks.";
-        SafeOverlayDrawDistance = p.getInt(20);
+        SafeOverlayDrawDistance = p.getInt(30);
 
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayTransparency", 0.3);
         p.comment = "The transparency of the unsafe marks. Must be between greater than 0.1 and less than or equal to 1.";
