@@ -2,6 +2,7 @@ package zyin.zyinhud;
 
 import java.text.DecimalFormat;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.registry.LanguageRegistry;
@@ -32,16 +33,24 @@ public class HorseInfo
 
     //private static final DecimalFormat twoDecimalPlaces = new DecimalFormat("#.##");
     private static final DecimalFormat oneDecimalPlace = new DecimalFormat("#.#");
-
-    //values above the good value are green
+    
+    
+    //values above the perfect value are aqua
+    //values between the perfect and good values are green
     //values between the good and bad values are white
     //values below the bad value are red
-    private static double goodHorseSpeedThreshold = 10.5;	//max: ~12.5?
-    private static double badHorseSpeedThreshold = 9;		//min: ~7?
-    private static double goodHorseJumpThreshold = 4;		//max: ~5.1?
+    private static double perfectHorseSpeedThreshold = 13;	//max: 13.6?
+    private static double goodHorseSpeedThreshold = 11;
+    private static double badHorseSpeedThreshold = 9.5;		//min: ~7?
+    
+    private static double perfectHorseJumpThreshold = 5;	//max: 5.5
+    private static double goodHorseJumpThreshold = 4;
     private static double badHorseJumpThreshold = 2.5;		//min: 1.5
-    private static int goodHorseHPThreshold = 26;			//max: ~30?
+    
+    private static int perfectHorseHPThreshold = 28;		//max: 30
+    private static int goodHorseHPThreshold = 24;			
     private static int badHorseHPThreshold = 20;			//min: ~14?
+    
 
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
 
@@ -63,14 +72,19 @@ public class HorseInfo
 
             if (riddenEntity instanceof EntityHorse)
             {
+            	//Localization.get("horseinfo.debug"),
                 EntityHorse horse = (EntityHorse) riddenEntity;
-                String horseSpeedMessage = "Horse Speed: " + GetHorseSpeedText(horse) + " m/s";
-                String horseJumpMessage = "Horse Jump: " + GetHorseJumpText(horse) + " blocks";
-                String horseHPMessage = "Horse HP: " + GetHorseHPText(horse);
-                //String horseHPMessage = "Horse HP: " + GetHorseHPText(horse) + " (" + GetHorseHeartsText(horse) + " hearts)";
+                String horseSpeedMessage = Localization.get("horseinfo.debug.speed") + " " + GetHorseSpeedText(horse) + " m/s";
+                String horseJumpMessage = Localization.get("horseinfo.debug.jump") + " " + GetHorseJumpText(horse) + " blocks";
+                String horseHPMessage = Localization.get("horseinfo.debug.hp") + " " + GetHorseHPText(horse);
+                String horseColor = Localization.get("horseinfo.debug.color") + " " + GetHorseColoringText(horse);
+                String horseMarking = Localization.get("horseinfo.debug.markings") + " " + GetHorseMarkingText(horse);
+                
                 mc.fontRenderer.drawStringWithShadow(horseSpeedMessage, 1, 130, 0xffffff);
                 mc.fontRenderer.drawStringWithShadow(horseJumpMessage, 1, 140, 0xffffff);
                 mc.fontRenderer.drawStringWithShadow(horseHPMessage, 1, 150, 0xffffff);
+                mc.fontRenderer.drawStringWithShadow(horseColor, 1, 170, 0xffffff);
+                mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
             }
         }
     }
@@ -208,9 +222,9 @@ public class HorseInfo
             {
                 GetHorseAgeAsPercent(horse) + "%",
                 "",
-                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.speed"),
-                GetHorseHPText(horse) + " " + Localization.get("horseinfo.hp"),
-                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.jump")
+                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.overlay.speed"),
+                GetHorseHPText(horse) + " " + Localization.get("horseinfo.overlay.hp"),
+                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.overlay.jump")
             };
             return multilineOverlayMessage;
         }
@@ -218,9 +232,9 @@ public class HorseInfo
         {
         	String[] multilineOverlayMessage =
             {
-                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.speed"),
-                GetHorseHPText(horse) + " " + Localization.get("horseinfo.hp"),
-                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.jump")
+                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.overlay.speed"),
+                GetHorseHPText(horse) + " " + Localization.get("horseinfo.overlay.hp"),
+                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.overlay.jump")
             };
             return multilineOverlayMessage;
         }
@@ -240,21 +254,19 @@ public class HorseInfo
     /**
      * Gets a horses speed, colored based on how good it is.
      * @param horse
-     * @return e.x.:<br>green "12.5"<br>white "11.3"<br>red "7.0"
+     * @return e.x.:<br>aqua "13.5"<br>green "12.5"<br>white "11.3"<br>red "7.0"
      */
     private static String GetHorseSpeedText(EntityHorse horse)
     {
         double horseSpeed = GetEntityMaxSpeed(horse);
         String horseSpeedString = oneDecimalPlace.format(horseSpeed);
 
-        if (horseSpeed > goodHorseSpeedThreshold)
-        {
+        if (horseSpeed > perfectHorseSpeedThreshold)
+            horseSpeedString = FontCodes.AQUA + horseSpeedString + FontCodes.WHITE;
+        else if (horseSpeed > goodHorseSpeedThreshold)
             horseSpeedString = FontCodes.GREEN + horseSpeedString + FontCodes.WHITE;
-        }
         else if (horseSpeed < badHorseSpeedThreshold)
-        {
             horseSpeedString = FontCodes.RED + horseSpeedString + FontCodes.WHITE;
-        }
 
         return horseSpeedString;
     }
@@ -262,29 +274,27 @@ public class HorseInfo
     /**
      * Gets a horses HP, colored based on how good it is.
      * @param horse
-     * @return e.x.:<br>green "28"<br>white "22"<br>red "18"
+     * @return e.x.:<br>aqua "28"<br>green "26"<br>white "22"<br>red "18"
      */
     private static String GetHorseHPText(EntityHorse horse)
     {
         int horseHP = GetEntityMaxHP(horse);
         String horseHPString = oneDecimalPlace.format(GetEntityMaxHP(horse));
 
-        if (horseHP > goodHorseHPThreshold)
-        {
+        if (horseHP > perfectHorseHPThreshold)
+            horseHPString = FontCodes.AQUA + horseHPString + FontCodes.WHITE;
+        else if (horseHP > goodHorseHPThreshold)
             horseHPString = FontCodes.GREEN + horseHPString + FontCodes.WHITE;
-        }
         else if (horseHP < badHorseHPThreshold)
-        {
             horseHPString = FontCodes.RED + horseHPString + FontCodes.WHITE;
-        }
 
         return horseHPString;
     }
-
+    
     /**
      * Gets a horses hearts, colored based on how good it is.
      * @param horse
-     * @return e.x.:<br>green "14"<br>white "11"<br>red "9"
+     * @return e.x.:<br>aqua "15"<br>green "13"<br>white "11"<br>red "9"
      */
     private static String GetHorseHeartsText(EntityHorse horse)
     {
@@ -292,14 +302,12 @@ public class HorseInfo
         int horseHearts = GetEntityMaxHearts(horse);
         String horseHeartsString = "" + horseHearts;
 
-        if (horseHP > goodHorseHPThreshold)
-        {
-            horseHeartsString = FontCodes.GREEN + horseHeartsString + FontCodes.WHITE;
-        }
+        if (horseHP > perfectHorseHPThreshold)
+            horseHeartsString = FontCodes.AQUA + horseHeartsString + FontCodes.WHITE;
+        else if (horseHP > goodHorseHPThreshold)
+                horseHeartsString = FontCodes.GREEN + horseHeartsString + FontCodes.WHITE;
         else if (horseHP < badHorseHPThreshold)
-        {
             horseHeartsString = FontCodes.RED + horseHeartsString + FontCodes.WHITE;
-        }
 
         return horseHeartsString;
     }
@@ -307,23 +315,53 @@ public class HorseInfo
     /**
      * Gets a horses jump height, colored based on how good it is.
      * @param horse
-     * @return e.x.:<br>green "5"<br>white "3"<br>red "1.5"
+     * @return e.x.:<br>aqua "5.4"<br>green "4"<br>white "3"<br>red "1.5"
      */
     private static String GetHorseJumpText(EntityHorse horse)
     {
         double horseJump = GetHorseMaxJump(horse);
         String horseJumpString = oneDecimalPlace.format(GetHorseMaxJump(horse));
 
-        if (horseJump > goodHorseJumpThreshold)
-        {
+        if (horseJump > perfectHorseJumpThreshold)
+            horseJumpString = FontCodes.AQUA + horseJumpString + FontCodes.WHITE;
+        else if (horseJump > goodHorseJumpThreshold)
             horseJumpString = FontCodes.GREEN + horseJumpString + FontCodes.WHITE;
-        }
         else if (horseJump < badHorseJumpThreshold)
-        {
             horseJumpString = FontCodes.RED + horseJumpString + FontCodes.WHITE;
-        }
 
         return horseJumpString;
+    }
+
+    /**
+     * Gets a horses primary coloring
+     * @param horse
+     * @return
+     */
+    private static String GetHorseColoringText(EntityHorse horse)
+    {
+        String texture = horse.func_110212_cp()[0];
+        String[] textureArray = texture.split("/");			//"textures/entity/horse/horse_creamy.png"
+        texture = textureArray[textureArray.length-1];		//"horse_creamy.png"
+        texture = texture.substring(6, texture.length()-4);	//"creamy"
+        texture = WordUtils.capitalize(texture);			//"Creamy"
+        
+        return texture;
+    }
+
+    /**
+     * Gets a horses secondary coloring
+     * @param horse
+     * @return
+     */
+    private static String GetHorseMarkingText(EntityHorse horse)
+    {
+        String texture = horse.func_110212_cp()[1];
+        String[] textureArray = texture.split("/");				//"textures/entity/horse/horse_markings_blackdots.png"
+        texture = textureArray[textureArray.length-1];			//"horse_markings_blackdots.png"
+        texture = texture.substring(15, texture.length()-4);	//"blackdots"
+        texture = WordUtils.capitalize(texture);				//"Blackdots"
+        
+        return texture;
     }
 
     /**
@@ -342,13 +380,11 @@ public class HorseInfo
         //0.833727 = 4 blocks
         //0.881760 = 4.5 blocks
         //...
-        //??? = 5.1 blocks (max according to the Wiki)
+        //??? = 5.5 blocks (max according to the Wiki)
         double jumpHeight = (horse.func_110215_cj() - 0.5) * 4.0 / 0.5 + 1.5;
 
         if (jumpHeight < 1.5)
-        {
-            return 1.5;
-        }
+            return 1.5;	//horses can always jump over a fence, no matter what
 
         return jumpHeight;
     }
@@ -376,7 +412,7 @@ public class HorseInfo
     /**
      * Gets an entity's max run speed in meters(blocks) per second
      * @param entity
-     * @return e.x. Steve = 4.3 m/s. Horses ~7-12?
+     * @return e.x. Steve = 4.3 m/s. Horses ~7-13
      */
     private	 static double GetEntityMaxSpeed(EntityLivingBase entity)
     {

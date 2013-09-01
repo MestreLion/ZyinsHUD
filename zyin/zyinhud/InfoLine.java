@@ -20,7 +20,7 @@ public class InfoLine
      */
     public static final String SPACER = " ";
 
-    private static final int notificationDuration = 1000;	//measured in milliseconds
+    private static final int notificationDuration = 1200;	//measured in milliseconds
     private static long notificationTimer = 0;				//timer that goes from notificationDuration to 0
     private static long notificationStartTime;
     private static String notificationMessage = "";

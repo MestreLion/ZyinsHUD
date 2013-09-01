@@ -2,7 +2,7 @@
  * IDEAS
  * =====
  * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
- * dont render other player's armor (or just helmet?) in multiplayer
+ * //dont render other player's armor (or just helmet?) in multiplayer
  */
 
 package zyin.zyinhud;
@@ -27,7 +27,6 @@ import zyin.zyinhud.keyhandler.WeaponSwapperKeyHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.tickhandler.RenderTickHandler;
 import zyin.zyinhud.util.Localization;
-import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.KeyBindingRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Instance;
@@ -37,17 +36,17 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkMod;
-import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.8.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.8.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
     /**
      * Comma seperated values of languages to load by setting the default value in the config file.
-     * Recreate the config file or the variable "SupportedLanguages" to see these values updated.
+     * Recreate the config file, or just the variable "SupportedLanguages" (located in the config file)
+     * to see these values updated.
      */
     private static final String DefaultSupportedLanguages = "en_US"; //"en_US, zh_CN"
     
@@ -56,6 +55,7 @@ public class ZyinHUD
     public static final String CATEGORY_INFOLINE = "info line";
     public static final String CATEGORY_COORDINATES = "coordinates";
     public static final String CATEGORY_COMPASS = "compass";
+    public static final String CATEGORY_DISTANCEMEASURER = "distance measurer";
     public static final String CATEGORY_DURABILITYINFO = "durability info";
     public static final String CATEGORY_SAFEOVERLAY = "safe overlay";
     public static final String CATEGORY_POTIONTIMERS = "potion timers";
@@ -79,6 +79,9 @@ public class ZyinHUD
     //Configurable values - compass
     public static boolean ShowCompass;
 
+    //Configurable values - distance measurer
+    public static String DistanceMeasurerHotkey;
+
     //Configurable values - durability info
     public static boolean ShowDurabilityInfo;
     public static boolean ShowArmorDurability;
@@ -90,6 +93,7 @@ public class ZyinHUD
     public static int DurabilityLocationVertical;
 
     //Configurable values - safe overlay
+    public static String SafeOverlayHotkey;
     public static int SafeOverlayDrawDistance;
     public static double SafeOverlayTransparency;
     public static boolean SafeOverlayDisplayInNether;
@@ -99,14 +103,17 @@ public class ZyinHUD
     public static boolean ShowPotionTimers;
 
     //Configurable values - player locator
+    public static String PlayerLocatorHotkey;
     public static boolean ShowDistanceToPlayers;
     public static int PlayerLocatorMinViewDistance;
 
     //Configurable values - eating aid
+    public static String EatingAidHotkey;
     public static boolean EnableEatingAid;
     public static boolean DontEatGoldenFood;
 
     //Configurable values - weapon swap
+    public static String WeaponSwapHotkey;
     public static boolean EnableWeaponSwap;
     public static boolean ScanHotbarForWeaponsFromLeftToRight;
 
@@ -114,30 +121,59 @@ public class ZyinHUD
     public static boolean ShowFPS;
 
     //Configurable values - horse info
+    public static String HorseInfoHotkey;
     public static boolean ShowHorseStatsOnF3Menu;
     public static int HorseInfoMaxViewDistance;
 
     //Configurable values - ender pearl aid
+    public static String EnderPearlAidHotkey;
     public static boolean EnableEnderPearlAid;
-
+    
+    
+    //Key bindings
+    private static KeyBinding[] key_K;
+    private static KeyBinding[] key_L;
+    private static KeyBinding[] key_P;
+    private static KeyBinding[] key_G;
+    private static KeyBinding[] key_F;
+    private static KeyBinding[] key_O;
+    private static KeyBinding[] key_C;
+    
+    
+    //default hotkeys
+    private static String DefaultDistanceMeasurerHotkey = "K";
+    private static String DefaultSafeOverlayHotkeyHotkey = "L";
+    private static String DefaultPlayerLocatorHotkey = "P";
+    private static String DefaultEatingAidHotkey = "G";
+    private static String DefaultWeaponSwapHotkey = "F";
+    private static String DefaultHorseInfoHotkey = "O";
+    private static String DefaultEnderPearlAidHotkey = "C";
+    
+    
+    //the current state of various mods (everything is turned off initially)
     public static int DistanceMeasurerMode = 0;	//0=off, 1=simple, 2=complex
     public static int SafeOverlayMode = 0;		//0=off, 1=on
     public static int PlayerLocatorMode = 0;	//0=off, 1=on
     public static int HorseInfoMode = 0;		//0=off, 1=on
     
     
-    
     Minecraft mc = Minecraft.getMinecraft();
     public static Configuration config = null;
 
+    
     @Instance("ZyinHUD")
     public static ZyinHUD instance;
 
     @SidedProxy(clientSide = "zyin.zyinhud.ClientProxy", serverSide = "zyin.zyinhud.CommonProxy")
     public static CommonProxy proxy;
+    
 
+    
+    
+    
     public ZyinHUD()
     {
+    	
     }
 
     @Mod.EventHandler
@@ -153,60 +189,74 @@ public class ZyinHUD
     {
         proxy.registerRenderers();
         
-        //needed for @ForgeSubscribe method subscriptions
-        //MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
-        MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);
+        MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);	//needed for @ForgeSubscribe method subscriptions
         
-        LoadTickHandlers();
-        LoadKeyHandlers();
+        TickRegistry.registerTickHandler(new HUDTickHandler(), Side.CLIENT);
         
-        
+    	LoadKeyHandlers();
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+    	
     }
 
     @Mod.EventHandler
     public void serverStopping(FMLServerStoppingEvent event)
     {
+    	UpdateConfigFileWithModifiedHotkeys();
         config.save();
     }
-
-    private void LoadTickHandlers()
+    
+    
+    
+    
+    
+    /**
+     * If the user changes any hotkeys in the Options > Controls menu in game, then update our config file.
+     */
+    private void UpdateConfigFileWithModifiedHotkeys()
     {
-        //Tick Handlers (for drawing on the HUD) are defined here
-        TickRegistry.registerTickHandler(new HUDTickHandler(), Side.CLIENT);
-    }
+    	Property p;
+    	String hotkey;
+    	
+    	hotkey = Keyboard.getKeyName(key_K[0].keyCode);
+        p = config.get(CATEGORY_DISTANCEMEASURER, "DistanceMeasurerHotkey", DefaultDistanceMeasurerHotkey);
+        p.comment = "Default: " + DefaultDistanceMeasurerHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_L[0].keyCode);
+        p = config.get(CATEGORY_SAFEOVERLAY, "SafeoverlayHotkey", DefaultSafeOverlayHotkeyHotkey);
+        p.comment = "Default: " + DefaultSafeOverlayHotkeyHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_P[0].keyCode);
+        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", DefaultPlayerLocatorHotkey);
+        p.comment = "Default: " + DefaultPlayerLocatorHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_G[0].keyCode);
+        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", DefaultEatingAidHotkey);
+        p.comment = "Default: " + DefaultEatingAidHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_F[0].keyCode);
+        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", DefaultWeaponSwapHotkey);
+        p.comment = "Default: " + DefaultWeaponSwapHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_O[0].keyCode);
+        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", DefaultHorseInfoHotkey);
+        p.comment = "Default: " + DefaultHorseInfoHotkey;
+        p.set(hotkey);
+    	
+    	hotkey = Keyboard.getKeyName(key_C[0].keyCode);
+        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
+        p.comment = "Default: " + DefaultEnderPearlAidHotkey;
+        p.set(hotkey);
+	}
 
-    private void LoadKeyHandlers()
-    {
-        //Key Bind Handlers (for hotkeys) are defined here
-        boolean[] repeatFalse = {false};
-        //boolean[] repeatTrue = {true};
-        
-        KeyBinding[] key_K = {new KeyBinding("Distance Measurer Toggle", 	Keyboard.KEY_K)};
-        KeyBindingRegistry.registerKeyBinding(new DistanceMeasurerKeyHandler(key_K, repeatFalse));
-        
-        KeyBinding[] key_L = {new KeyBinding("Safe Overlay Toggle", 		Keyboard.KEY_L)};
-        KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatFalse));
-        
-        KeyBinding[] key_P = {new KeyBinding("Player Locator Toggle", 		Keyboard.KEY_P)};
-        KeyBindingRegistry.registerKeyBinding(new PlayerLocatorKeyHandler(key_P, repeatFalse));
-        
-        KeyBinding[] key_G = {new KeyBinding("Eating Aid Hotkey", 			Keyboard.KEY_G)};
-        KeyBindingRegistry.registerKeyBinding(new EatingAidKeyHandler(key_G, repeatFalse));
-        
-        KeyBinding[] key_F = {new KeyBinding("Weapon Swap Hotkey", 			Keyboard.KEY_F)};
-        KeyBindingRegistry.registerKeyBinding(new WeaponSwapperKeyHandler(key_F, repeatFalse));
-        
-        KeyBinding[] key_O = {new KeyBinding("Horse Info Hotkey", 			Keyboard.KEY_O)};
-        KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
-        
-        KeyBinding[] key_C = {new KeyBinding("Ender Pearl Aid Hotkey", 		Keyboard.KEY_C)};
-        KeyBindingRegistry.registerKeyBinding(new EnderPearlAidKeyHandler(key_C, repeatFalse));
-    }
     
     private String[] GetSupportedLanguages()
     {
@@ -249,6 +299,12 @@ public class ZyinHUD
         p.comment = "Enable/Disable showing the compass.";
         ShowCompass = p.getBoolean(true);
         
+
+        //CATEGORY_DISTANCEMEASURER
+        p = config.get(CATEGORY_DISTANCEMEASURER, "DistanceMeasurerHotkey", DefaultDistanceMeasurerHotkey);
+        p.comment = "Default: " + DefaultDistanceMeasurerHotkey;
+        DistanceMeasurerHotkey = p.getString();
+        
         
         //CATEGORY_DURABILITYINFO
         p = config.get(CATEGORY_DURABILITYINFO, "ShowDurabilityInfo", true);
@@ -272,7 +328,7 @@ public class ZyinHUD
         DurabilityDisplayThresholdForItem = p.getDouble(0.9);
         
         p = config.get(CATEGORY_DURABILITYINFO, "DurabilityUpdateFrequency", 50);
-        p.comment = "Update the HUD every XX game ticks (~100 = 1 second)";
+        p.comment = "Update the HUD every XX render ticks (60 = 1 second at 60 fps)";
         DurabilityUpdateFrequency = p.getInt();
         
         p = config.get(CATEGORY_DURABILITYINFO, "DurabilityLocationHorizontal", 20);
@@ -285,6 +341,10 @@ public class ZyinHUD
         
         
         //CATEGORY_SAFEOVERLAY
+        p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayHotkey", "L");
+        p.comment = "Default: L";
+        SafeOverlayHotkey = p.getString();
+        
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game with - + L and + + L.";
         SafeOverlayDrawDistance = p.getInt(20);
@@ -309,6 +369,10 @@ public class ZyinHUD
         
         
         //CATEGORY_PLAYERLOCATOR
+        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", "P");
+        p.comment = "Default: P";
+        PlayerLocatorHotkey = p.getString();
+        
         p = config.get(CATEGORY_PLAYERLOCATOR, "ShowDistanceToPlayers", false);
         p.comment = "Show how far away you are from the other players next to their name.";
         ShowDistanceToPlayers = p.getBoolean(false);
@@ -319,6 +383,10 @@ public class ZyinHUD
         
         
         //CATEGORY_EATINGAID
+        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", "G");
+        p.comment = "Default: G";
+        EatingAidHotkey = p.getString();
+        
         p = config.get(CATEGORY_EATINGAID, "EnableEatingAid", true);
         p.comment = "Enables pressing a hotkey (default=G) to eat food even if it is  in your inventory and not your hotbar.";
         EnableEatingAid = p.getBoolean(true);
@@ -329,6 +397,10 @@ public class ZyinHUD
         
         
         //CATEGORY_WEAPONSWAP
+        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", "F");
+        p.comment = "Default: F";
+        WeaponSwapHotkey = p.getString();
+        
         p = config.get(CATEGORY_WEAPONSWAP, "EnableWeaponSwap", true);
         p.comment = "Enables pressing a hotkey (default=F) to swap between your sword and bow.";
         EnableWeaponSwap = p.getBoolean(true);
@@ -345,6 +417,10 @@ public class ZyinHUD
         
         
         //CATEGORY_HORSEINFO
+        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", "O");
+        p.comment = "Default: O";
+        HorseInfoHotkey = p.getString();
+        
         p = config.get(CATEGORY_HORSEINFO, "ShowHorseStatsOnF3Menu", true);
         p.comment = "Enable/Disable showing the stats of the horse you're riding on the F3 screen.";
         ShowHorseStatsOnF3Menu = p.getBoolean(true);
@@ -355,11 +431,77 @@ public class ZyinHUD
         
         
         //CATEGORY_ENDERPEARLAID
+        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", "C");
+        p.comment = "Default: C";
+        EnderPearlAidHotkey = p.getString();
+        
         p = config.get(CATEGORY_ENDERPEARLAID, "EnableEnderPearlAid", true);
         p.comment = "Enables pressing a hotkey (default=C) to use an enderpearl even if it is  in your inventory and not your hotbar.";
         EnableEnderPearlAid = p.getBoolean(true);
         
         
+    }
+
+
+    private void LoadKeyHandlers()
+    {
+        //Key Bind Handlers (for hotkeys) are defined here
+        boolean[] repeatFalse = {false};
+        //boolean[] repeatTrue = {true};
         
+        int hotkey;
+        
+        hotkey = GetKeyboardKeyFromString(DistanceMeasurerHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultDistanceMeasurerHotkey) : hotkey;
+        key_K = new KeyBinding[] {new KeyBinding("Distance Measurer Toggle", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new DistanceMeasurerKeyHandler(key_K, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(SafeOverlayHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultSafeOverlayHotkeyHotkey) : hotkey;
+        key_L = new KeyBinding[] {new KeyBinding("Safe Overlay Toggle", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(PlayerLocatorHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultPlayerLocatorHotkey) : hotkey;
+        key_P = new KeyBinding[] {new KeyBinding("Player Locator Toggle", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new PlayerLocatorKeyHandler(key_P, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(EatingAidHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEatingAidHotkey) : hotkey;
+        key_G = new KeyBinding[] {new KeyBinding("Eating Aid Hotkey", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new EatingAidKeyHandler(key_G, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(WeaponSwapHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultWeaponSwapHotkey) : hotkey;
+        key_F = new KeyBinding[] {new KeyBinding("Weapon Swap Hotkey", 	hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new WeaponSwapperKeyHandler(key_F, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(HorseInfoHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultHorseInfoHotkey) : hotkey;
+        key_O = new KeyBinding[] {new KeyBinding("Horse Info Hotkey", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(EnderPearlAidHotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEnderPearlAidHotkey) : hotkey;
+        key_C = new KeyBinding[] {new KeyBinding("Ender Pearl Aid Hotkey", hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new EnderPearlAidKeyHandler(key_C, repeatFalse));
+    }
+    
+    /**
+     * Converts the string representation of a key into an integer.
+     * @param key example: "L", "G", "NUMPAD2"
+     * @return an integer representation of this key
+     */
+    private static int GetKeyboardKeyFromString(String key)
+    {
+    	key = key.trim();
+    	int keyIndex = Keyboard.getKeyIndex(key.toUpperCase());
+    	if(keyIndex == 0)
+    	{
+    		System.out.println("=========================================================================");
+    		System.out.println("[WARNING] ZyinHUD.cfg: \"" + key + "\" is not a valid hotkey! Setting to default.");
+    		System.out.println("=========================================================================");
+    	}
+    	return keyIndex;
     }
 }
