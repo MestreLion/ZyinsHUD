@@ -4,35 +4,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockCake;
-import net.minecraft.block.BlockFluid;
-import net.minecraft.block.BlockCactus;
-import net.minecraft.block.BlockHopper;
-import net.minecraft.block.BlockIce;
-import net.minecraft.block.BlockPistonBase;
-import net.minecraft.block.BlockPistonExtension;
-import net.minecraft.block.BlockPistonMoving;
-import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockAnvil;
-import net.minecraft.block.BlockBed;
-import net.minecraft.block.BlockWall;
 import net.minecraft.block.BlockBasePressurePlate;
+import net.minecraft.block.BlockBed;
+import net.minecraft.block.BlockCactus;
+import net.minecraft.block.BlockCake;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockFence;
-import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockFluid;
 import net.minecraft.block.BlockGlass;
 import net.minecraft.block.BlockHalfSlab;
+import net.minecraft.block.BlockHopper;
+import net.minecraft.block.BlockIce;
 import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockPane;
+import net.minecraft.block.BlockPistonBase;
+import net.minecraft.block.BlockPistonExtension;
+import net.minecraft.block.BlockPistonMoving;
 import net.minecraft.block.BlockRailBase;
 import net.minecraft.block.BlockSnow;
+import net.minecraft.block.BlockStairs;
+import net.minecraft.block.BlockWall;
 import net.minecraft.block.BlockWeb;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.EnumSkyBlock;
 
@@ -95,7 +94,7 @@ class SafeOverlay
 
         player = mc.thePlayer;
 
-        if (displayInNether && player.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
+        if (!displayInNether && player.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
             return;
 
         frameTime = System.currentTimeMillis();

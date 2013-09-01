@@ -11,6 +11,8 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiCrafting;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.texture.TextureObject;
+import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemBow;
@@ -19,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
 import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.Icon;
 import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.opengl.GL11;
 
@@ -27,7 +30,12 @@ import cpw.mods.fml.common.TickType;
 
 public class HUDTickHandler implements ITickHandler
 {
-    public static final String DURABILITY_ICONS_PNG = "/zyin/images/Durability_icons.png";
+	
+    //public static final String DURABILITY_ICONS_PNG = "/zyin/images/Durability_icons.png";
+	
+	//public static final String DURABILITY_ICONS_PNG = "/minecraft/assets/minecraft/textures/gui/book.png";
+	public static final String DURABILITY_ICONS_PNG = "/textures/gui/book.png";
+    public static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation(DURABILITY_ICONS_PNG);
 
     //U and V is the top left part of the image
     //X and Y is the width and height of the image
@@ -175,7 +183,23 @@ public class HUDTickHandler implements ITickHandler
                     if (ZyinMod.ShowArmorDurability)
                     {
                         GL11.glDisable(GL11.GL_LIGHTING);	//disable lighting so it renders at full brightness
-                        GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));
+
+                        //TODO: glBindTexture
+                        //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));	//ORIGINAL
+                        
+                        //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.func_110581_b(RESOURCE_DURABILITY_ICONS_PNG).func_110552_b());
+                        
+                        
+                        //TextureObject to = mc.renderEngine.func_110581_b(RESOURCE_DURABILITY_ICONS_PNG);
+                        //int ti = to.func_110552_b();
+                        //GL11.glBindTexture(GL11.GL_TEXTURE_2D, ti);
+
+
+                        
+                        //mc.renderEngine.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
+
+
+                        
                         gig.drawTexturedModalRect(durabalityLocX, durabalityLocY, armorDurabilityU, armorDurabilityV, armorDurabilityX, armorDurabilityY);
                     }
                 }
@@ -193,9 +217,21 @@ public class HUDTickHandler implements ITickHandler
                         }
 
                         //render the item with enchant effect
-                        itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                        //TODO: renderItemAndEffectIntoGUI 
+                        //itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                        
+                        
+                        
+                        //Icon icon = toolStack.getItem().getIcon(toolStack, 0);
+                        //itemRenderer.renderIcon(0, 10, icon, 16, 16);
+                        
+                        
+                        
                         //render the item's durability bar
-                        itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                        //TODO: renderItemOverlayIntoGUI 
+                        //itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                        
+                        
                         String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
                         int damageX = (horizontalPosition) + toolX / 2;
                         int damageY = (verticalSpacer) + toolY - 9;
@@ -208,8 +244,9 @@ public class HUDTickHandler implements ITickHandler
                     }
                 }
             }
-
-            mc.renderEngine.resetBoundTexture();
+            
+            //TODO: resetBoundTexture
+            //mc.renderEngine.resetBoundTexture();
         }
     }
 
