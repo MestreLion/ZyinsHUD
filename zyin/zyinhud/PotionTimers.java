@@ -1,4 +1,6 @@
-package zyin;
+package zyin.zyinhud;
+
+import zyin.zyinhud.util.FontCode;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -15,6 +17,9 @@ public class PotionTimers
 {
 	private static Minecraft mc = Minecraft.getMinecraft();
 
+	private static final int[] blinkingThresholds = {3*20, 6*20, 16*20};	//the time at which blinking starts
+	private static final int[] blinkingSpeed = {5, 10, 20};					//how often the blinking occurs
+	private static final int[] blinkingDuration = {2, 3, 3};					//how long the blink lasts
     
     public static void Render()
     {
@@ -27,9 +32,6 @@ public class PotionTimers
         {
 	    	Collection potionEffects = mc.thePlayer.getActivePotionEffects();	//key:potionId, value:potionEffect
 	    	
-    		int[] blinkingThresholds = {3*20, 6*20, 16*20};	//the time at which blinking starts
-    		int[] blinkingSpeed = {5, 10, 20};					//how often the blinking occurs
-    		int[] blinkingDuration = {2, 3, 3};					//how long the blink lasts
 
 			mc.fontRenderer.setUnicodeFlag(true);
 	    	Iterator it = potionEffects.iterator();
@@ -37,9 +39,9 @@ public class PotionTimers
 	    	while(it.hasNext())
 	    	{
 	    		PotionEffect potionEffect = (PotionEffect)it.next();
-	    		Boolean isFromBeacon = potionEffect.getIsAmbient();
+	    		Boolean isFromBeacon = potionEffect.getIsAmbient();	//Minecraft bug: this is always false
 	    		
-	    		if(!isFromBeacon)	//ignore effects from Beacons
+	    		if(!isFromBeacon)	//ignore effects from Beacons (Minecraft bug: isFromBeacon is always false)
 	    		{	
 	    			String durationString = Potion.getDurationString(potionEffect);
 	    			Potion potion = Potion.potionTypes[potionEffect.getPotionID()];

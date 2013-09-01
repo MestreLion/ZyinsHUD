@@ -1,4 +1,6 @@
-package zyin;
+package zyin.zyinhud;
+
+import zyin.zyinhud.util.FontCode;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;

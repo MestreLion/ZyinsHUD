@@ -4,14 +4,14 @@
     "name": "Zyin's HUD",
     "description": "Displays your coordinates, a compass, your breaking equipment, measures distances, displays potion timers, and displays unsafe areas",
     "mcversion": "1.6.1",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "url": "http://www.minecraftforum.net/topic/1851472-152forgesspsmp-zyins-hud/",
     "updateUrl": "",
     "authors": [
         "Zyin"
     ],
     "credits": "",
-    "logoFile": "/zyin/images/Durability.png",
+    "logoFile": "ZyinHUD.png",
     "screenshots": [
     ],
     "parent":"",

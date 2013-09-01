@@ -1,4 +1,4 @@
-package zyin;
+package zyin.zyinhud;
 
 import org.lwjgl.opengl.GL11;
 

@@ -1,4 +1,4 @@
-package zyin.util;
+package zyin.zyinhud.util;
 
 /**
  * Insert into strings to add some flavor.

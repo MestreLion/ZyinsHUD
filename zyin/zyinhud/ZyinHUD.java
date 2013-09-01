@@ -5,7 +5,7 @@
  * //FPS display (no public variable in Minecraft for this)
  */
 
-package zyin;
+package zyin.zyinhud;
 
 import java.io.File;
 
@@ -19,9 +19,9 @@ import net.minecraftforge.event.ForgeSubscribe;
 
 import org.lwjgl.input.Keyboard;
 
-import zyin.keyhandler.DistanceMeasurerKeyHandler;
-import zyin.keyhandler.PlayerLocatorKeyHandler;
-import zyin.keyhandler.SafeOverlayKeyHandler;
+import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
+import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
+import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
 import cpw.mods.fml.client.registry.KeyBindingRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
@@ -36,7 +36,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -90,20 +90,21 @@ public class ZyinHUD
     @Instance("ZyinHUD")
     public static ZyinHUD instance;
 
-    @SidedProxy(clientSide = "zyin.ClientProxy", serverSide = "zyin.CommonProxy")
+    @SidedProxy(clientSide = "zyin.zyinhud.ClientProxy", serverSide = "zyin.zyinhud.CommonProxy")
     public static CommonProxy proxy;
 
     public ZyinHUD()
     {
+    	
     }
     
-    @PreInit
+    @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         LoadConfigSettings(event.getSuggestedConfigurationFile());
     }
-
-    @Init
+    
+    @Mod.EventHandler
     public void load(FMLInitializationEvent event)
     {
         proxy.registerRenderers();
@@ -114,10 +115,11 @@ public class ZyinHUD
         LoadTickHandlers();
         LoadKeyHandlers();
     }
-
-    @PostInit
+    
+    @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+    	
     }
 
     private void LoadTickHandlers()
@@ -193,7 +195,7 @@ public class ZyinHUD
         p.comment = "Update the HUD every XX game ticks (~100 = 1 second)";
         DurabilityUpdateFrequency = p.getInt();
         
-        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityLocationHorizontal", 10);
+        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityLocationHorizontal", 20);
         p.comment = "The horizontal position of the durability icons. 0 is left, 400 is far right.";
         DurabilityLocationHorizontal = p.getInt();
         
@@ -229,7 +231,8 @@ public class ZyinHUD
         config.save();
         this.config = config;	//so other classes can reference this config file
     }
-
+    
+    
     /**
      * Render any things that need to be rendered into the game world (in the world, NOT on 
      * the user's HUD - that is done in the onRenderTick() method in HUDTickHandler.java)

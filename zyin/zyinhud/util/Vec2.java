@@ -1,4 +1,4 @@
-package zyin.util;
+package zyin.zyinhud.util;
 
 
 public class Vec2

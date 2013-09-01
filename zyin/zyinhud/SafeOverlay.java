@@ -1,4 +1,6 @@
-package zyin;
+package zyin.zyinhud;
+
+import zyin.zyinhud.util.FontCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +40,6 @@ import net.minecraftforge.common.Property;
 
 import org.lwjgl.opengl.GL11;
 
-import zyin.util.FontCode;
 
 /**
  * The Safe Overlay renders an overlay onto the game world showing which areas

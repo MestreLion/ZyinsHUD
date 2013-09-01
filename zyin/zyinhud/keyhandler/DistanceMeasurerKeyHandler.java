@@ -1,21 +1,21 @@
-package zyin.keyhandler;
+package zyin.zyinhud.keyhandler;
 
 import java.util.EnumSet;
 
-import zyin.InfoLine;
-import zyin.ZyinHUD;
+import zyin.zyinhud.ZyinHUD;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.settings.KeyBinding;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class PlayerLocatorKeyHandler extends KeyHandler
+public class DistanceMeasurerKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
-    public PlayerLocatorKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public DistanceMeasurerKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -23,7 +23,7 @@ public class PlayerLocatorKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Player Locator Key Handler";
+        return "Distance Measurer Key Handler";
     }
 
     @Override
@@ -38,20 +38,14 @@ public class PlayerLocatorKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-        
-        
-        ZyinHUD.PlayerLocatorMode++;
-        
-        //0=off, 1=on
-        if (ZyinHUD.PlayerLocatorMode > 1)
-        {
-            ZyinHUD.PlayerLocatorMode = 0;
-        }
 
-        /*if(ZyinHUD.PlayerLocatorMode == 0)
-        	InfoLine.DisplayNotification("Player Locator: disabled");
-        else if(ZyinHUD.PlayerLocatorMode == 1)
-        	InfoLine.DisplayNotification("Player Locator: enabled");*/
+        ZyinHUD.DistanceMeasurerMode++;
+
+        //0=off, 1=simple, 2=complex
+        if (ZyinHUD.DistanceMeasurerMode > 2)
+        {
+            ZyinHUD.DistanceMeasurerMode = 0;
+        }
     }
 
     @Override

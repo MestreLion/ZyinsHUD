@@ -1,4 +1,4 @@
-package zyin;
+package zyin.zyinhud;
 
 import java.util.EnumSet;
 

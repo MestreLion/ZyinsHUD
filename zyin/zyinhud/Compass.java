@@ -1,6 +1,7 @@
-package zyin;
+package zyin.zyinhud;
 
-import zyin.util.FontCode;
+import zyin.zyinhud.util.FontCode;
+
 import net.minecraft.client.Minecraft;
 
 /**

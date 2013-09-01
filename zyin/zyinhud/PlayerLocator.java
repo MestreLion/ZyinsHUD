@@ -1,4 +1,6 @@
-package zyin;
+package zyin.zyinhud;
+
+import zyin.zyinhud.util.FontCode;
 
 import org.lwjgl.opengl.GL11;
 
@@ -7,8 +9,9 @@ import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityCow;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.Vec3;
-import zyin.util.FontCode;
 
 /**
  * The Player Locator checks for nearby players and displays their name on screen wherever they are.
@@ -52,11 +55,12 @@ public class PlayerLocator
             	 if(i > maxOverlayMessagesRendered)
             		 break;
             	 
-            	 if(!((Entity)object instanceof EntityClientPlayerMP))
+            	 if((object instanceof EntityClientPlayerMP) ||
+            			 !(object instanceof EntityPlayer))
             	 //if(!((Entity)object instanceof EntityCow))	//for single player testing/debugging!
             		 continue;	//we only care about other players
             	 
-            	 EntityClientPlayerMP otherPlayer = (EntityClientPlayerMP)object;
+            	 EntityPlayer otherPlayer = (EntityPlayer)object;
             	 //EntityCow otherPlayer = (EntityCow)object;	//for single player testing/debugging!
             	 
             	 //only show entities that are close by
