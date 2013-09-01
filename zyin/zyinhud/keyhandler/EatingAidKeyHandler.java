@@ -4,20 +4,20 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.EatingHelper;
+import zyin.zyinhud.EatingAid;
 import zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class EatingHelperKeyHandler extends KeyHandler
+public class EatingAidKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
-    
+
     private int eatingTimer = 0;
     private boolean isEating = false;
 
-    public EatingHelperKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public EatingAidKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -25,7 +25,7 @@ public class EatingHelperKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Eating Helper Key Handler";
+        return "Eating Aid Key Handler";
     }
 
     @Override
@@ -40,9 +40,11 @@ public class EatingHelperKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-        
-        if(ZyinHUD.EnableEatingHelper)
-        	EatingHelper.instance.Eat();
+
+        if (ZyinHUD.EnableEatingAid)
+        {
+            EatingAid.instance.Eat();
+        }
     }
 
     @Override

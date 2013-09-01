@@ -1,6 +1,7 @@
 package zyin.zyinhud;
 
 import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 import net.minecraft.client.Minecraft;
 
@@ -9,10 +10,9 @@ import net.minecraft.client.Minecraft;
  */
 public class Compass
 {
-	private static Minecraft mc = Minecraft.getMinecraft();
-	
-	
-	/**
+    private static Minecraft mc = Minecraft.getMinecraft();
+
+    /**
      * Calculates the direction the player is facing
      * @return "[Direction]" compass formatted string if the Compass is enabled, otherwise "".
      */
@@ -23,34 +23,52 @@ public class Compass
             int yaw = (int)mc.thePlayer.rotationYaw;
             yaw += 22;	//+22 centers the compass (45degrees/2)
             yaw %= 360;
-            if(yaw < 0)
-            	yaw += 360;
-            
+
+            if (yaw < 0)
+            {
+                yaw += 360;
+            }
+
             int facing = yaw / 45; //  360degrees divided by 45 == 8 zones
             String compassDirection = "";
 
             if (facing == 0)
-                compassDirection = "S";
+            {
+                compassDirection = Localization.get("compass.south");
+            }
             else if (facing == 1)
-                compassDirection = "SW";
+            {
+                compassDirection = Localization.get("compass.southwest");
+            }
             else if (facing == 2)
-                compassDirection = "W";
+            {
+                compassDirection = Localization.get("compass.west");
+            }
             else if (facing == 3)
-                compassDirection = "NW";
+            {
+                compassDirection = Localization.get("compass.northwest");
+            }
             else if (facing == 4)
-                compassDirection = "N";
+            {
+                compassDirection = Localization.get("compass.north");
+            }
             else if (facing == 5)
-                compassDirection = "NE";
+            {
+                compassDirection = Localization.get("compass.northeast");
+            }
             else if (facing == 6)
-                compassDirection = "E";
+            {
+                compassDirection = Localization.get("compass.east");
+            }
             else// if(facing == 7)
-                compassDirection = "SE";
-             
+            {
+                compassDirection = Localization.get("compass.southeast");
+            }
+
             String compassString = FontCodes.GRAY + "[" + FontCodes.RED + compassDirection + FontCodes.GRAY + "]";
             return compassString + InfoLine.SPACER;
         }
 
         return "";
     }
-    
 }

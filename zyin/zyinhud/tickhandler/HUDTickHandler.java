@@ -16,9 +16,9 @@ import cpw.mods.fml.common.TickType;
 
 public class HUDTickHandler implements ITickHandler
 {
-	public static int renderTickCount = 0;
+    public static int renderTickCount = 0;
     private static Minecraft mc = Minecraft.getMinecraft();
-    
+
     public HUDTickHandler()
     {
     }
@@ -64,9 +64,8 @@ public class HUDTickHandler implements ITickHandler
 
     protected void onTickInGUI(GuiScreen guiScreen)
     {
-    	
     }
-    
+
     /**
      * Render any things that need to be rendered onto the user's HUD (on the screen, NOT in the game
      * world - that is done in the RenderWorldLastEvent of RenderTickHandler.java)
@@ -76,18 +75,12 @@ public class HUDTickHandler implements ITickHandler
         InfoLine.RenderOntoHUD();
         DurabilityInfo.RenderOntoHUD();
         PotionTimers.RenderOntoHUD();
-        
         HorseInfo.RenderOntoDebugMenu();
-        
         EntityTrackerHelper.RenderAllEntityOverlays();	//PlayerLocator.RenderEntityOverlay(), HorseInfo.RenderEntityOverlay()
-        
         renderTickCount++;
     }
 
     protected void onTickInGame()
     {
-    	
     }
-
-    
 }

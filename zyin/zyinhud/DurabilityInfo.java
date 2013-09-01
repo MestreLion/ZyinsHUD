@@ -49,20 +49,16 @@ public class DurabilityInfo
     //where the tool icons are rendered
     public static int equipmentLocX = durabalityLocX + armorDurabilityX;
     public static int equipmentLocY = durabalityLocY;
-    
-    
-	private static Minecraft mc = Minecraft.getMinecraft();
-	private static ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
+
+    private static Minecraft mc = Minecraft.getMinecraft();
+    private static ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
     private static final RenderItem itemRenderer = new RenderItem();
     private static final GuiIngame gig = new GuiIngame(mc);
     private static final TextureManager textureManager = mc.func_110434_K();
-    
+
     private static int renderTickCount = 0;
-    
-    
-    
-	
-	/**
+
+    /**
      * Renders the main durability icon and any damaged tools onto the screen.
      */
     public static void RenderOntoHUD()
@@ -71,7 +67,7 @@ public class DurabilityInfo
         //and not in a menu
         //and F3 not shown
         if (ZyinHUD.ShowDurabilityInfo &&
-        		(mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
+                (mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
                 && !mc.gameSettings.showDebugInfo)
         {
             //don't waste time recalculating things every tick
@@ -104,7 +100,6 @@ public class DurabilityInfo
                         GL11.glDisable(GL11.GL_LIGHTING);	//disable lighting so it renders at full brightness
                         //TODO: glBindTexture
                         //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));	//ORIGINAL
-                        
                         //bind texture
                         textureManager.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
                         GL11.glColor4f(255f, 255f, 255f, 255f);	//fixes transparency issue when a InfoLine Notification is displayed
@@ -126,21 +121,16 @@ public class DurabilityInfo
 
                         //render the item with enchant effect
                         itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
-                        
                         //render the item's durability bar
                         itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
-                        
                         String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
                         int damageX = (horizontalPosition) + toolX / 2;
                         int damageY = (verticalSpacer) + toolY - 9;
-                        
                         GL11.glDisable(GL11.GL_LIGHTING);	//this is needed because the itemRenderer.renderItem() method enables lighting
-                        
                         mc.fontRenderer.setUnicodeFlag(true);
                         mc.fontRenderer.drawStringWithShadow(damage, damageX, damageY, 0xffffff);
                         mc.fontRenderer.setUnicodeFlag(false);
                         //GL11.glEnable(GL11.GL_LIGHTING); 		not needed
-                        
                         numTools++;
                     }
                 }
@@ -148,12 +138,10 @@ public class DurabilityInfo
 
             //TODO: resetBoundTexture
             //mc.renderEngine.resetBoundTexture();
-
             renderTickCount++;
         }
     }
-    
-    
+
     /**
      * Finds items in the players hot bar and equipped armor that is damaged and adds them to the damagedItemsList list.
      */
@@ -225,5 +213,4 @@ public class DurabilityInfo
             }
         }
     }
-    
 }

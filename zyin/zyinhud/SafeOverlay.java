@@ -1,6 +1,7 @@
 package zyin.zyinhud;
 
 import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +47,6 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 
 import org.lwjgl.opengl.GL11;
 
-
 /**
  * The Safe Overlay renders an overlay onto the game world showing which areas
  * mobs can spawn on.
@@ -62,17 +62,17 @@ public class SafeOverlay
      * <br>drawDistance = 20, updateFrequency = ~1000ms
      * <br>drawDistance = 175, updateFrequency = 8000ms
      */
-	protected int updateFrequency;
+    protected int updateFrequency;
     /**
      * The fastest the update frequency should be set to, in milliseconds.
      * It will be set to this value when the drawDistance = minDrawDistance.
      */
-	protected static final  int updateFrequencyMin = 100;
+    protected static final  int updateFrequencyMin = 100;
     /**
      * The slowest the update frequency should be set to, in milliseconds.
      * It will be set to this value when the drawDistance = maxDrawDistance.
      */
-	protected static final int updateFrequencyMax = 8000;
+    protected static final int updateFrequencyMax = 8000;
 
     /**
      * USE THE Getter/Setter METHODS FOR THIS!!
@@ -89,9 +89,9 @@ public class SafeOverlay
      * <br>
      * drawDistance = 175 = 42,875,000 blocks (max)
      */
-	protected int drawDistance;
-	public static final int defaultDrawDistance = 20;
-	public static final int minDrawDistance = 2;	//can't go lower than 2. setting this to 1 dispays nothing
+    protected int drawDistance;
+    public static final int defaultDrawDistance = 20;
+    public static final int minDrawDistance = 2;	//can't go lower than 2. setting this to 1 dispays nothing
     public static final int maxDrawDistance = 175;	//175 is the edge of the visible map on far
 
     /**
@@ -106,7 +106,7 @@ public class SafeOverlay
 
     public boolean displayInNether;
     private boolean renderUnsafePositionsThroughWalls = false;
-    
+
     private Position playerPosition;
     private Position cachePosition = new Position();
     private static List<Position> unsafePositionCache;
@@ -115,20 +115,18 @@ public class SafeOverlay
     private RenderGlobal renderGlobal;
     private RenderBlocks renderBlocks;
     private EntityPlayer player;
-    
+
     /**
      * When this flag is set to true Safe Overlay will recalculate the unsafe position cache.
      */
     private static boolean recalculateUnsafePositionsFlag = false;
-    private List<Thread> safeCalculatorThreads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
-    
-	/**
-	 * Use this instance of the Safe Overlay for method calls.
-	 */
+    private List<Thread> safeCalculatorThreads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance * 2 + 1));
+
+    /**
+     * Use this instance of the Safe Overlay for method calls.
+     */
     public static SafeOverlay instance = new SafeOverlay();
-    
-    
-    
+
     protected SafeOverlay()
     {
         mc = Minecraft.getMinecraft();
@@ -136,10 +134,8 @@ public class SafeOverlay
         renderBlocks = renderGlobal.globalRenderBlocks;
         player = mc.thePlayer;
         playerPosition = new Position();
-        
         //Don't let multiple threads access this list at the same time by making it a Synchronized List
-        unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());	
-        
+        unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());
         //grab configuration settings
         setDrawDistance(ZyinHUD.SafeOverlayDrawDistance);
         setSeeUnsafePositionsThroughWalls(ZyinHUD.SafeOverlaySeeThroughWalls);
@@ -148,9 +144,7 @@ public class SafeOverlay
         unsafeOverlayTransparency = (unsafeOverlayTransparency >= 1f) ? 1f : unsafeOverlayTransparency;	//check upper bounds
         displayInNether = ZyinHUD.SafeOverlayDisplayInNether;
     }
-    
-    
-    
+
     /**
      * Event fired when the player interacts with another block.
      * <p>
@@ -160,39 +154,54 @@ public class SafeOverlay
     @ForgeSubscribe
     public void onPlayerInteractEvent(PlayerInteractEvent event)
     {
-    	if(event.action != Action.RIGHT_CLICK_BLOCK)
-    		return;	//can only place blocks by right clicking
-    	
-    	int x = event.x;
-    	int y = event.y;
-    	int z = event.z;
+        if (event.action != Action.RIGHT_CLICK_BLOCK)
+        {
+            return;    //can only place blocks by right clicking
+        }
 
-    	int blockClickedId = mc.theWorld.getBlockId(x, y, z);
-    	//System.out.println("block clicked at ("+x+","+y+","+z+")");
-    	//System.out.println("block clicked ID:"+blockClickedId);
-    	
-    	int blockFace = event.face;	// Bottom = 0, Top = 1, Sides = 2-5
-    	if(blockFace == 0)
-    		y--;
-    	else if(blockFace == 1)
-    		y++;
-    	else if(blockFace == 2)
-    		z--;
-    	else if(blockFace == 3)
-    		z++;
-    	else if(blockFace == 4)
-    		x--;
-    	else if(blockFace == 5)
-    		x++;
-    	
-    	int blockPlacedId = mc.theWorld.getBlockId(x, y, z);
-    	//System.out.println("block placed at ("+x+","+y+","+z+")");
-    	//System.out.println("block placed ID:"+blockPlacedId);
-    	
-    	if(blockPlacedId != 0)	//if it's not an Air block
-    		onBlockPlaced(blockPlacedId, x, y ,z);
+        int x = event.x;
+        int y = event.y;
+        int z = event.z;
+        int blockClickedId = mc.theWorld.getBlockId(x, y, z);
+        //System.out.println("block clicked at ("+x+","+y+","+z+")");
+        //System.out.println("block clicked ID:"+blockClickedId);
+        int blockFace = event.face;	// Bottom = 0, Top = 1, Sides = 2-5
+
+        if (blockFace == 0)
+        {
+            y--;
+        }
+        else if (blockFace == 1)
+        {
+            y++;
+        }
+        else if (blockFace == 2)
+        {
+            z--;
+        }
+        else if (blockFace == 3)
+        {
+            z++;
+        }
+        else if (blockFace == 4)
+        {
+            x--;
+        }
+        else if (blockFace == 5)
+        {
+            x++;
+        }
+
+        int blockPlacedId = mc.theWorld.getBlockId(x, y, z);
+        //System.out.println("block placed at ("+x+","+y+","+z+")");
+        //System.out.println("block placed ID:"+blockPlacedId);
+
+        if (blockPlacedId != 0)	//if it's not an Air block
+        {
+            onBlockPlaced(blockPlacedId, x, y , z);
+        }
     }
-    
+
     /**
      * Psuedo event handler for blocks being placed.
      * Will fire when the player ATTEMPTS to placed a block
@@ -204,9 +213,11 @@ public class SafeOverlay
      */
     public void onBlockPlaced(int blockId, int x, int y, int z)
     {
-    	//System.out.println("block placed at ("+x+","+y+","+z+")");
-    	if(Block.lightValue[blockId] > 0)
-    		onLightEmittingBlockPlaced(blockId, x, y, z);
+        //System.out.println("block placed at ("+x+","+y+","+z+")");
+        if (Block.lightValue[blockId] > 0)
+        {
+            onLightEmittingBlockPlaced(blockId, x, y, z);
+        }
     }
 
     /**
@@ -220,14 +231,10 @@ public class SafeOverlay
      */
     public void onLightEmittingBlockPlaced(int blockId, int x, int y, int z)
     {
-    	//System.out.println("light emitting block placed at ("+x+","+y+","+z+")");
-    	RecalculateUnsafePositions();
+        //System.out.println("light emitting block placed at ("+x+","+y+","+z+")");
+        RecalculateUnsafePositions();
     }
-    
-    
-    
-    
-    
+
     /**
      * This thead will calculate unsafe positions around the player given a Y coordinate.
      * <p>
@@ -244,42 +251,38 @@ public class SafeOverlay
      */
     class SafeCalculatorThread extends Thread
     {
-    	private int y;
-    	
-		SafeCalculatorThread(int y)
-		{
-			super("Safe Overlay Calculator Thread at y="+y);
-			//Start the thread
-			this.y = y;
-			start(); 
-		}
+        private int y;
+
+        SafeCalculatorThread(int y)
+        {
+            super("Safe Overlay Calculator Thread at y=" + y);
+            //Start the thread
+            this.y = y;
+            start();
+        }
 
         //This is the entry point for the thread after start() is called.
         public void run()
         {
-        	Position pos = new Position();
-           
-			for (int x = -drawDistance; x < drawDistance; x++)
-			for (int z = -drawDistance; z < drawDistance; z++)
-			{
-				pos.x = playerPosition.x + x;
-				pos.y = playerPosition.y + y;
-				pos.z = playerPosition.z + z;
-				
-				if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
-						&& pos.GetLightLevelWithoutSky() < 8)
-				{
-					unsafePositionCache.add(new Position(pos));
-				}
-			}
+            Position pos = new Position();
+
+            for (int x = -drawDistance; x < drawDistance; x++)
+                for (int z = -drawDistance; z < drawDistance; z++)
+                {
+                    pos.x = playerPosition.x + x;
+                    pos.y = playerPosition.y + y;
+                    pos.z = playerPosition.z + z;
+
+                    if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
+                            && pos.GetLightLevelWithoutSky() < 8)
+                    {
+                        unsafePositionCache.add(new Position(pos));
+                    }
+                }
         }
     }
-    
-    
 
-    
-
-	/**
+    /**
      * Renders all unsafe areas around the player.
      * It will only recalculate the unsafe areas once every [updateFrequency] milliseconds
      * @param partialTickTime
@@ -299,7 +302,7 @@ public class SafeOverlay
         {
             return;
         }
-        
+
         long frameTime = System.currentTimeMillis();
         double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
         double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
@@ -315,7 +318,6 @@ public class SafeOverlay
 
         GL11.glTranslated(-x, -y, -z);		//go from cartesian x,y,z coordinates to in-world x,y,z coordinates
         GL11.glDisable(GL11.GL_TEXTURE_2D);	//fixes color rendering bug (we aren't rendering textures)
-        
         //allows for color transparency
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -328,7 +330,7 @@ public class SafeOverlay
         {
             GL11.glEnable(GL11.GL_DEPTH_TEST);
         }
-        
+
         GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
 
         //render unsafe areas
@@ -340,19 +342,16 @@ public class SafeOverlay
         GL11.glEnd();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
-        
     }
-    
-    
 
-	/**
+    /**
      * Renders all unsafe areas around the player.
      * It will only recalculate the unsafe areas once every [updateFrequency] milliseconds
      * @param partialTickTime
      */
     public void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
     {
-    	if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
+        if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
         {
             return;
         }
@@ -363,46 +362,47 @@ public class SafeOverlay
         {
             return;
         }
-        
+
         long frameTime = System.currentTimeMillis();
         double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
         double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
         double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTickTime;
         playerPosition = new Position((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
-        
+
         if (recalculateUnsafePositionsFlag || frameTime - lastGenerate > updateFrequency)
         {
-        	CalculateUnsafePositionsMultithreaded();
+            CalculateUnsafePositionsMultithreaded();
         }
 
         GL11.glTranslated(-x, -y, -z);		//go from cartesian x,y,z coordinates to in-world x,y,z coordinates
         GL11.glDisable(GL11.GL_TEXTURE_2D);	//fixes color rendering bug (we aren't rendering textures)
-        
         //allows for color transparency
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         if (renderUnsafePositionsThroughWalls)
-            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);    //allows this unsafe position to be rendered through other blocks
-        else
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-        
-        GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
-        
-        
-        //wait for all the threads to finish calculation before rendering the unsafe positions
-        for(Thread t : safeCalculatorThreads)
         {
-        	try 
-        	{
-				t.join();
-			} 
-        	catch (InterruptedException e) 
-        	{
-				e.printStackTrace();
-			}
+            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);    //allows this unsafe position to be rendered through other blocks
         }
-        
+        else
+        {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        }
+
+        GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
+
+        //wait for all the threads to finish calculation before rendering the unsafe positions
+        for (Thread t : safeCalculatorThreads)
+        {
+            try
+            {
+                t.join();
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
 
         //render unsafe areas
         for (Position position : unsafePositionCache)
@@ -413,13 +413,7 @@ public class SafeOverlay
         GL11.glEnd();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
-        
     }
-    
-    
-    
-    
-    
 
     /**
      * Renders an unsafe marker ("X" icon) at the position with colors depending on the Positions light levels.
@@ -430,14 +424,11 @@ public class SafeOverlay
     {
         int blockId = position.GetBlockId(0, 0, 0);
         int blockAboveId = position.GetBlockId(0, 1, 0);
-        
         Block block = Block.blocksList[blockId];
         Block blockAbove = Block.blocksList[blockAboveId];
-        
         //block is null when attempting to render on an Air block
         //we don't like null references so treat Air like an ordinary Stone block
         block = (block == null) ? Block.stone : block;
-        
         //get bounding box data for this block
         //don't bother for horizontal (X and Z) bounds because every hostile mob spawns on a 1.0 wide block
         //some blocks, like farmland, have a different vertical (Y) bound
@@ -514,13 +505,10 @@ public class SafeOverlay
         double maxY = position.y + boundingBoxMaxY + 0.02;
         double minZ = position.z + boundingBoxMinZ + 0.02;
         double maxZ = position.z + boundingBoxMaxZ - 0.02;
-        
         //render an "X" slightly above the block
         GL11.glColor4f(r, g, b, alpha);	//alpha must be > 0.1
-        
         GL11.glVertex3d(maxX, maxY, maxZ);
         GL11.glVertex3d(minX, maxY, minZ);
-        
         GL11.glVertex3d(maxX, maxY, minZ);
         GL11.glVertex3d(minX, maxY, maxZ);
     }
@@ -540,24 +528,23 @@ public class SafeOverlay
         boolean previous = false;
 
         for (int x = -drawDistance; x < drawDistance; x++)
-        for (int z = -drawDistance; z < drawDistance; z++)
-        for (int y = -drawDistance; y < drawDistance; y++)
-        {
-            pos.x = playerPosition.x + x;
-            pos.y = playerPosition.y + y;
-            pos.z = playerPosition.z + z;
+            for (int z = -drawDistance; z < drawDistance; z++)
+                for (int y = -drawDistance; y < drawDistance; y++)
+                {
+                    pos.x = playerPosition.x + x;
+                    pos.y = playerPosition.y + y;
+                    pos.z = playerPosition.z + z;
 
-            if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
-                    && pos.GetLightLevelWithoutSky() < 8)
-            {
-                unsafePositionCache.add(new Position(pos));
-            }
-        }
+                    if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
+                            && pos.GetLightLevelWithoutSky() < 8)
+                    {
+                        unsafePositionCache.add(new Position(pos));
+                    }
+                }
 
         cachePosition = playerPosition;
         lastGenerate = System.currentTimeMillis();
     }
-    
 
     /**
      * Calculates which areas around the player are unsafe and adds these Positions
@@ -574,41 +561,36 @@ public class SafeOverlay
     {
         unsafePositionCache.clear();
         //List<Thread> threads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
-        
-		for (int y = -drawDistance; y < drawDistance; y++)
+
+        for (int y = -drawDistance; y < drawDistance; y++)
         {
-			safeCalculatorThreads.add(new SafeCalculatorThread(y));
+            safeCalculatorThreads.add(new SafeCalculatorThread(y));
         }
-        
-		/*
+
+        /*
         for(Thread t : threads)
         {
-        	try 
+        	try
         	{
-				t.join();
-			} 
-        	catch (InterruptedException e) 
+        		t.join();
+        	}
+        	catch (InterruptedException e)
         	{
-				e.printStackTrace();
-			}
+        		e.printStackTrace();
+        	}
         }*/
-		
-		recalculateUnsafePositionsFlag = false;
-        
-
+        recalculateUnsafePositionsFlag = false;
         cachePosition = playerPosition;
         lastGenerate = System.currentTimeMillis();
     }
-    
+
     /**
      * Sets a flag for the Safe Overlay to recalculate unsafe positions on the next screen render.
      */
     public void RecalculateUnsafePositions()
     {
-    	recalculateUnsafePositionsFlag = true;
+        recalculateUnsafePositionsFlag = true;
     }
-    
-    
 
     /**
      * Gets the status of the Safe Overlay
@@ -618,18 +600,17 @@ public class SafeOverlay
     {
         if (ZyinHUD.SafeOverlayMode == 0)	//off
         {
-        	return FontCodes.WHITE + "";
+            return FontCodes.WHITE + "";
         }
         else if (ZyinHUD.SafeOverlayMode == 1)	//on
         {
-        	return FontCodes.WHITE + "safe" + InfoLine.SPACER;
+            return FontCodes.WHITE + Localization.get("safeoverlay.infoline") + InfoLine.SPACER;
         }
         else
         {
-        	return FontCodes.WHITE + "???" + InfoLine.SPACER;
+            return FontCodes.WHITE + "???" + InfoLine.SPACER;
         }
     }
-    
 
     /**
      * Gets the current draw distance.
@@ -637,79 +618,79 @@ public class SafeOverlay
      */
     public int getDrawDistance()
     {
-		return drawDistance;
-	}
-    
+        return drawDistance;
+    }
+
     /**
      * Sets the current draw distance.
      * @param newDrawDistance the new draw distance
      * @return the updated draw distance
      */
-	public int setDrawDistance(int newDrawDistance)
-	{
-		if(newDrawDistance > maxDrawDistance)
-			newDrawDistance = maxDrawDistance;
-		else if(newDrawDistance < minDrawDistance)
-			newDrawDistance = minDrawDistance;
-		
-		drawDistance = newDrawDistance;
-		
-		double percent = (double)newDrawDistance / maxDrawDistance;
-		updateFrequency = (int) ((double)(updateFrequencyMax-updateFrequencyMin) * percent  + updateFrequencyMin);
-		
-		RecalculateUnsafePositions();
-		
+    public int setDrawDistance(int newDrawDistance)
+    {
+        if (newDrawDistance > maxDrawDistance)
+        {
+            newDrawDistance = maxDrawDistance;
+        }
+        else if (newDrawDistance < minDrawDistance)
+        {
+            newDrawDistance = minDrawDistance;
+        }
+
+        drawDistance = newDrawDistance;
+        double percent = (double)newDrawDistance / maxDrawDistance;
+        updateFrequency = (int)((double)(updateFrequencyMax - updateFrequencyMin) * percent  + updateFrequencyMin);
+        RecalculateUnsafePositions();
         //save the new draw distance
         Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
         p.set(drawDistance);
-		
-		return drawDistance;
-	}
+        return drawDistance;
+    }
 
-	/**
-	 * Increases the current draw distance by 3.
-	 * @return the updated draw distance
-	 */
-	public int increaseDrawDistance()
-	{
-		return setDrawDistance(drawDistance + 3);
-	}
-	/**
-	 * Decreases the current draw distance by 3.
-	 * @return the updated draw distance
-	 */
-	public int decreaseDrawDistance()
-	{
-		return setDrawDistance(drawDistance - 3);
-	}
-	/**
-	 * Increases the current draw distance.
-	 * @param amount how much to increase the draw distance by
-	 * @return the updated draw distance
-	 */
-	public int increaseDrawDistance(int amount)
-	{
-		return setDrawDistance(drawDistance + amount);
-	}
-	/**
-	 * Decreases the current draw distance.
-	 * @param amount how much to increase the draw distance by
-	 * @return the updated draw distance
-	 */
-	public int decreaseDrawDistance(int amount)
-	{
-		return setDrawDistance(drawDistance - amount);
-	}
-	
-	/**
-	 * Checks if see through walls mode is enabled.
-	 * @return
-	 */
+    /**
+     * Increases the current draw distance by 3.
+     * @return the updated draw distance
+     */
+    public int increaseDrawDistance()
+    {
+        return setDrawDistance(drawDistance + 3);
+    }
+    /**
+     * Decreases the current draw distance by 3.
+     * @return the updated draw distance
+     */
+    public int decreaseDrawDistance()
+    {
+        return setDrawDistance(drawDistance - 3);
+    }
+    /**
+     * Increases the current draw distance.
+     * @param amount how much to increase the draw distance by
+     * @return the updated draw distance
+     */
+    public int increaseDrawDistance(int amount)
+    {
+        return setDrawDistance(drawDistance + amount);
+    }
+    /**
+     * Decreases the current draw distance.
+     * @param amount how much to increase the draw distance by
+     * @return the updated draw distance
+     */
+    public int decreaseDrawDistance(int amount)
+    {
+        return setDrawDistance(drawDistance - amount);
+    }
+
+    /**
+     * Checks if see through walls mode is enabled.
+     * @return
+     */
     public boolean canSeeUnsafePositionsThroughWalls()
     {
-    	return renderUnsafePositionsThroughWalls;
-	}
+        return renderUnsafePositionsThroughWalls;
+    }
     /**
      * Sets the see through wall mode
      * @param safeOverlaySeeThroughWalls true or false
@@ -717,24 +698,21 @@ public class SafeOverlay
      */
     public boolean setSeeUnsafePositionsThroughWalls(Boolean safeOverlaySeeThroughWalls)
     {
-    	renderUnsafePositionsThroughWalls = safeOverlaySeeThroughWalls;
-
+        renderUnsafePositionsThroughWalls = safeOverlaySeeThroughWalls;
         //save this new setting
         Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
         p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
         p.set(renderUnsafePositionsThroughWalls);
-        
-		return renderUnsafePositionsThroughWalls;
-	}
+        return renderUnsafePositionsThroughWalls;
+    }
     /**
      * Toggles the current see through wall mode
      * @return the udpated see through wall mode
      */
     public boolean toggleSeeUnsafePositionsThroughWalls()
     {
-    	return setSeeUnsafePositionsThroughWalls(!renderUnsafePositionsThroughWalls);
-	}
-    
+        return setSeeUnsafePositionsThroughWalls(!renderUnsafePositionsThroughWalls);
+    }
 
     /**
      * Helper class to storing information about a location in the world.

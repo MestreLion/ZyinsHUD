@@ -7,6 +7,7 @@ import org.lwjgl.input.Keyboard;
 import zyin.zyinhud.InfoLine;
 import zyin.zyinhud.SafeOverlay;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.util.Localization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.settings.KeyBinding;
@@ -42,69 +43,64 @@ public class SafeOverlayKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-        
 
         //if Control is pressed, enable see through mode
         if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
                 || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
         {
-        	boolean seeThroughWalls = SafeOverlay.instance.toggleSeeUnsafePositionsThroughWalls();
-        	
-        	if(seeThroughWalls)
-            	InfoLine.DisplayNotification("See through walls Enabled");
+            boolean seeThroughWalls = SafeOverlay.instance.toggleSeeUnsafePositionsThroughWalls();
+
+            if (seeThroughWalls)
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsenabled"));
+            }
             else
-            	InfoLine.DisplayNotification("See through walls Disabled");
-            
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsdisabled"));
+            }
+
             SafeOverlay.instance.RecalculateUnsafePositions();
-        	
             return;
         }
-        
-        
+
         //if "+" is pressed, increase the draw distance
         if (Keyboard.isKeyDown(Keyboard.KEY_EQUALS) || 	//keyboard "+" ("=")
-        		Keyboard.isKeyDown(Keyboard.KEY_ADD))	//numpad "+"
+                Keyboard.isKeyDown(Keyboard.KEY_ADD))	//numpad "+"
         {
             int drawDistance = SafeOverlay.instance.increaseDrawDistance();
-            
-            if(drawDistance == SafeOverlay.maxDrawDistance)
-            	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance + " (max)");
+
+            if (drawDistance == SafeOverlay.maxDrawDistance)
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + drawDistance + " ("+Localization.get("safeoverlay.distance.max")+")");
+            }
             else
-            	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance);
-            
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + drawDistance);
+            }
+
             SafeOverlay.instance.RecalculateUnsafePositions();
-            
             return;
         }
-        
-        
+
         //if "-" is pressed, decrease the draw distance
         if (Keyboard.isKeyDown(Keyboard.KEY_MINUS))
         {
             int drawDistance = SafeOverlay.instance.decreaseDrawDistance();
-            
-        	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance);
-            
+            InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + drawDistance);
             SafeOverlay.instance.RecalculateUnsafePositions();
-            
             return;
         }
-        
-        
+
         //if "0" is pressed, set to the default draw distance
         if (Keyboard.isKeyDown(Keyboard.KEY_0))
         {
             int drawDistance = SafeOverlay.instance.setDrawDistance(SafeOverlay.defaultDrawDistance);
-        	SafeOverlay.instance.setSeeUnsafePositionsThroughWalls(false);
-            
-        	InfoLine.DisplayNotification("Safe Overlay settings: default ("+drawDistance+")");
-            
+            SafeOverlay.instance.setSeeUnsafePositionsThroughWalls(false);
+            InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + Localization.get("safeoverlay.distance.default") + " (" + drawDistance + ")");
             SafeOverlay.instance.RecalculateUnsafePositions();
-            
             return;
         }
-        
-        
+
         ZyinHUD.SafeOverlayMode++;
 
         //0=off, 1=on
@@ -112,10 +108,10 @@ public class SafeOverlayKeyHandler extends KeyHandler
         {
             ZyinHUD.SafeOverlayMode = 0;
         }
-        
-        if(ZyinHUD.SafeOverlayMode == 1)
+
+        if (ZyinHUD.SafeOverlayMode == 1)
         {
-        	//if we enable the mod, calculate unsafe areas immediately
+            //if we enable the mod, calculate unsafe areas immediately
             SafeOverlay.instance.RecalculateUnsafePositions();
         }
     }

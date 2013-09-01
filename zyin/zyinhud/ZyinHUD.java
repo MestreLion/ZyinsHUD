@@ -18,13 +18,16 @@ import net.minecraftforge.common.Property;
 import org.lwjgl.input.Keyboard;
 
 import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
-import zyin.zyinhud.keyhandler.EatingHelperKeyHandler;
+import zyin.zyinhud.keyhandler.EatingAidKeyHandler;
+import zyin.zyinhud.keyhandler.EnderPearlAidKeyHandler;
 import zyin.zyinhud.keyhandler.HorseInfoKeyHandler;
 import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
 import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
-import zyin.zyinhud.keyhandler.WeaponSwapKeyHandler;
+import zyin.zyinhud.keyhandler.WeaponSwapperKeyHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.tickhandler.RenderTickHandler;
+import zyin.zyinhud.util.Localization;
+import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.KeyBindingRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Instance;
@@ -34,13 +37,22 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.7.1")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.8.0")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
+    /**
+     * Comma seperated values of languages to load by setting the default value in the config file.
+     * Recreate the config file or the variable "SupportedLanguages" to see these values updated.
+     */
+    private static final String DefaultSupportedLanguages = "en_US"; //"en_US, zh_CN"
+    
+    
+    public static final String CATEGORY_LANGUAGE = "language";
     public static final String CATEGORY_INFOLINE = "info line";
     public static final String CATEGORY_COORDINATES = "coordinates";
     public static final String CATEGORY_COMPASS = "compass";
@@ -48,10 +60,14 @@ public class ZyinHUD
     public static final String CATEGORY_SAFEOVERLAY = "safe overlay";
     public static final String CATEGORY_POTIONTIMERS = "potion timers";
     public static final String CATEGORY_PLAYERLOCATOR = "player locator";
-    public static final String CATEGORY_EATINGHELPER = "eating helper";
+    public static final String CATEGORY_EATINGAID = "eating aid";
     public static final String CATEGORY_WEAPONSWAP = "weapon swap";
     public static final String CATEGORY_FPS = "fps";
     public static final String CATEGORY_HORSEINFO = "horse info";
+    public static final String CATEGORY_ENDERPEARLAID = "ender pearl aid";
+
+    //Configurable values - language
+    public static String SupportedLanguages;
     
     //Configurable values - info line
     public static boolean ShowInfoLine;
@@ -59,7 +75,7 @@ public class ZyinHUD
     //Configurable values - coordinates
     public static boolean ShowCoordinates;
     public static boolean UseYCoordinateColors;
-    
+
     //Configurable values - compass
     public static boolean ShowCompass;
 
@@ -78,7 +94,7 @@ public class ZyinHUD
     public static double SafeOverlayTransparency;
     public static boolean SafeOverlayDisplayInNether;
     public static boolean SafeOverlaySeeThroughWalls;
-    
+
     //Configurable values - potion timers
     public static boolean ShowPotionTimers;
 
@@ -86,29 +102,31 @@ public class ZyinHUD
     public static boolean ShowDistanceToPlayers;
     public static int PlayerLocatorMinViewDistance;
 
-    //Configurable values - eating helper
-    public static boolean EnableEatingHelper;
-    public static boolean ScanHotbarForFoodFromLeftToRight;
-    
+    //Configurable values - eating aid
+    public static boolean EnableEatingAid;
+    public static boolean DontEatGoldenFood;
+
     //Configurable values - weapon swap
     public static boolean EnableWeaponSwap;
     public static boolean ScanHotbarForWeaponsFromLeftToRight;
-    
+
     //Configurable values - fps
     public static boolean ShowFPS;
-    
+
     //Configurable values - horse info
     public static boolean ShowHorseStatsOnF3Menu;
     public static int HorseInfoMaxViewDistance;
-    
-    
-    
+
+    //Configurable values - ender pearl aid
+    public static boolean EnableEnderPearlAid;
+
     public static int DistanceMeasurerMode = 0;	//0=off, 1=simple, 2=complex
     public static int SafeOverlayMode = 0;		//0=off, 1=on
     public static int PlayerLocatorMode = 0;	//0=off, 1=on
-    public static int HorseInfoMode = 0;	//0=off, 1=on
+    public static int HorseInfoMode = 0;		//0=off, 1=on
     
-
+    
+    
     Minecraft mc = Minecraft.getMinecraft();
     public static Configuration config = null;
 
@@ -120,15 +138,16 @@ public class ZyinHUD
 
     public ZyinHUD()
     {
-    	
     }
-    
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         LoadConfigSettings(event.getSuggestedConfigurationFile());
+        
+        Localization.loadLanguages("/lang/zyinhud/", GetSupportedLanguages());
     }
-    
+
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
@@ -138,15 +157,15 @@ public class ZyinHUD
         //MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
         MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);
         
-        
         LoadTickHandlers();
         LoadKeyHandlers();
+        
+        
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
-    	
     }
 
     @Mod.EventHandler
@@ -154,9 +173,6 @@ public class ZyinHUD
     {
         config.save();
     }
-    
-    
-    
 
     private void LoadTickHandlers()
     {
@@ -179,16 +195,24 @@ public class ZyinHUD
         KeyBinding[] key_P = {new KeyBinding("Player Locator Toggle", 		Keyboard.KEY_P)};
         KeyBindingRegistry.registerKeyBinding(new PlayerLocatorKeyHandler(key_P, repeatFalse));
         
-        KeyBinding[] key_G = {new KeyBinding("Eating Helper Hotkey", 		Keyboard.KEY_G)};
-        KeyBindingRegistry.registerKeyBinding(new EatingHelperKeyHandler(key_G, repeatFalse));
+        KeyBinding[] key_G = {new KeyBinding("Eating Aid Hotkey", 			Keyboard.KEY_G)};
+        KeyBindingRegistry.registerKeyBinding(new EatingAidKeyHandler(key_G, repeatFalse));
         
         KeyBinding[] key_F = {new KeyBinding("Weapon Swap Hotkey", 			Keyboard.KEY_F)};
-        KeyBindingRegistry.registerKeyBinding(new WeaponSwapKeyHandler(key_F, repeatFalse));
+        KeyBindingRegistry.registerKeyBinding(new WeaponSwapperKeyHandler(key_F, repeatFalse));
         
         KeyBinding[] key_O = {new KeyBinding("Horse Info Hotkey", 			Keyboard.KEY_O)};
         KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
         
+        KeyBinding[] key_C = {new KeyBinding("Ender Pearl Aid Hotkey", 		Keyboard.KEY_C)};
+        KeyBindingRegistry.registerKeyBinding(new EnderPearlAidKeyHandler(key_C, repeatFalse));
     }
+    
+    private String[] GetSupportedLanguages()
+    {
+    	return SupportedLanguages.replace(" ","").split(",");
+    }
+    
 
     private void LoadConfigSettings(File configFile)
     {
@@ -197,10 +221,16 @@ public class ZyinHUD
         config.load();	//config.save() is done in serverStopping() event
         Property p;
         
+
+        //CATEGORY_LANGUAGE
+        p = config.get(CATEGORY_LANGUAGE, "SupportedLanguages", DefaultSupportedLanguages);
+        p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud.";
+        SupportedLanguages = p.getString();
+        
         
         //CATEGORY_INFOLINE
         p = config.get(CATEGORY_INFOLINE, "ShowInfoLine", true);
-        p.comment = "Enable/Disable the entire info line in the top left part of the screen.";
+        p.comment = "Enable/Disable the entire info line in the top left part of the screen. This includes coordinates, compass, mod status, etc.";
         ShowInfoLine = p.getBoolean(true);
         
         
@@ -208,6 +238,7 @@ public class ZyinHUD
         p = config.get(CATEGORY_COORDINATES, "ShowCoordinates", true);
         p.comment = "Enable/Disable showing your coordinates.";
         ShowCoordinates = p.getBoolean(true);
+        
         p = config.get(CATEGORY_COORDINATES, "UseYCoordinateColors", true);
         p.comment = "Color code the Y (height) coordinate based on what ores can spawn at that level.";
         UseYCoordinateColors = p.getBoolean(true);
@@ -255,7 +286,7 @@ public class ZyinHUD
         
         //CATEGORY_SAFEOVERLAY
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
+        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game with - + L and + + L.";
         SafeOverlayDrawDistance = p.getInt(20);
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayTransparency", 0.3);
@@ -269,6 +300,7 @@ public class ZyinHUD
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", false);
         p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
         SafeOverlaySeeThroughWalls = p.getBoolean(false);
+        
         
         //CATEGORY_POTIONTIMERS
         p = config.get(CATEGORY_POTIONTIMERS, "ShowPotionTimers", true);
@@ -284,17 +316,17 @@ public class ZyinHUD
         p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorMinViewDistance", 10);
         p.comment = "Stop showing player names when they are this close (distance measured in blocks).";
         PlayerLocatorMinViewDistance = p.getInt(10);
-
         
-        //CATEGORY_EATINGHELPER
-        p = config.get(CATEGORY_EATINGHELPER, "EnableEatingHelper", true);
-        p.comment = "Enables pressing a hotkey (default=G) to eat food from your hotbar.";
-        EnableEatingHelper = p.getBoolean(true);
         
-        p = config.get(CATEGORY_EATINGHELPER, "ScanHotbarForFoodFromLeftToRight", true);
-        p.comment = "Set to false to scan the hotbar for food from right to left. Only matters if you have multiple food in your hotbar.";
-        ScanHotbarForFoodFromLeftToRight = p.getBoolean(true);
-
+        //CATEGORY_EATINGAID
+        p = config.get(CATEGORY_EATINGAID, "EnableEatingAid", true);
+        p.comment = "Enables pressing a hotkey (default=G) to eat food even if it is  in your inventory and not your hotbar.";
+        EnableEatingAid = p.getBoolean(true);
+        
+        p = config.get(CATEGORY_EATINGAID, "DontEatGoldenFood", true);
+        p.comment = "Enable/Disable using golden apples and golden carrots as food.";
+        DontEatGoldenFood = p.getBoolean(true);
+        
         
         //CATEGORY_WEAPONSWAP
         p = config.get(CATEGORY_WEAPONSWAP, "EnableWeaponSwap", true);
@@ -320,20 +352,14 @@ public class ZyinHUD
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoMaxViewDistance", 8);
         p.comment = "How far away horse stats will be rendered on the screen (distance measured in blocks).";
         HorseInfoMaxViewDistance = p.getInt(8);
-
+        
+        
+        //CATEGORY_ENDERPEARLAID
+        p = config.get(CATEGORY_ENDERPEARLAID, "EnableEnderPearlAid", true);
+        p.comment = "Enables pressing a hotkey (default=C) to use an enderpearl even if it is  in your inventory and not your hotbar.";
+        EnableEnderPearlAid = p.getBoolean(true);
+        
+        
         
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    
-    
 }

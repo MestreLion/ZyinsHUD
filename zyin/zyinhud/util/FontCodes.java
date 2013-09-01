@@ -24,13 +24,12 @@ public class FontCodes
     public static final String LIGHT_PURPLE = "\247d";
     public static final String YELLOW = "\247e";
     public static final String WHITE = "\247f";
-    
+
     //font styles
     public static final String BOLD = "\247l";
     public static final String STRIKETHROUGH = "\247m";
     public static final String UNDERLINE = "\247n";
     public static final String ITALICS = "\247o";
-    
+
     public static final String RESET = "\247r";
-    
 }

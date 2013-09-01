@@ -2,20 +2,19 @@ package zyin.zyinhud.keyhandler;
 
 import java.util.EnumSet;
 
-import zyin.zyinhud.InfoLine;
-import zyin.zyinhud.ZyinHUD;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import zyin.zyinhud.WeaponSwapper;
+import zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class HorseInfoKeyHandler extends KeyHandler
+public class WeaponSwapperKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
-    public HorseInfoKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public WeaponSwapperKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -23,7 +22,7 @@ public class HorseInfoKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Horse Info Key Handler";
+        return "Weapon Swapper Key Handler";
     }
 
     @Override
@@ -39,12 +38,9 @@ public class HorseInfoKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        ZyinHUD.HorseInfoMode++;
-
-        //0=off, 1=on
-        if (ZyinHUD.HorseInfoMode > 1)
+        if (ZyinHUD.EnableWeaponSwap)
         {
-            ZyinHUD.HorseInfoMode = 0;
+            WeaponSwapper.SwapWeapons();
         }
     }
 

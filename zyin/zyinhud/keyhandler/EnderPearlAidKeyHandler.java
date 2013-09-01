@@ -4,18 +4,21 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.WeaponSwapper;
+import zyin.zyinhud.EatingAid;
+import zyin.zyinhud.EnderPearlAid;
 import zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class WeaponSwapKeyHandler extends KeyHandler
+public class EnderPearlAidKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
-    
 
-    public WeaponSwapKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    private int eatingTimer = 0;
+    private boolean isEating = false;
+
+    public EnderPearlAidKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -23,7 +26,7 @@ public class WeaponSwapKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Weapon Swap Key Handler";
+        return "Ender Pearl Aid Key Handler";
     }
 
     @Override
@@ -38,9 +41,11 @@ public class WeaponSwapKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-        
-        if(ZyinHUD.EnableWeaponSwap)
-        	WeaponSwapper.SwapWeapons();
+
+        if (ZyinHUD.EnableEnderPearlAid)
+        {
+            EnderPearlAid.UseEnderPearl();
+        }
     }
 
     @Override

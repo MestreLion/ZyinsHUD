@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 
 import org.lwjgl.opengl.GL11;
 
+import cpw.mods.fml.common.registry.LanguageRegistry;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.GuiChat;
@@ -18,138 +20,146 @@ import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 /**
  * Shows information about horses in the F3 menu.
  */
 public class HorseInfo
 {
-	private static Minecraft mc = Minecraft.getMinecraft();
+    private static Minecraft mc = Minecraft.getMinecraft();
     private static EntityClientPlayerMP me;
-    
-	//private static final DecimalFormat twoDecimalPlaces = new DecimalFormat("#.##");
-	private static final DecimalFormat oneDecimalPlace = new DecimalFormat("#.#");
 
-	//values above the good value are green
-	//values between the good and bad values are white
-	//values below the bad value are red
+    //private static final DecimalFormat twoDecimalPlaces = new DecimalFormat("#.##");
+    private static final DecimalFormat oneDecimalPlace = new DecimalFormat("#.#");
+
+    //values above the good value are green
+    //values between the good and bad values are white
+    //values below the bad value are red
     private static double goodHorseSpeedThreshold = 10.5;	//max: ~12.5?
     private static double badHorseSpeedThreshold = 9;		//min: ~7?
     private static double goodHorseJumpThreshold = 4;		//max: ~5.1?
     private static double badHorseJumpThreshold = 2.5;		//min: 1.5
     private static int goodHorseHPThreshold = 26;			//max: ~30?
     private static int badHorseHPThreshold = 20;			//min: ~14?
-	
+
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
-	
+
     private static int maxViewDistance = ZyinHUD.HorseInfoMaxViewDistance;	//how far away we will render the overlay
-    
-	
-	/**
-	 * Renders a horse's speed, hit points, and jump strength on the F3 menu when the player is riding it.
-	 */
-	public static void RenderOntoDebugMenu()
-	{
-    	//if the player is in the world
+
+    /**
+     * Renders a horse's speed, hit points, and jump strength on the F3 menu when the player is riding it.
+     */
+    public static void RenderOntoDebugMenu()
+    {
+        //if the player is in the world
         //and not in a menu
         //and F3 is shown
         if (ZyinHUD.ShowHorseStatsOnF3Menu &&
-        		(mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
+                (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && mc.gameSettings.showDebugInfo)
         {
-        	Entity riddenEntity = mc.thePlayer.ridingEntity;
-        	if(riddenEntity instanceof EntityHorse)
-        	{
-        		EntityHorse horse = (EntityHorse) riddenEntity;
-        		
-        		String horseSpeedMessage = "Horse Speed: " + GetHorseSpeedText(horse) + " m/s";
-        		String horseJumpMessage = "Horse Jump: " + GetHorseJumpText(horse) + " blocks";
-        		String horseHPMessage = "Horse HP: " + GetHorseHPText(horse);
-        		//String horseHPMessage = "Horse HP: " + GetHorseHPText(horse) + " (" + GetHorseHeartsText(horse) + " hearts)";
-        		
-            	mc.fontRenderer.drawStringWithShadow(horseSpeedMessage, 1, 130, 0xffffff);
-            	mc.fontRenderer.drawStringWithShadow(horseJumpMessage, 1, 140, 0xffffff);
-            	mc.fontRenderer.drawStringWithShadow(horseHPMessage, 1, 150, 0xffffff);
-        	}
+            Entity riddenEntity = mc.thePlayer.ridingEntity;
+
+            if (riddenEntity instanceof EntityHorse)
+            {
+                EntityHorse horse = (EntityHorse) riddenEntity;
+                String horseSpeedMessage = "Horse Speed: " + GetHorseSpeedText(horse) + " m/s";
+                String horseJumpMessage = "Horse Jump: " + GetHorseJumpText(horse) + " blocks";
+                String horseHPMessage = "Horse HP: " + GetHorseHPText(horse);
+                //String horseHPMessage = "Horse HP: " + GetHorseHPText(horse) + " (" + GetHorseHeartsText(horse) + " hearts)";
+                mc.fontRenderer.drawStringWithShadow(horseSpeedMessage, 1, 130, 0xffffff);
+                mc.fontRenderer.drawStringWithShadow(horseJumpMessage, 1, 140, 0xffffff);
+                mc.fontRenderer.drawStringWithShadow(horseHPMessage, 1, 150, 0xffffff);
+            }
         }
-	}
-	
-	/**
-	 * Renders a horse's speed, hit points, and jump strength on the screen.
-	 * @param entity
-	 * @param x location on the HUD
-	 * @param y location on the HUD
-	 * @param isEntityBehindUs
-	 */
-	public static void RenderEntityOverlay(Entity entity, int x, int y, boolean isEntityBehindUs)
-	{
-		if(!(entity instanceof EntityHorse))
-			return;	//we only care about horses
-		
-		
+    }
+
+    /**
+     * Renders a horse's speed, hit points, and jump strength on the screen by an entity.
+     * @param entity
+     * @param x location on the HUD
+     * @param y location on the HUD
+     * @param isEntityBehindUs
+     */
+    public static void RenderEntityOverlay(Entity entity, int x, int y, boolean isEntityBehindUs)
+    {
+        if (!(entity instanceof EntityHorse))
+        {
+            return;    //we only care about horses
+        }
+
         //if the player is in the world
         //and not looking at a menu
         //and F3 not pressed
         if (ZyinHUD.HorseInfoMode == 1 &&
-        		(mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
+                (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && !mc.gameSettings.showDebugInfo)
         {
-        	if(isEntityBehindUs)
-        		return;
-        	
-			me = mc.thePlayer;
-			
-			EntityHorse horse = (EntityHorse)entity;
-			
-			if(horse.riddenByEntity instanceof EntityClientPlayerMP)
-				return;	//don't render stats of the horse we are currently riding
-			
-			//only show entities that are close by
-			double distanceFromMe = me.getDistanceToEntity(horse);
-			if(distanceFromMe > maxViewDistance)
-				return;
-			
-			
-        	String[] multilineOverlayMessage = GetMultilineOverlayMessage(horse);
-			
-			
-			//calculate the width of the longest string in the multi-lined overlay message
-			int overlayMessageWidth = 0;
-			for(String overlayMessageLine : multilineOverlayMessage)
-			{
-				int thisMessageWidth = mc.fontRenderer.getStringWidth(overlayMessageLine);
-				if(thisMessageWidth > overlayMessageWidth)
-					overlayMessageWidth = thisMessageWidth;
-			}
+            if (isEntityBehindUs)
+            {
+                return;
+            }
 
-			ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
-			int width = res.getScaledWidth();
-			int height = res.getScaledHeight();
-			
-			//center the text on the horse
-			x -= overlayMessageWidth / 2;
-			
-			//move the text vertically based on how many lines are displayed
-			y -= (multilineOverlayMessage.length - 3)*10;
-        	
-			//don't render text if it is off the screen
-			if(x >= width || x <= 0 - overlayMessageWidth
-				|| y <= 0 - multilineOverlayMessage.length*verticalSpaceBetweenLines || y >= height)
-				return;
-			
-			//render the overlay message
+            me = mc.thePlayer;
+            EntityHorse horse = (EntityHorse)entity;
+
+            if (horse.riddenByEntity instanceof EntityClientPlayerMP)
+            {
+                return;    //don't render stats of the horse we are currently riding
+            }
+
+            //only show entities that are close by
+            double distanceFromMe = me.getDistanceToEntity(horse);
+
+            if (distanceFromMe > maxViewDistance)
+            {
+                return;
+            }
+
+            String[] multilineOverlayMessage = GetMultilineOverlayMessage(horse);
+            
+            //calculate the width of the longest string in the multi-lined overlay message
+            int overlayMessageWidth = 0;
+            for (String overlayMessageLine : multilineOverlayMessage)
+            {
+                int thisMessageWidth = mc.fontRenderer.getStringWidth(overlayMessageLine);
+
+                if (thisMessageWidth > overlayMessageWidth)
+                {
+                    overlayMessageWidth = thisMessageWidth;
+                }
+            }
+
+            ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
+            int width = res.getScaledWidth();
+            int height = res.getScaledHeight();
+            
+            //center the text on the horse
+            x -= overlayMessageWidth / 2;
+            //move the text vertically based on how many lines are displayed
+            y -= (multilineOverlayMessage.length - 3) * 10;
+
+            //don't render text if it is off the screen
+            if (x >= width || x <= 0 - overlayMessageWidth
+                    || y <= 0 - multilineOverlayMessage.length * verticalSpaceBetweenLines || y >= height)
+            {
+                return;
+            }
+
+            //render the overlay message
             GL11.glDisable(GL11.GL_LIGHTING);
             int i = 0;
-            for(String s : multilineOverlayMessage)
+
+            for (String s : multilineOverlayMessage)
             {
-            	mc.fontRenderer.drawStringWithShadow(s, x, y+i*verticalSpaceBetweenLines, 0xFFFFFF);
-            	i++;
+                mc.fontRenderer.drawStringWithShadow(s, x, y + i * verticalSpaceBetweenLines, 0xFFFFFF);
+                i++;
             }
         }
-	}
+    }
 
-
-	/**
+    /**
      * Gets the status of the Horse Info
      * @return the string "horse" if the Horse Info is enabled, otherwise "".
      */
@@ -157,217 +167,225 @@ public class HorseInfo
     {
         if (ZyinHUD.HorseInfoMode == 0)	//off
         {
-        	return FontCodes.WHITE + "";
+            return FontCodes.WHITE + "";
         }
         else if (ZyinHUD.HorseInfoMode == 1)	//on
         {
-        	return FontCodes.WHITE + "horse" + InfoLine.SPACER;
+            return FontCodes.WHITE + "horse" + InfoLine.SPACER;
         }
         else
         {
-        	return FontCodes.WHITE + "???" + InfoLine.SPACER;
+            return FontCodes.WHITE + "???" + InfoLine.SPACER;
         }
     }
-    
-
 
     private static String[] GetMultilineOverlayMessage(EntityHorse horse)
     {
+        float horseGrowingAge = horse.func_110254_bY();	//horse age, 0.5 (baby) to 1 (adult)
 
+        /*
+        int field_110278_bp = horse.field_110278_bp;	//tail rotation
+        int field_110279_bq = horse.field_110279_bq;
+        float func_110258_o = horse.func_110258_o(1f);	//head rotation
+        float bodyRotation = horse.func_110223_p(1f);	//standing up rotation (i.e. when jumping)
+        float func_110201_q = horse.func_110201_q(1f);	//flickers for... idk
 
-		float horseGrowingAge = horse.func_110254_bY();	//horse age, 0.5 (baby) to 1 (adult)
-		
-		/*
-		int field_110278_bp = horse.field_110278_bp;	//tail rotation
-		int field_110279_bq = horse.field_110279_bq;
-		float func_110258_o = horse.func_110258_o(1f);	//head rotation
-		float bodyRotation = horse.func_110223_p(1f);	//standing up rotation (i.e. when jumping)
-		float func_110201_q = horse.func_110201_q(1f);	//flickers for... idk
-		
-		int love = horse.inLove;	//countdown timer starting at ~600 when fed a breeding item
-		//horse.breeding;	//countdown from 60 after breeding initiated
-		
-		
+        int love = horse.inLove;	//countdown timer starting at ~600 when fed a breeding item
+        //horse.breeding;	//countdown from 60 after breeding initiated
 
-    	mc.fontRenderer.drawStringWithShadow("tail rotation:"+field_110278_bp, 1, 40, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("field_110279_bq:"+field_110279_bq, 1, 50, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("age:"+horseAge, 1, 60, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("head rotation:"+func_110258_o, 1, 70, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("func_110223_p:"+bodyRotation, 1, 80, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("func_110201_q:"+func_110201_q, 1, 90, 0xFFFFFF);
-    	mc.fontRenderer.drawStringWithShadow("love:"+love, 1, 100, 0xFFFFFF);
-    	*/
-		
-		if(horseGrowingAge < 1f)
-		{
-			String[] multilineOverlayMessage = 
-			{
-					GetHorseAgeAsPercent(horse) + "%",
-					"",
-					GetHorseSpeedText(horse) + " m/s",
-					GetHorseHPText(horse) + " hp",
-					GetHorseJumpText(horse) + " jump"
-			};
-			return multilineOverlayMessage;
-		}
-		else
-		{
-			String[] multilineOverlayMessage = 
-			{
-					GetHorseSpeedText(horse) + " m/s",
-					GetHorseHPText(horse) + " hp",
-					GetHorseJumpText(horse) + " jump"
-			};
-			return multilineOverlayMessage;
-		}
-	}
+        mc.fontRenderer.drawStringWithShadow("tail rotation:"+field_110278_bp, 1, 40, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("field_110279_bq:"+field_110279_bq, 1, 50, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("age:"+horseAge, 1, 60, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("head rotation:"+func_110258_o, 1, 70, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("func_110223_p:"+bodyRotation, 1, 80, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("func_110201_q:"+func_110201_q, 1, 90, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("love:"+love, 1, 100, 0xFFFFFF);
+        */
+
+        if (horseGrowingAge < 1f)
+        {
+            String[] multilineOverlayMessage =
+            {
+                GetHorseAgeAsPercent(horse) + "%",
+                "",
+                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.speed"),
+                GetHorseHPText(horse) + " " + Localization.get("horseinfo.hp"),
+                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.jump")
+            };
+            return multilineOverlayMessage;
+        }
+        else
+        {
+        	String[] multilineOverlayMessage =
+            {
+                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.speed"),
+                GetHorseHPText(horse) + " " + Localization.get("horseinfo.hp"),
+                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.jump")
+            };
+            return multilineOverlayMessage;
+        }
+    }
 
     /**
      * Gets the horses age ranging from 0 to 100.
      * @param horse
      * @return
      */
-	private static int GetHorseAgeAsPercent(EntityHorse horse)
-	{
-		float horseGrowingAge = horse.func_110254_bY();	//horse age ranges from 0.5 to 1
-		return (int) ((horseGrowingAge - 0.5f)*2.0f * 100f);
-	}
-	
+    private static int GetHorseAgeAsPercent(EntityHorse horse)
+    {
+        float horseGrowingAge = horse.func_110254_bY();	//horse age ranges from 0.5 to 1
+        return (int)((horseGrowingAge - 0.5f) * 2.0f * 100f);
+    }
+
     /**
      * Gets a horses speed, colored based on how good it is.
      * @param horse
      * @return e.x.:<br>green "12.5"<br>white "11.3"<br>red "7.0"
      */
-	private static String GetHorseSpeedText(EntityHorse horse)
-	{
-		double horseSpeed = GetEntityMaxSpeed(horse);
-		String horseSpeedString = oneDecimalPlace.format(horseSpeed);
-		
-		if(horseSpeed > goodHorseSpeedThreshold)
-			horseSpeedString = FontCodes.GREEN + horseSpeedString + FontCodes.WHITE;
-		else if(horseSpeed < badHorseSpeedThreshold)
-			horseSpeedString = FontCodes.RED + horseSpeedString + FontCodes.WHITE;
-		
-		return horseSpeedString;
-	}
-	
-	/**
+    private static String GetHorseSpeedText(EntityHorse horse)
+    {
+        double horseSpeed = GetEntityMaxSpeed(horse);
+        String horseSpeedString = oneDecimalPlace.format(horseSpeed);
+
+        if (horseSpeed > goodHorseSpeedThreshold)
+        {
+            horseSpeedString = FontCodes.GREEN + horseSpeedString + FontCodes.WHITE;
+        }
+        else if (horseSpeed < badHorseSpeedThreshold)
+        {
+            horseSpeedString = FontCodes.RED + horseSpeedString + FontCodes.WHITE;
+        }
+
+        return horseSpeedString;
+    }
+
+    /**
      * Gets a horses HP, colored based on how good it is.
      * @param horse
      * @return e.x.:<br>green "28"<br>white "22"<br>red "18"
      */
-	private static String GetHorseHPText(EntityHorse horse)
-	{
-		int horseHP = GetEntityMaxHP(horse);
-		String horseHPString = oneDecimalPlace.format(GetEntityMaxHP(horse));
-		
-		if(horseHP > goodHorseHPThreshold)
-			horseHPString = FontCodes.GREEN + horseHPString + FontCodes.WHITE;
-		else if(horseHP < badHorseHPThreshold)
-			horseHPString = FontCodes.RED + horseHPString + FontCodes.WHITE;
-		
-		return horseHPString;
-	}
-	
-	/**
+    private static String GetHorseHPText(EntityHorse horse)
+    {
+        int horseHP = GetEntityMaxHP(horse);
+        String horseHPString = oneDecimalPlace.format(GetEntityMaxHP(horse));
+
+        if (horseHP > goodHorseHPThreshold)
+        {
+            horseHPString = FontCodes.GREEN + horseHPString + FontCodes.WHITE;
+        }
+        else if (horseHP < badHorseHPThreshold)
+        {
+            horseHPString = FontCodes.RED + horseHPString + FontCodes.WHITE;
+        }
+
+        return horseHPString;
+    }
+
+    /**
      * Gets a horses hearts, colored based on how good it is.
      * @param horse
      * @return e.x.:<br>green "14"<br>white "11"<br>red "9"
      */
-	private static String GetHorseHeartsText(EntityHorse horse)
-	{
-		int horseHP = GetEntityMaxHP(horse);
-		int horseHearts = GetEntityMaxHearts(horse);
-		String horseHeartsString = ""+horseHearts;
-		
-		if(horseHP > goodHorseHPThreshold)
-			horseHeartsString = FontCodes.GREEN + horseHeartsString + FontCodes.WHITE;
-		else if(horseHP < badHorseHPThreshold)
-			horseHeartsString = FontCodes.RED + horseHeartsString + FontCodes.WHITE;
-		
-		return horseHeartsString;
-	}
-	
-	/**
+    private static String GetHorseHeartsText(EntityHorse horse)
+    {
+        int horseHP = GetEntityMaxHP(horse);
+        int horseHearts = GetEntityMaxHearts(horse);
+        String horseHeartsString = "" + horseHearts;
+
+        if (horseHP > goodHorseHPThreshold)
+        {
+            horseHeartsString = FontCodes.GREEN + horseHeartsString + FontCodes.WHITE;
+        }
+        else if (horseHP < badHorseHPThreshold)
+        {
+            horseHeartsString = FontCodes.RED + horseHeartsString + FontCodes.WHITE;
+        }
+
+        return horseHeartsString;
+    }
+
+    /**
      * Gets a horses jump height, colored based on how good it is.
      * @param horse
      * @return e.x.:<br>green "5"<br>white "3"<br>red "1.5"
      */
-	private static String GetHorseJumpText(EntityHorse horse)
-	{
-		double horseJump = GetHorseMaxJump(horse);
-		String horseJumpString = oneDecimalPlace.format(GetHorseMaxJump(horse));
-		
-		if(horseJump > goodHorseJumpThreshold)
-			horseJumpString = FontCodes.GREEN + horseJumpString + FontCodes.WHITE;
-		else if(horseJump < badHorseJumpThreshold)
-			horseJumpString = FontCodes.RED + horseJumpString + FontCodes.WHITE;
-		
-		return horseJumpString;
-	}
-	
-	
-	
-	/**
-	 * Gets the max height a horse can jump when the jump bar is fully charged.
-	 * @param horse
-	 * @return e.x. 1.5 for all donkeys, horses are ~2-5
-	 */
-	private static double GetHorseMaxJump(EntityHorse horse)
-	{
-		//testing data:
-		//0.5000000 = 1.5 blocks (min) (all donkeys have 0.5)
-		//0.55 = 2 blocks
-		//0.58596 = 2 blocks
-		//0.668953 = 2.5 blocks
-		//0.7214789 = 3 blocks
-		//0.833727 = 4 blocks
-		//0.881760 = 4.5 blocks
-		//...
-		//??? = 5.1 blocks (max according to the Wiki)
-		
-		double jumpHeight = (horse.func_110215_cj() - 0.5) * 4.0/0.5 + 1.5;
-		
-		if(jumpHeight < 1.5)
-			return 1.5;
-		
-		return jumpHeight;
-	}
+    private static String GetHorseJumpText(EntityHorse horse)
+    {
+        double horseJump = GetHorseMaxJump(horse);
+        String horseJumpString = oneDecimalPlace.format(GetHorseMaxJump(horse));
 
-	/**
-	 * Gets an entity's max hit points
-	 * @param entity
-	 * @return e.x. Steve = 20 hit points
-	 */
-	private static int GetEntityMaxHP(EntityLivingBase entity)
-	{
-		return (int) entity.func_110148_a(SharedMonsterAttributes.field_111267_a).func_111125_b();
-	}
-	
-	/**
-	 * Gets the max hearts an entity has
-	 * @param entity
-	 * @return e.x. Steve = 20 hit points
-	 */
-	private static int GetEntityMaxHearts(EntityLivingBase entity)
-	{
-		return (int) Math.round(entity.func_110148_a(SharedMonsterAttributes.field_111267_a).func_111125_b() / 2);
-	}
-	
-	/**
-	 * Gets an entity's max run speed in meters(blocks) per second
-	 * @param entity
-	 * @return e.x. Steve = 4.3 m/s. Horses ~7-12?
-	 */	
-	private	 static double GetEntityMaxSpeed(EntityLivingBase entity)
-	{
-		//Steve has a movement speed of 0.1 and walks 4.3 blocks per second,
-		//so multiply this result by 43 to convert to blocks per second
-		
-		//testing data:
-		//0.174999	~7.69 m/s
-		//0.19427	~8.333 m/s
-		//0.1		~4.3-4.5 m/s
-		return entity.func_110148_a(SharedMonsterAttributes.field_111263_d).func_111125_b() * 43;
-	}
+        if (horseJump > goodHorseJumpThreshold)
+        {
+            horseJumpString = FontCodes.GREEN + horseJumpString + FontCodes.WHITE;
+        }
+        else if (horseJump < badHorseJumpThreshold)
+        {
+            horseJumpString = FontCodes.RED + horseJumpString + FontCodes.WHITE;
+        }
+
+        return horseJumpString;
+    }
+
+    /**
+     * Gets the max height a horse can jump when the jump bar is fully charged.
+     * @param horse
+     * @return e.x. 1.5 for all donkeys, horses are ~2-5
+     */
+    private static double GetHorseMaxJump(EntityHorse horse)
+    {
+        //testing data:
+        //0.5000000 = 1.5 blocks (min) (all donkeys have 0.5)
+        //0.55 = 2 blocks
+        //0.58596 = 2 blocks
+        //0.668953 = 2.5 blocks
+        //0.7214789 = 3 blocks
+        //0.833727 = 4 blocks
+        //0.881760 = 4.5 blocks
+        //...
+        //??? = 5.1 blocks (max according to the Wiki)
+        double jumpHeight = (horse.func_110215_cj() - 0.5) * 4.0 / 0.5 + 1.5;
+
+        if (jumpHeight < 1.5)
+        {
+            return 1.5;
+        }
+
+        return jumpHeight;
+    }
+
+    /**
+     * Gets an entity's max hit points
+     * @param entity
+     * @return e.x. Steve = 20 hit points
+     */
+    private static int GetEntityMaxHP(EntityLivingBase entity)
+    {
+        return (int) entity.func_110148_a(SharedMonsterAttributes.field_111267_a).func_111125_b();
+    }
+
+    /**
+     * Gets the max hearts an entity has
+     * @param entity
+     * @return e.x. Steve = 20 hit points
+     */
+    private static int GetEntityMaxHearts(EntityLivingBase entity)
+    {
+        return (int) Math.round(entity.func_110148_a(SharedMonsterAttributes.field_111267_a).func_111125_b() / 2);
+    }
+
+    /**
+     * Gets an entity's max run speed in meters(blocks) per second
+     * @param entity
+     * @return e.x. Steve = 4.3 m/s. Horses ~7-12?
+     */
+    private	 static double GetEntityMaxSpeed(EntityLivingBase entity)
+    {
+        //Steve has a movement speed of 0.1 and walks 4.3 blocks per second,
+        //so multiply this result by 43 to convert to blocks per second
+        //testing data:
+        //0.174999	~7.69 m/s
+        //0.19427	~8.333 m/s
+        //0.1		~4.3-4.5 m/s
+        return entity.func_110148_a(SharedMonsterAttributes.field_111263_d).func_111125_b() * 43;
+    }
 }

@@ -6,13 +6,12 @@ import zyin.zyinhud.SafeOverlay;
 
 public class RenderTickHandler
 {
-	public static RenderTickHandler instance = new RenderTickHandler();
-    
-	private RenderTickHandler()
-	{
-		
-	}
-	
+    public static RenderTickHandler instance = new RenderTickHandler();
+
+    private RenderTickHandler()
+    {
+    }
+
     /**
      * Event fired when the world gets rendered.
      * We render any things that need to be rendered into the game world in this method.

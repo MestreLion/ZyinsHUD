@@ -11,10 +11,9 @@ import net.minecraft.util.MovingObjectPosition;
  */
 public class DistanceMeasurer
 {
-	private static Minecraft mc = Minecraft.getMinecraft();
-	
-	
-	/**
+    private static Minecraft mc = Minecraft.getMinecraft();
+
+    /**
      * Calculates the distance of the block the player is pointing at
      * @return if the Distance Measurer is enabled, the string "[FarthestDistance]" or
      * "[x, z, y (AbsoluteDistance)]" is returned, otherwise "".
@@ -31,21 +30,17 @@ public class DistanceMeasurer
                 double coordX = mc.thePlayer.posX - 0.5;
                 double coordY = mc.thePlayer.posY - mc.thePlayer.height;
                 double coordZ = mc.thePlayer.posZ - 0.5;
-                
                 double blockX = objectMouseOver.blockX;
                 double blockY = objectMouseOver.blockY;
                 double blockZ = objectMouseOver.blockZ;
-                
                 double deltaX = coordX - blockX;
                 double deltaY = coordY - blockY;
                 double deltaZ = coordZ - blockZ;
                 double delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-                
                 String x = String.format("%1$,.1f", deltaX);
                 String y = String.format("%1$,.1f", deltaY);
                 String z = String.format("%1$,.1f", deltaZ);
                 String distance = String.format("%1$,.1f", delta);
-                
                 double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
                 double farthestDistance = Math.max(Math.abs(deltaY), farthestHorizontalDistance);
                 String farthestDistanceDistanceStr = String.format("%1$,.1f", farthestDistance);

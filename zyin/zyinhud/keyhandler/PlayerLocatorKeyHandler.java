@@ -38,10 +38,9 @@ public class PlayerLocatorKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-        
-        
+
         ZyinHUD.PlayerLocatorMode++;
-        
+
         //0=off, 1=on
         if (ZyinHUD.PlayerLocatorMode > 1)
         {
