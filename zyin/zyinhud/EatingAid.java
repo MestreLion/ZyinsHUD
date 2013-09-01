@@ -81,7 +81,7 @@ public class EatingAid
                 return;
             }
             
-            foodItemIndex = GetBestFoodItemIndexFromInventory();
+            foodItemIndex = GetFoodItemIndexFromInventory();
         	if (foodItemIndex < 0)
             {
                 InfoLine.DisplayNotification(Localization.get("eatingaid.nofood"));
@@ -194,7 +194,94 @@ public class EatingAid
     {
         return isCurrentlyEating;
     }
+    
+    
+    
+    public int GetFoodItemIndexFromInventory()
+    {
+    	if(ZyinHUD.EatingAidMode == 0)
+    	{
+    		//basic mode
+    		return GetStrongestFoodItemIndexFromInventory();
+    	}
+    	else if(ZyinHUD.EatingAidMode == 1)
+    	{
+    		//intelligent mode
+    		return GetBestFoodItemIndexFromInventory();
+    	}
+    	else
+    	{
+    		return -2;
+    	}
+    }
+    
+    /**
+     * Finds the food with the highest saturation and returns its index in your inventory.
+     * @return
+     */
+    public int GetStrongestFoodItemIndexFromInventory()
+    {
+    	List inventorySlots = mc.thePlayer.inventoryContainer.inventorySlots;
+        int bestFoodMatchIndex = -1;
+        float bestFoodMatchSaturation = 0;
+        int foodLevel = mc.thePlayer.getFoodStats().getFoodLevel();	//max 20
+        
+        //iterate over the hotbar (36-44), then main inventory (9-35)
+        for (int i = inventorySlots.size() - 1; i > 8; i--)
+        {
+        	if(ZyinHUD.PrioritizeFoodInHotbar
+        		&& i == 35 && bestFoodMatchIndex > -1)
+        		return bestFoodMatchIndex;
+        	
+        	
+            Slot slot = (Slot)inventorySlots.get(i);
+            ItemStack itemStack = slot.getStack();
 
+            if (itemStack == null)
+            {
+                continue;
+            }
+
+            Item item = itemStack.getItem();
+
+            if (item instanceof ItemFood)
+            {
+                ItemFood food = (ItemFood)item;
+                float saturation = food.getSaturationModifier();
+                
+                if (item.equals(item.goldenCarrot)
+                        || item.equals(item.appleGold))
+                {
+                    if (ZyinHUD.DontEatGoldenFood)
+                    {
+                        continue;
+                    }
+
+                    saturation = 0.0001f;	//setting the saturation value low will make it unappealing to the food selection algorithm
+                }
+                else if (item.equals(item.rottenFlesh)
+                         || item.equals(item.poisonousPotato)
+                         || item.equals(item.spiderEye))
+                {
+                	saturation = 0.0002f;	//setting the saturation value low will make it unappealing to the food selection algorithm
+                }
+                
+                if(saturation > bestFoodMatchSaturation)
+                {
+                	bestFoodMatchIndex = i;
+                	bestFoodMatchSaturation = saturation;
+                	continue;
+                }
+            }
+        }
+
+        if (bestFoodMatchIndex > -1)
+            return bestFoodMatchIndex;
+        else
+            return -1;
+    }
+    
+    
     /**
      * Determines the best food that you can eat and returns its index in your inventory.
      * The best food is defined by not over eating (not wasting food), but still healing the most hunger.
@@ -207,10 +294,15 @@ public class EatingAid
         int bestFoodMatchOvereat = 999;
         int bestFoodMatchEat = -999;
         int foodLevel = mc.thePlayer.getFoodStats().getFoodLevel();	//max 20
-
+        
         //iterate over the hotbar (36-44), then main inventory (9-35)
         for (int i = inventorySlots.size() - 1; i > 8; i--)
         {
+        	if(ZyinHUD.PrioritizeFoodInHotbar
+        		&& i == 35 && bestFoodMatchIndex > -1)
+        		return bestFoodMatchIndex;
+        	
+        	
             Slot slot = (Slot)inventorySlots.get(i);
             ItemStack itemStack = slot.getStack();
 

@@ -513,6 +513,7 @@ public class SafeOverlay
         double maxY = position.y + boundingBoxMaxY + 0.02;
         double minZ = position.z + boundingBoxMinZ + 0.02;
         double maxZ = position.z + boundingBoxMaxZ - 0.02;
+        
         //render an "X" slightly above the block
         GL11.glColor4f(r, g, b, alpha);	//alpha must be > 0.1
         GL11.glVertex3d(maxX, maxY, maxZ);

@@ -3,7 +3,7 @@
  * =====
  * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
  * //dont render other player's armor (or just helmet?) in multiplayer
- * use the same code for Eating Aid for a "Healing Potion Aid"
+ * horse tracker integrated into player locator, uses the horses name to render on the screen
  */
 
 package zyin.zyinhud;
@@ -42,7 +42,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -115,6 +115,8 @@ public class ZyinHUD
     public static String EatingAidHotkey;
     public static boolean EnableEatingAid;
     public static boolean DontEatGoldenFood;
+    public static boolean PrioritizeFoodInHotbar;
+    public static int EatingAidMode = 0;	//0=basic, 1=intelligent
 
     //Configurable values - weapon swap
     public static String WeaponSwapHotkey;
@@ -154,7 +156,7 @@ public class ZyinHUD
     
     //default hotkeys
     private static String DefaultDistanceMeasurerHotkey = "K";
-    private static String DefaultSafeOverlayHotkeyHotkey = "L";
+    private static String DefaultSafeOverlayHotkey = "L";
     private static String DefaultPlayerLocatorHotkey = "P";
     private static String DefaultEatingAidHotkey = "G";
     private static String DefaultWeaponSwapHotkey = "F";
@@ -264,8 +266,8 @@ public class ZyinHUD
         p.set(hotkey);
     	
     	hotkey = Keyboard.getKeyName(key_L[0].keyCode);
-        p = config.get(CATEGORY_SAFEOVERLAY, "SafeoverlayHotkey", DefaultSafeOverlayHotkeyHotkey);
-        p.comment = "Default: " + DefaultSafeOverlayHotkeyHotkey;
+        p = config.get(CATEGORY_SAFEOVERLAY, "SafeoverlayHotkey", DefaultSafeOverlayHotkey);
+        p.comment = "Default: " + DefaultSafeOverlayHotkey;
         p.set(hotkey);
     	
     	hotkey = Keyboard.getKeyName(key_P[0].keyCode);
@@ -364,7 +366,7 @@ public class ZyinHUD
         
         //CATEGORY_DURABILITYINFO
         p = config.get(CATEGORY_DURABILITYINFO, "ShowDurabilityInfo", true);
-        p.comment = "Enable/Disable durability info.";
+        p.comment = "Enable/Disable showing all durability info.";
         ShowDurabilityInfo = p.getBoolean(true);
         
         p = config.get(CATEGORY_DURABILITYINFO, "ShowArmorDurability", true);
@@ -397,12 +399,12 @@ public class ZyinHUD
         
         
         //CATEGORY_SAFEOVERLAY
-        p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayHotkey", "L");
-        p.comment = "Default: L";
+        p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayHotkey", DefaultSafeOverlayHotkey);
+        p.comment = "Default: "+DefaultSafeOverlayHotkey;
         SafeOverlayHotkey = p.getString();
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game with - + L and + + L.";
+        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game with - + "+DefaultSafeOverlayHotkey+" and + + "+DefaultSafeOverlayHotkey+".";
         SafeOverlayDrawDistance = p.getInt(20);
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayTransparency", 0.3);
@@ -414,7 +416,7 @@ public class ZyinHUD
         SafeOverlayDisplayInNether = p.getBoolean(false);
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", false);
-        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
+        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + "+DefaultSafeOverlayHotkey+".";
         SafeOverlaySeeThroughWalls = p.getBoolean(false);
         
         
@@ -425,8 +427,8 @@ public class ZyinHUD
         
         
         //CATEGORY_PLAYERLOCATOR
-        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", "P");
-        p.comment = "Default: P";
+        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", DefaultPlayerLocatorHotkey);
+        p.comment = "Default: "+DefaultPlayerLocatorHotkey;
         PlayerLocatorHotkey = p.getString();
         
         p = config.get(CATEGORY_PLAYERLOCATOR, "ShowDistanceToPlayers", false);
@@ -439,26 +441,36 @@ public class ZyinHUD
         
         
         //CATEGORY_EATINGAID
-        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", "G");
-        p.comment = "Default: G";
+        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", DefaultEatingAidHotkey);
+        p.comment = "Default: "+DefaultEatingAidHotkey;
         EatingAidHotkey = p.getString();
         
         p = config.get(CATEGORY_EATINGAID, "EnableEatingAid", true);
-        p.comment = "Enables pressing a hotkey (default=G) to eat food even if it is  in your inventory and not your hotbar.";
+        p.comment = "Enables pressing a hotkey (default="+DefaultEatingAidHotkey+") to eat food even if it is  in your inventory and not your hotbar.";
         EnableEatingAid = p.getBoolean(true);
         
         p = config.get(CATEGORY_EATINGAID, "DontEatGoldenFood", true);
         p.comment = "Enable/Disable using golden apples and golden carrots as food.";
         DontEatGoldenFood = p.getBoolean(true);
         
+        p = config.get(CATEGORY_EATINGAID, "PrioritizeFoodInHotbar", false);
+        p.comment = "Use food that is in your hotbar before looking for food in your main inventory.";
+        PrioritizeFoodInHotbar = p.getBoolean(false);
+        
+        p = config.get(CATEGORY_EATINGAID, "EatingAidMode", 1);
+        p.comment = "Set the eating aid mode:" + config.NEW_LINE +
+					"0 = always eat food with the highest saturation value" + config.NEW_LINE +
+					"1 = intelligently select food so that you don't overeat and waste anything";
+        EatingAidMode = p.getInt(1);
+        
         
         //CATEGORY_WEAPONSWAP
-        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", "F");
-        p.comment = "Default: F";
+        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", DefaultWeaponSwapHotkey);
+        p.comment = "Default: "+DefaultWeaponSwapHotkey;
         WeaponSwapHotkey = p.getString();
         
         p = config.get(CATEGORY_WEAPONSWAP, "EnableWeaponSwap", true);
-        p.comment = "Enables pressing a hotkey (default=F) to swap between your sword and bow.";
+        p.comment = "Enables pressing a hotkey (default="+DefaultWeaponSwapHotkey+") to swap between your sword and bow.";
         EnableWeaponSwap = p.getBoolean(true);
         
         p = config.get(CATEGORY_WEAPONSWAP, "ScanHotbarForWeaponsFromLeftToRight", true);
@@ -473,8 +485,8 @@ public class ZyinHUD
         
         
         //CATEGORY_HORSEINFO
-        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", "O");
-        p.comment = "Default: O";
+        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", DefaultHorseInfoHotkey);
+        p.comment = "Default: "+DefaultHorseInfoHotkey;
         HorseInfoHotkey = p.getString();
         
         p = config.get(CATEGORY_HORSEINFO, "ShowHorseStatsOnF3Menu", true);
@@ -487,12 +499,12 @@ public class ZyinHUD
         
         
         //CATEGORY_ENDERPEARLAID
-        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", "C");
-        p.comment = "Default: C";
+        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
+        p.comment = "Default: "+DefaultEnderPearlAidHotkey;
         EnderPearlAidHotkey = p.getString();
         
         p = config.get(CATEGORY_ENDERPEARLAID, "EnableEnderPearlAid", true);
-        p.comment = "Enables pressing a hotkey (default=C) to use an enderpearl even if it is  in your inventory and not your hotbar.";
+        p.comment = "Enables pressing a hotkey (default="+DefaultEnderPearlAidHotkey+") to use an enderpearl even if it is  in your inventory and not your hotbar.";
         EnableEnderPearlAid = p.getBoolean(true);
         
         
@@ -509,12 +521,12 @@ public class ZyinHUD
 
         
         //CATEGORY_POTIONAID
-        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", "V");
-        p.comment = "Default: V";
+        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", DefaultPotionAidHotkey);
+        p.comment = "Default: " + DefaultPotionAidHotkey;
         PotionAidHotkey = p.getString();
         
         p = config.get(CATEGORY_POTIONAID, "EnablePotionAid", true);
-        p.comment = "Enables pressing a hotkey (default=V) to drink a potion even if it is  in your inventory and not your hotbar.";
+        p.comment = "Enables pressing a hotkey (default="+DefaultPotionAidHotkey+") to drink a potion even if it is  in your inventory and not your hotbar.";
         EnablePotionAid = p.getBoolean(true);
         
         
@@ -537,7 +549,7 @@ public class ZyinHUD
         KeyBindingRegistry.registerKeyBinding(new DistanceMeasurerKeyHandler(key_K, repeatFalse));
 
         hotkey = GetKeyboardKeyFromString(SafeOverlayHotkey);
-        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultSafeOverlayHotkeyHotkey) : hotkey;
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultSafeOverlayHotkey) : hotkey;
         key_L = new KeyBinding[] {new KeyBinding("Safe Overlay Toggle", hotkey)};
         KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatTrue));
 

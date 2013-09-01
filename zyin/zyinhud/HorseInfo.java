@@ -39,13 +39,13 @@ public class HorseInfo
     //values between the perfect and good values are green
     //values between the good and bad values are white
     //values below the bad value are red
-    private static double perfectHorseSpeedThreshold = 13;	//max: 13.6?
+    private static double perfectHorseSpeedThreshold = 13;	//max: 14.1?
     private static double goodHorseSpeedThreshold = 11;
     private static double badHorseSpeedThreshold = 9.5;		//min: ~7?
     
     private static double perfectHorseJumpThreshold = 5;	//max: 5.5
     private static double goodHorseJumpThreshold = 4;
-    private static double badHorseJumpThreshold = 2.5;		//min: 1.5
+    private static double badHorseJumpThreshold = 2.5;		//min: 1.2
     
     private static int perfectHorseHPThreshold = 28;		//max: 30
     private static int goodHorseHPThreshold = 24;			
@@ -80,6 +80,8 @@ public class HorseInfo
 
                 String coloring = GetHorseColoringText(horse);
                 String marking = GetHorseMarkingText(horse);
+                if(marking.isEmpty())	//no markings
+                	marking = "None";
                 
                 String horseColor = Localization.get("horseinfo.debug.color") + " " + coloring;
                 String horseMarking = Localization.get("horseinfo.debug.markings") + " " + marking;
@@ -91,14 +93,7 @@ public class HorseInfo
                 if(!coloring.isEmpty())	//not a donkey
                 {
                     mc.fontRenderer.drawStringWithShadow(horseColor, 1, 170, 0xffffff);
-                    
-                    if(marking.isEmpty())	//plain markings
-                    {
-                    	horseMarking = Localization.get("horseinfo.debug.markings") + " " + Localization.get("horseinfo.debug.markings.plain");
-                        mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
-                    }
-                    else	//normal markings
-                    	mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
+                    mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
                 }
             }
         }
@@ -335,7 +330,7 @@ public class HorseInfo
     private static String GetHorseJumpText(EntityHorse horse)
     {
         double horseJump = GetHorseMaxJump(horse);
-        String horseJumpString = oneDecimalPlace.format(GetHorseMaxJump(horse));
+        String horseJumpString = oneDecimalPlace.format(horseJump);
 
         if (horseJump > perfectHorseJumpThreshold)
             horseJumpString = FontCodes.AQUA + horseJumpString + FontCodes.WHITE;
@@ -390,26 +385,44 @@ public class HorseInfo
     /**
      * Gets the max height a horse can jump when the jump bar is fully charged.
      * @param horse
-     * @return e.x. 1.5 for all donkeys, horses are ~2-5
+     * @return e.x. 1.2?-5.5?
      */
     private static double GetHorseMaxJump(EntityHorse horse)
     {
-        //testing data:
-        //0.5000000 = 1.5 blocks (min) (all donkeys have 0.5)
-        //0.55 = 2 blocks
-        //0.58596 = 2 blocks
-        //0.668953 = 2.5 blocks
-        //0.7214789 = 3 blocks
-        //0.833727 = 4 blocks
-        //0.881760 = 4.5 blocks
+        //testing data (tested using snow layers on blocks):
+        //0.46865 = 1.5   blocks
+        //0.47179 = 1.5   blocks
+        //0.49099 = 1.5   blocks
+        //0.49262 = 1.625 blocks
+        //0.49494 = 1.625 blocks
+        //0.50000 = 1.625 blocks
+        //0.50505 = 1.625 blocks
+    	//0.50937 = 1.75  blocks
+    	//0.51283 = 1.75  blocks
+    	//0.51358 = 1.75  blocks
+    	//0.52574 = 1.75  blocks
+    	//0.56227 = 2     blocks
+    	//...
+    	//0.90143 = 4.875 blocks
+    	//0.90297 = 4.875 blocks
+    	//0.90805 = 4.875 blocks
+    	//0.91588 = 5     blocks
+    	//0.91405 = 5     blocks
+    	//0.93901 = 5.25  blocks
+    	//0.94306 = 5.25  blocks
         //...
         //??? = 5.5 blocks (max according to the Wiki)
-        double jumpHeight = (horse.func_110215_cj() - 0.5) * 4.0 / 0.5 + 1.5;
-
-        if (jumpHeight < 1.5)
-            return 1.5;	//horses can always jump over a fence, no matter what
-
-        return jumpHeight;
+    	
+    	//simulate gravity and air resistance to determine the jump height
+    	double yVelocity = horse.func_110215_cj();	//horses's jump strength attribute
+    	double jumpHeight = 0;
+    	while (yVelocity > 0)
+    	{
+    		jumpHeight += yVelocity;
+    		yVelocity -= 0.08;
+    		yVelocity *= 0.98;
+    	}
+    	return jumpHeight;
     }
 
     /**
