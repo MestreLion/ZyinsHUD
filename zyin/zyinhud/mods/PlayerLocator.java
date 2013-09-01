@@ -74,10 +74,10 @@ public class PlayerLocator
     private static final String SneakingMessagePrefix = FontCodes.ITALICS;
     private static final String RidingMessagePrefix = "     ";	//space for the saddle/minecart/boat icon
 
-    public static int maxViewDistanceCutoff = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
-    public static int minViewDistanceCutoff = 0;
     /** Don't render players that are closer than this */
     public static int viewDistanceCutoff = 10;
+    public static int minViewDistanceCutoff = 0;
+    public static int maxViewDistanceCutoff = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
 
     /**
      * Renders nearby players's names on the screen.

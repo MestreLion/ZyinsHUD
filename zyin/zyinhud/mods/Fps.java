@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import zyin.zyinhud.tickhandler.HUDTickHandler;
+import zyin.zyinhud.util.FontCodes;
 import zyin.zyinhud.util.Localization;
 
 public class Fps
@@ -35,7 +36,7 @@ public class Fps
     {
         if (Fps.Enabled)
         {
-            return currentFps + " " + Localization.get("fps.infoline") + InfoLine.SPACER;
+            return FontCodes.WHITE + currentFps + " " + Localization.get("fps.infoline") + InfoLine.SPACER;
         }
         else
         {

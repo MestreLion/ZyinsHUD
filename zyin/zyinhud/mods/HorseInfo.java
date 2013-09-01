@@ -77,8 +77,8 @@ public class HorseInfo
     
     /** Horses that are farther away than this will not have their info shown */
     public static int viewDistanceCutoff = 8;		//how far away we will render the overlay
-    public static int minViewDistance = 0;
-    public static int maxViewDistance = 120;
+    public static int minViewDistanceCutoff = 0;
+    public static int maxViewDistanceCutoff = 120;
     
     private static DecimalFormat decimalFormat = GetDecimalFormat();
     
@@ -199,7 +199,8 @@ public class HorseInfo
             //only show entities that are close by
             double distanceFromMe = me.getDistanceToEntity(horse);
 
-            if (distanceFromMe > viewDistanceCutoff)
+            if (distanceFromMe > maxViewDistanceCutoff
+                    || distanceFromMe < viewDistanceCutoff)
             {
                 return;
             }

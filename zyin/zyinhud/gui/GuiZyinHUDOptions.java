@@ -318,7 +318,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiHorseInfoHotkeyButton(902, buttonX_column1, Y, buttonWidth_half, buttonHeight, HorseInfo.Hotkey));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.minviewdistance"), HorseInfo.minViewDistance, HorseInfo.maxViewDistance, HorseInfo.viewDistanceCutoff, true));
+    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.minviewdistance"), HorseInfo.minViewDistanceCutoff, HorseInfo.maxViewDistanceCutoff, HorseInfo.viewDistanceCutoff, true));
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.numdecimalsdisplayed"), HorseInfo.minNumberOfDecimalsDisplayed, HorseInfo.maxNumberOfDecimalsDisplayed, HorseInfo.GetNumberOfDecimalsDisplayed(), true));
     	Y += buttonHeight + buttonSpacing;
@@ -711,7 +711,7 @@ public class GuiZyinHUDOptions extends GuiScreen
             else if (button.id == 803)	//Min view distance slider
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
-            	PlayerLocator.minViewDistanceCutoff = value;
+            	PlayerLocator.viewDistanceCutoff = value;
             }
             else if (button.id == 804)	//Show distance to players
             {
@@ -740,7 +740,7 @@ public class GuiZyinHUDOptions extends GuiScreen
             else if (button.id == 903)	//Min view distance slider
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
-            	HorseInfo.minViewDistance = value;
+            	HorseInfo.viewDistanceCutoff = value;
             }
             else if (button.id == 904)	//Decimal slider
             {
