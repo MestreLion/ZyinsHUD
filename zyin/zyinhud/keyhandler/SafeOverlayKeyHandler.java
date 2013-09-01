@@ -54,6 +54,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
             	InfoLine.DisplayNotification("See through walls Enabled");
             else
             	InfoLine.DisplayNotification("See through walls Disabled");
+            
+            SafeOverlay.instance.RecalculateUnsafePositions();
         	
             return;
         }
@@ -70,6 +72,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
             else
             	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance);
             
+            SafeOverlay.instance.RecalculateUnsafePositions();
+            
             return;
         }
         
@@ -80,6 +84,9 @@ public class SafeOverlayKeyHandler extends KeyHandler
             int drawDistance = SafeOverlay.instance.decreaseDrawDistance();
             
         	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance);
+            
+            SafeOverlay.instance.RecalculateUnsafePositions();
+            
             return;
         }
         
@@ -90,6 +97,9 @@ public class SafeOverlayKeyHandler extends KeyHandler
             int drawDistance = SafeOverlay.instance.setDrawDistance(SafeOverlay.defaultDrawDistance);
             
         	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance+" (default)");
+            
+            SafeOverlay.instance.RecalculateUnsafePositions();
+            
             return;
         }
         
@@ -100,6 +110,12 @@ public class SafeOverlayKeyHandler extends KeyHandler
         if (ZyinHUD.SafeOverlayMode > 1)
         {
             ZyinHUD.SafeOverlayMode = 0;
+        }
+        
+        if(ZyinHUD.SafeOverlayMode == 1)
+        {
+        	//if we enable the mod, calculate unsafe areas immediately
+            SafeOverlay.instance.RecalculateUnsafePositions();
         }
     }
 

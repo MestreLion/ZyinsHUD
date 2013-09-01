@@ -9,13 +9,22 @@ package zyin.zyinhud;
 
 import java.io.File;
 
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.Property;
+import net.minecraftforge.event.Event;
 import net.minecraftforge.event.ForgeSubscribe;
+import net.minecraftforge.event.entity.player.EntityInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 
 import org.lwjgl.input.Keyboard;
 
@@ -36,17 +45,17 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.1")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.2")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
-    public static String CATEGORY_INFOLINE = "info line";
-    public static String CATEGORY_COORDINATES = "coordinates";
-    public static String CATEGORY_COMPASS = "compass";
-    public static String CATEGORY_DURABILITYINFO = "durability info";
-    public static String CATEGORY_SAFEOVERLAY = "safe overlay";
-    public static String CATEGORY_POTIONTIMERS = "potion timers";
-    public static String CATEGORY_PLAYERLOCATOR = "player locator";
+    public static final String CATEGORY_INFOLINE = "info line";
+    public static final String CATEGORY_COORDINATES = "coordinates";
+    public static final String CATEGORY_COMPASS = "compass";
+    public static final String CATEGORY_DURABILITYINFO = "durability info";
+    public static final String CATEGORY_SAFEOVERLAY = "safe overlay";
+    public static final String CATEGORY_POTIONTIMERS = "potion timers";
+    public static final String CATEGORY_PLAYERLOCATOR = "player locator";
 
     //Configurable values - info line
     public static Boolean ShowInfoLine;
@@ -85,6 +94,7 @@ public class ZyinHUD
     public static int SafeOverlayMode = 0;		//0=off, 1=on
     
 
+    Minecraft mc = Minecraft.getMinecraft();
     public static Configuration config = null;
 
     @Instance("ZyinHUD")
@@ -110,7 +120,9 @@ public class ZyinHUD
         proxy.registerRenderers();
         
         //needed for @ForgeSubscribe method subscriptions
-        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
+        
+        
         
         LoadTickHandlers();
         LoadKeyHandlers();
@@ -208,12 +220,15 @@ public class ZyinHUD
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks.";
         SafeOverlayDrawDistance = p.getInt(20);
+        
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayTransparency", 0.3);
         p.comment = "The transparency of the unsafe marks. Must be between greater than 0.1 and less than or equal to 1.";
         SafeOverlayTransparency = p.getDouble(0.3);
+        
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDisplayInNether", false);
         p.comment = "Enable/Disable showing unsafe areas in the Nether.";
         SafeOverlayDisplayInNether = p.getBoolean(false);
+        
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", false);
         p.comment = "Enable/Disable showing unsafe areas through walls. Toggle ingame with Ctrl + L.";
         SafeOverlaySeeThroughWalls = p.getBoolean(false);
@@ -233,15 +248,4 @@ public class ZyinHUD
     }
     
     
-    /**
-     * Render any things that need to be rendered into the game world (in the world, NOT on 
-     * the user's HUD - that is done in the onRenderTick() method in HUDTickHandler.java)
-     * @param event
-     */
-    @ForgeSubscribe
-    public void renderWorldLastEvent(RenderWorldLastEvent event)
-    {
-        //render unsafe positions (hotkey check and cache calculations are done in this render method)
-        SafeOverlay.instance.RenderAllUnsafePositions(event.partialTicks);
-    }
 }

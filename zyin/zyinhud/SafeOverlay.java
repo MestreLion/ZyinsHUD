@@ -3,6 +3,7 @@ package zyin.zyinhud;
 import zyin.zyinhud.util.FontCode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -11,6 +12,7 @@ import net.minecraft.block.BlockBasePressurePlate;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.BlockCactus;
 import net.minecraft.block.BlockCake;
+import net.minecraft.block.BlockCarpet;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFarmland;
@@ -36,7 +38,11 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.Property;
+import net.minecraftforge.event.ForgeSubscribe;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 
 import org.lwjgl.opengl.GL11;
 
@@ -107,6 +113,128 @@ public class SafeOverlay
     private RenderGlobal renderGlobal;
     private RenderBlocks renderBlocks;
     private EntityPlayer player;
+    
+
+    public static boolean recalculateUnsafePositionsFlag = false;
+    List<Thread> threads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
+    
+    
+    
+    
+    
+    
+
+    
+    
+    /**
+     * Event fired when the world gets rendered.
+     * We render any things that need to be rendered into the game world in this method.
+     * @param event
+     */
+    @ForgeSubscribe
+    public void renderWorldLastEvent(RenderWorldLastEvent event)
+    {
+        //render unsafe positions (cache calculations are done from this render method)
+        RenderAllUnsafePositionsMultithreaded(event.partialTicks);
+    }
+    
+    /**
+     * Event fired when the player interacts with another block.
+     * @param event
+     */
+    @ForgeSubscribe
+    public void onPlayerInteractEvent(PlayerInteractEvent event)
+    {
+    	if(event.action != Action.RIGHT_CLICK_BLOCK)
+    		return;	//can only place blocks by right clicking
+    	
+    	int x = event.x;
+    	int y = event.y;
+    	int z = event.z;
+
+    	int blockClickedId = mc.theWorld.getBlockId(x, y, z);
+    	System.out.println("block clicked at ("+x+","+y+","+z+")");
+    	System.out.println("block clicked ID:"+blockClickedId);
+    	
+    	int blockFace = event.face;	// Bottom = 0, Top = 1, Sides = 2-5
+    	if(blockFace == 0)
+    		y--;
+    	else if(blockFace == 1)
+    		y++;
+    	else if(blockFace == 2)
+    		z--;
+    	else if(blockFace == 3)
+    		z++;
+    	else if(blockFace == 4)
+    		x--;
+    	else if(blockFace == 5)
+    		x++;
+    	
+    	int blockPlacedId = mc.theWorld.getBlockId(x, y, z);
+    	System.out.println("block placed at ("+x+","+y+","+z+")");
+    	System.out.println("block placed ID:"+blockPlacedId);
+    	
+    	if(blockPlacedId != 0)	//if it's not an Air block
+    		onBlockPlaced(blockPlacedId, x, y ,z);
+    }
+    
+    /**
+     * Psuedo event handler for blocks being placed.
+     * Will fire when the player ATTEMPTS to placed a block
+     * (it will fire even if the block isn't succesfully placed).
+     * @param blockId
+     * @param x
+     * @param y
+     * @param z
+     */
+    public void onBlockPlaced(int blockId, int x, int y, int z)
+    {
+    	if(Block.lightValue[blockId] > 0)
+    		onLightEmittingBlockPlaced(blockId, x, y, z);
+    	
+    	//do whatever
+    	//Block block = Block.blocksList[blockId];
+    }
+
+    /**
+     * Psuedo event handler for a light emitting block being placed.
+     * Will fire when the player ATTEMPTS to placed a block
+     * (it will fire even if the block isn't succesfully placed).
+     * @param blockId
+     * @param x
+     * @param y
+     * @param z
+     */
+    public void onLightEmittingBlockPlaced(int blockId, int x, int y, int z)
+    {
+    	//do whatever
+    	//Block block = Block.blocksList[blockId];
+    	
+    	RecalculateUnsafePositions();
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 	/**
 	 * Use this instance of the Safe Overlay for method calls.
@@ -119,8 +247,10 @@ public class SafeOverlay
         renderGlobal = mc.renderGlobal;
         renderBlocks = renderGlobal.globalRenderBlocks;
         player = mc.thePlayer;
-        unsafePositionCache = new ArrayList<Position>();
         playerPosition = new Position();
+        
+        //Don't let multiple threads access this list at the same time by making it a Synchronized List
+        unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());	
         
         //grab configuration settings
         setDrawDistance(ZyinHUD.SafeOverlayDrawDistance);
@@ -130,12 +260,177 @@ public class SafeOverlay
         unsafeOverlayTransparency = (unsafeOverlayTransparency >= 1f) ? 1f : unsafeOverlayTransparency;	//check upper bounds
         displayInNether = ZyinHUD.SafeOverlayDisplayInNether;
     }
+    
+    //With default settings (range=20)
+	//13% CPU
+	//0.4 ms with no calculations
+	//6 ms with calculations
+	
+	//With max settings (range=80)  (68-100 fps)
+	//24% CPU
+	//7 ms with no calculations
+	//305 ms with calculations
+    //SafeOverlay.instance.RenderAllUnsafePositions(event.partialTicks);
+
+	
+	
+	
+	
+	
+	
+	//With default settings (range=20)
+	//%10-19 CPU
+	//0.6 ms with no calculations
+	//1-4 ms with calculations
+	
+	//With max settings (range=80) (85-100 fps)
+	//25-35% CPU
+	//7 ms with no calculations
+	//85-102 ms with calculations
+
+    
+    /**
+     * This thead will calculate unsafe positions around the player given a Y coordinate.
+     * <p>
+     * <b>Single threaded</b> performance (with drawDistance=80 [max]):
+     * <br>Average CPU usage: 24%
+     * <br>Time to calculate all unsafe areas: <b>305 ms</b>
+     * <p>
+     * <b>Multi threaded</b> performance (with drawDistance=80 [max]):
+     * <br>Average CPU usage: 25-35%
+     * <br>Time to calculate all unsafe areas: <b>100 ms</b>
+     * <p>
+     * Machine specs when this test took place: Core i7 2.3GHz, 8GB DDR3, GTX 260
+     * <br>With vanilla textures, far render distance, flatland map.
+     */
+    class SafeCalculatorThread extends Thread
+    {
+    	private int y;
+    	
+		SafeCalculatorThread(int y)
+		{
+			super("Safe Overlay Calculator Thread at y="+y);
+			//Start the thread
+			this.y = y;
+			start(); 
+		}
+
+        //This is the entry point for the thread after start() is called.
+        public void run()
+        {
+        	Position pos = new Position();
+           
+			for (int x = -drawDistance; x < drawDistance; x++)
+			for (int z = -drawDistance; z < drawDistance; z++)
+			{
+				pos.x = playerPosition.x + x;
+				pos.y = playerPosition.y + y;
+				pos.z = playerPosition.z + z;
+				
+				if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
+						&& pos.GetLightLevelWithoutSky() < 8)
+				{
+					unsafePositionCache.add(new Position(pos));
+				}
+			}
+        }
+    }
+    
+    
+    
+    
+    
+    
+    public void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
+    {
+    	if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
+        {
+            return;
+        }
+
+        player = mc.thePlayer;
+
+        if (!displayInNether && player.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
+        {
+            return;
+        }
+        
+        long frameTime = System.currentTimeMillis();
+        double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
+        double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
+        double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTickTime;
+        playerPosition = new Position((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+
+        /*if (unsafePositionCache.size() == 0
+                || !playerPosition.equals(cachePosition)
+                || frameTime - lastGenerate > updateFrequency)*/
+        if (recalculateUnsafePositionsFlag
+        	//|| !playerPosition.equals(cachePosition)
+	        || frameTime - lastGenerate > updateFrequency)
+        {
+        	CalculateUnsafePositionsMultithreaded();
+        }
+
+        GL11.glTranslated(-x, -y, -z);		//go from cartesian x,y,z coordinates to in-world x,y,z coordinates
+        GL11.glDisable(GL11.GL_TEXTURE_2D);	//fixes color rendering bug (we aren't rendering textures)
+        
+        //allows for color transparency
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        if (renderUnsafePositionsThroughWalls)
+        {
+            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);    //allows this unsafe position to be rendered through other blocks
+        }
+        else
+        {
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        }
+        
+        GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
+        
+        
+
+        
+
+        for(Thread t : threads)
+        {
+        	try 
+        	{
+				t.join();
+			} 
+        	catch (InterruptedException e) 
+        	{
+				e.printStackTrace();
+			}
+        }
+        
+
+        //render unsafe areas
+        for (Position position : unsafePositionCache)
+        {
+            RenderUnsafeMarker(position);
+        }
+
+        GL11.glEnd();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
+        
+    }
+    
+    
+    
+    
+    
+    
 
 	/**
      * Renders all unsafe areas around the player.
-     * It will only recalculate the unsafe areas once every [updateFrequency] (250) milliseconds
+     * It will only recalculate the unsafe areas once every [updateFrequency] milliseconds
      * @param partialTickTime
      */
+    //SINGLE THREADED VERSION
+    @Deprecated
     public void RenderAllUnsafePositions(float partialTickTime)
     {
         if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
@@ -149,7 +444,7 @@ public class SafeOverlay
         {
             return;
         }
-
+        
         long frameTime = System.currentTimeMillis();
         double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
         double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
@@ -190,6 +485,7 @@ public class SafeOverlay
         GL11.glEnd();
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
+        
     }
 
     /**
@@ -271,11 +567,12 @@ public class SafeOverlay
         {
             if (blockAbove instanceof BlockSnow
                     || blockAbove instanceof BlockRailBase
-                    || blockAbove instanceof BlockBasePressurePlate)
+                    || blockAbove instanceof BlockBasePressurePlate
+                    || blockAbove instanceof BlockCarpet)
             {
                 //is there a spawnable block on top of this one?
                 //if so, then render the mark higher up to match its height
-                boundingBoxMaxY += blockAbove.getBlockBoundsMaxY();
+                boundingBoxMaxY = 1 + blockAbove.getBlockBoundsMaxY();
             }
         }
 
@@ -300,9 +597,10 @@ public class SafeOverlay
      * to the unsafePositionCache. The cache is used when the unsafe positions are
      * rendered (a.k.a. every frame). The cache is used to save CPU cycles from not
      * having to recalculate the unsafe locations every frame.
-     * @param playerPosition
      */
-    protected void CalculateUnsafePositions()
+    //SINGLE THREADED VERSION
+    @Deprecated
+    public void CalculateUnsafePositions()
     {
         unsafePositionCache.clear();
         Position pos = new Position();
@@ -315,18 +613,6 @@ public class SafeOverlay
             pos.x = playerPosition.x + x;
             pos.y = playerPosition.y + y;
             pos.z = playerPosition.z + z;
-            /*
-            boolean first = pos.CanMobsSpawnOnBlock(0, 0, 0);
-            boolean second = pos.CanMobsSpawnOnBlock(0, 1, 0);
-
-            if (first && !second)
-                unsafePositionCache.add(new Position(pos));
-
-            else if (!first && previous)
-                unsafePositionCache.add(new Position(pos, 0, -1, 0));
-
-            previous = second;
-            */
 
             if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
                     && pos.GetLightLevelWithoutSky() < 8)
@@ -337,6 +623,56 @@ public class SafeOverlay
 
         cachePosition = playerPosition;
         lastGenerate = System.currentTimeMillis();
+    }
+    
+
+    /**
+     * Calculates which areas around the player are unsafe and adds these Positions
+     * to the unsafePositionCache. The cache is used when the unsafe positions are
+     * rendered (a.k.a. every frame). The cache is used to save CPU cycles from not
+     * having to recalculate the unsafe locations every frame.
+     * <p>
+     * This is a multithreaded method that makes a new thread to calculate unsafe
+     * areas for each elevation (Y coordinate) around the player. This means that
+     * if the drawDistance=20, then a 40*40*40 cube is analyzed, which means we make
+     * 40 new threads to help calculate unsafe areas.
+     */
+    private void CalculateUnsafePositionsMultithreaded()
+    {
+        unsafePositionCache.clear();
+        //List<Thread> threads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
+        
+		for (int y = -drawDistance; y < drawDistance; y++)
+        {
+			threads.add(new SafeCalculatorThread(y));
+        }
+        
+		/*
+        for(Thread t : threads)
+        {
+        	try 
+        	{
+				t.join();
+			} 
+        	catch (InterruptedException e) 
+        	{
+				e.printStackTrace();
+			}
+        }*/
+		
+		recalculateUnsafePositionsFlag = false;
+        
+
+        cachePosition = playerPosition;
+        lastGenerate = System.currentTimeMillis();
+    }
+    
+    /**
+     * Sets a flag for the Safe Overlay to recalculate unsafe positions on the next screen render.
+     */
+    public void RecalculateUnsafePositions()
+    {
+    	recalculateUnsafePositionsFlag = true;
     }
     
     
@@ -392,7 +728,9 @@ public class SafeOverlay
 		double percent = (double)newDrawDistance / maxDrawDistance;
 		updateFrequency = (int) ((double)(updateFrequencyMax-updateFrequencyMin) * percent  + updateFrequencyMin);
 		
-		CalculateUnsafePositions();
+		
+		//for some reason when we call this here it freezes on t.join();
+		//CalculateUnsafePositionsMultithreaded();
 		
 
         //save the new draw distance

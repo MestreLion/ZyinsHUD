@@ -222,7 +222,7 @@ public class PlayerLocator
 
     /**
      * Gets the status of the Player Locator
-     * @return the string "locator" if the Player Locator is enabled, otherwise "".
+     * @return the string "players" if the Player Locator is enabled, otherwise "".
      */
     public static String CalculateMessageForInfoLine()
     {
@@ -234,7 +234,7 @@ public class PlayerLocator
         }
         else if (ZyinHUD.PlayerLocatorMode == 1)	//on
         {
-            safeOverlayString = FontCode.WHITE + "locator";
+            safeOverlayString = FontCode.WHITE + "players";
         }
         else
         {
