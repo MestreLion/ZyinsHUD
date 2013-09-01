@@ -31,10 +31,6 @@ public class HorseInfo
     private static Minecraft mc = Minecraft.getMinecraft();
     private static EntityClientPlayerMP me;
 
-    //private static final DecimalFormat twoDecimalPlaces = new DecimalFormat("#.##");
-    private static final DecimalFormat oneDecimalPlace = new DecimalFormat("#.#");
-    
-    
     //values above the perfect value are aqua
     //values between the perfect and good values are green
     //values between the good and bad values are white
@@ -51,10 +47,27 @@ public class HorseInfo
     private static int goodHorseHPThreshold = 24;			
     private static int badHorseHPThreshold = 20;			//min: ~14?
     
-
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
 
     private static int maxViewDistance = ZyinHUD.HorseInfoMaxViewDistance;	//how far away we will render the overlay
+    private static final DecimalFormat decimalFormat = GetDecimalFormat();
+    
+    
+    /**
+     * Gets the amount of decimals that should be displayed with a DecimalFormat object.
+     * @return
+     */
+    private static DecimalFormat GetDecimalFormat()
+    {
+    	if(ZyinHUD.HorseInfoNumberOfDecimalsDisplayed < 1)
+    		return new DecimalFormat("#");
+    	
+    	String format = "#.";
+    	for(int i = 1; i <= ZyinHUD.HorseInfoNumberOfDecimalsDisplayed; i++)
+    		format += "#";
+    	
+    	return new DecimalFormat(format);
+    }
 
     /**
      * Renders a horse's speed, hit points, and jump strength on the F3 menu when the player is riding it.
@@ -269,7 +282,7 @@ public class HorseInfo
     private static String GetHorseSpeedText(EntityHorse horse)
     {
         double horseSpeed = GetEntityMaxSpeed(horse);
-        String horseSpeedString = oneDecimalPlace.format(horseSpeed);
+        String horseSpeedString = decimalFormat.format(horseSpeed);
 
         if (horseSpeed > perfectHorseSpeedThreshold)
             horseSpeedString = FontCodes.AQUA + horseSpeedString + FontCodes.WHITE;
@@ -289,7 +302,7 @@ public class HorseInfo
     private static String GetHorseHPText(EntityHorse horse)
     {
         int horseHP = GetEntityMaxHP(horse);
-        String horseHPString = oneDecimalPlace.format(GetEntityMaxHP(horse));
+        String horseHPString = decimalFormat.format(GetEntityMaxHP(horse));
 
         if (horseHP > perfectHorseHPThreshold)
             horseHPString = FontCodes.AQUA + horseHPString + FontCodes.WHITE;
@@ -330,7 +343,7 @@ public class HorseInfo
     private static String GetHorseJumpText(EntityHorse horse)
     {
         double horseJump = GetHorseMaxJump(horse);
-        String horseJumpString = oneDecimalPlace.format(horseJump);
+        String horseJumpString = decimalFormat.format(horseJump);
 
         if (horseJump > perfectHorseJumpThreshold)
             horseJumpString = FontCodes.AQUA + horseJumpString + FontCodes.WHITE;

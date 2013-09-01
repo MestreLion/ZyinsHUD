@@ -216,7 +216,7 @@ public class EatingAid
     }
     
     /**
-     * Finds the food with the highest saturation and returns its index in your inventory.
+     * Finds the food with the highest saturation value and returns its index in your inventory.
      * @return
      */
     public int GetStrongestFoodItemIndexFromInventory()

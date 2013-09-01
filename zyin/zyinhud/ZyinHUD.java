@@ -3,6 +3,7 @@
  * =====
  * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
  * //dont render other player's armor (or just helmet?) in multiplayer
+ * 		cant just change the texture because theres 1 texture for helm/armor/pants/boots.
  * horse tracker integrated into player locator, uses the horses name to render on the screen
  */
 
@@ -18,6 +19,7 @@ import net.minecraftforge.common.Property;
 
 import org.lwjgl.input.Keyboard;
 
+import zyin.zyinhud.command.CommandFps;
 import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
 import zyin.zyinhud.keyhandler.EatingAidKeyHandler;
 import zyin.zyinhud.keyhandler.EnderPearlAidKeyHandler;
@@ -36,13 +38,13 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStoppedEvent;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.1")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.2")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -130,7 +132,8 @@ public class ZyinHUD
     public static String HorseInfoHotkey;
     public static boolean ShowHorseStatsOnF3Menu;
     public static int HorseInfoMaxViewDistance;
-
+    public static int HorseInfoNumberOfDecimalsDisplayed;
+    
     //Configurable values - ender pearl aid
     public static String EnderPearlAidHotkey;
     public static boolean EnableEnderPearlAid;
@@ -183,14 +186,12 @@ public class ZyinHUD
     @SidedProxy(clientSide = "zyin.zyinhud.ClientProxy", serverSide = "zyin.zyinhud.CommonProxy")
     public static CommonProxy proxy;
     
-
-    
-    
     
     public ZyinHUD()
     {
     	
     }
+
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -219,10 +220,16 @@ public class ZyinHUD
     }
 
     @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event)
+    {
+    	//THIS EVENT IS NOT FIRED ON SMP SERVERS
+    	event.registerServerCommand(new CommandFps());
+    }
+    
+    @Mod.EventHandler
     public void serverStopping(FMLServerStoppingEvent event)
     {
-    	//this event is not called on SMP worlds, which means we change the config file
-    	//while in game
+    	//THIS EVENT IS NOT FIRED ON SMP SERVERS
     	UpdateConfigFileWithModifiedValues();
     	UpdateConfigFileWithModifiedHotkeys();
         config.save();
@@ -242,7 +249,7 @@ public class ZyinHUD
     {
     	Property p;
     	
-        //Safe Overlay
+        //CATEGORY_SAFEOVERLAY
         p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
         p.set(SafeOverlay.instance.getDrawDistance());
@@ -250,6 +257,11 @@ public class ZyinHUD
         p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
         p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
         p.set(SafeOverlay.instance.getSeeUnsafePositionsThroughWalls());
+        
+        //CATEGORY_FPS
+        p = config.get(CATEGORY_FPS, "ShowFPS", false);
+        p.comment = "Enable/Disable showing your FPS at the end of the Info Line.";
+        p.set(ShowFPS);
     }
     
     /**
@@ -496,6 +508,10 @@ public class ZyinHUD
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoMaxViewDistance", 8);
         p.comment = "How far away horse stats will be rendered on the screen (distance measured in blocks).";
         HorseInfoMaxViewDistance = p.getInt(8);
+        
+        p = config.get(CATEGORY_HORSEINFO, "HorseInfoNumberOfDecimalsDisplayed", 1);
+        p.comment = "How many decimal places will be used when displaying horse stats.";
+        HorseInfoNumberOfDecimalsDisplayed = p.getInt(1);
         
         
         //CATEGORY_ENDERPEARLAID

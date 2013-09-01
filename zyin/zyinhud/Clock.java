@@ -16,7 +16,10 @@ public class Clock
 	private static Minecraft mc = Minecraft.getMinecraft();
 
 	private static long mobSpawningStartTime = 13187;
-	private static long mobSpawningStopTime = 22813;
+	
+	//mobs stop spawning at: 22813
+	//mobs start to burn at: 23600
+	private static long mobSpawningStopTime = 23600;
 	
     /**
      * Calculates time

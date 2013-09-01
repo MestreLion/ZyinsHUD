@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.passive.EntityHorse;
@@ -45,7 +46,7 @@ public class PlayerLocator
 
     private static final String SprintingMessagePrefix = "";
     private static final String SneakingMessagePrefix = FontCodes.ITALICS;
-    private static final String RidingMessagePrefix = "    ";	//space for the saddle/minecart/boat icon
+    private static final String RidingMessagePrefix = "     ";	//space for the saddle/minecart/boat icon
 
     public static int maxViewDistance = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
     public static int minViewDistance = ZyinHUD.PlayerLocatorMinViewDistance;		//don't render players that are closer than this
@@ -73,8 +74,7 @@ public class PlayerLocator
                 && !mc.gameSettings.showDebugInfo)
         {
             me = mc.thePlayer;
-            //EntityCow otherPlayer = (EntityCow)entity;	//for single player testing/debugging!
-            EntityOtherPlayerMP otherPlayer = (EntityOtherPlayerMP)entity;
+            EntityLiving otherPlayer = (EntityLiving)entity;	//could also cast as EntityPlayer
             //only show entities that are close by
             double distanceFromMe = me.getDistanceToEntity(otherPlayer);
 

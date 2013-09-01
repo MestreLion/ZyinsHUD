@@ -66,7 +66,7 @@ public class InventoryUtil
     	if(mc.isSingleplayer())
     		suggestedItemSwapDelay = 150;
     	else
-    		suggestedItemSwapDelay = 500;
+    		suggestedItemSwapDelay = 450;
     }
 
     

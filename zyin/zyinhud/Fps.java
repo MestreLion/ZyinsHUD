@@ -18,10 +18,7 @@ public class Fps
 
     private Fps()
     {
-        if (ZyinHUD.ShowFPS)
-        {
-            timer.scheduleAtFixedRate(new FpsTimerTask(), 0, 1000);    //recalculate once every 1000 ms
-        }
+        timer.scheduleAtFixedRate(new FpsTimerTask(), 0, 1000);    //recalculate once every 1000 ms
     }
 
     public static String CalculateMessageForInfoLine()

@@ -50,27 +50,6 @@ public class SafeOverlayKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        //if Control is pressed, enable see through mode
-        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
-                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
-        {
-            boolean seeThroughWalls = SafeOverlay.instance.toggleSeeUnsafePositionsThroughWalls();
-
-            if (seeThroughWalls)
-            {
-                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsenabled"));
-            }
-            else
-            {
-                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsdisabled"));
-            }
-
-            SafeOverlay.instance.RecalculateUnsafePositions();
-
-            isFirstKeypress = false;
-            return;
-        }
-
         //if "+" is pressed, increase the draw distance
         if (Keyboard.isKeyDown(Keyboard.KEY_EQUALS) || 	//keyboard "+" ("=")
                 Keyboard.isKeyDown(Keyboard.KEY_ADD))	//numpad "+"
@@ -118,6 +97,30 @@ public class SafeOverlayKeyHandler extends KeyHandler
         if(!isFirstKeypress)
         	return;
         isFirstKeypress = false;
+        
+
+
+        //if Control is pressed, enable see through mode
+        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
+        {
+            boolean seeThroughWalls = SafeOverlay.instance.toggleSeeUnsafePositionsThroughWalls();
+
+            if (seeThroughWalls)
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsenabled"));
+            }
+            else
+            {
+                InfoLine.DisplayNotification(Localization.get("safeoverlay.seethroughwallsdisabled"));
+            }
+
+            SafeOverlay.instance.RecalculateUnsafePositions();
+            
+            return;
+        }
+        
+        
 
         ZyinHUD.SafeOverlayMode++;
 
