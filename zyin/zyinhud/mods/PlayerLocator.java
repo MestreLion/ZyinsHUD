@@ -102,7 +102,7 @@ public class PlayerLocator
                 && !mc.gameSettings.showDebugInfo)
         {
             me = mc.thePlayer;
-            EntityLiving otherPlayer = (EntityLiving)entity;	//could also cast as EntityPlayer
+            EntityOtherPlayerMP otherPlayer = (EntityOtherPlayerMP)entity;	//could also cast as EntityPlayer
             //only show entities that are close by
             double distanceFromMe = me.getDistanceToEntity(otherPlayer);
 
