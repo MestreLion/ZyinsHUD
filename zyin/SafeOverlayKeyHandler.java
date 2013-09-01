@@ -30,46 +30,57 @@ class SafeOverlayKeyHandler extends KeyHandler
     public void keyDown(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd, boolean isRepeat)
     {
         if (!tickEnd)
-            return;	//this fixes an issue with the method being called twice
+        {
+            return;    //this fixes an issue with the method being called twice
+        }
 
-        if(mc.currentScreen != null)
-        	return;	//don't activate if the user is looking at a GUI
+        if (mc.currentScreen != null)
+        {
+            return;    //don't activate if the user is looking at a GUI
+        }
 
         //if Control is pressed, enable see through mode
-        if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
-        	|| Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
+        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
         {
-        	SafeOverlay.instance.renderUnsafePositionsThroughWalls = !SafeOverlay.instance.renderUnsafePositionsThroughWalls;	//toggle
-        	return;
+            SafeOverlay.instance.renderUnsafePositionsThroughWalls = !SafeOverlay.instance.renderUnsafePositionsThroughWalls;	//toggle
+            return;
         }
 
         //if "+" is pressed, increase the draw distance
-        if(Keyboard.isKeyDown(Keyboard.KEY_EQUALS))
+        if (Keyboard.isKeyDown(Keyboard.KEY_EQUALS))
         {
-        	SafeOverlay.instance.drawDistance += 3 ;
-        	if(SafeOverlay.instance.drawDistance > 80)
-        		SafeOverlay.instance.drawDistance = 80;	//after 80 it really starts to lag
-        	
-        	//save the new draw distance
-        	Property p = ZyinMod.config.get(ZyinMod.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        	p.set(SafeOverlay.instance.drawDistance);
-        	ZyinMod.config.save();
-        	return;
+            SafeOverlay.instance.drawDistance += 3 ;
+
+            if (SafeOverlay.instance.drawDistance > 80)
+            {
+                SafeOverlay.instance.drawDistance = 80;    //after 80 it really starts to lag
+            }
+
+            //save the new draw distance
+            Property p = ZyinMod.config.get(ZyinMod.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
+            p.set(SafeOverlay.instance.drawDistance);
+            ZyinMod.config.save();
+            return;
         }
+
         //if "-" is pressed, decrease the draw distance
-        if(Keyboard.isKeyDown(Keyboard.KEY_MINUS))
+        if (Keyboard.isKeyDown(Keyboard.KEY_MINUS))
         {
-        	SafeOverlay.instance.drawDistance -= 3 ;
-        	if(SafeOverlay.instance.drawDistance < 2)
-        		SafeOverlay.instance.drawDistance = 2;
-        	
-        	//save the new draw distance
-        	Property p = ZyinMod.config.get(ZyinMod.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        	p.set(SafeOverlay.instance.drawDistance);
-        	ZyinMod.config.save();
-        	return;
+            SafeOverlay.instance.drawDistance -= 3 ;
+
+            if (SafeOverlay.instance.drawDistance < 2)
+            {
+                SafeOverlay.instance.drawDistance = 2;
+            }
+
+            //save the new draw distance
+            Property p = ZyinMod.config.get(ZyinMod.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
+            p.set(SafeOverlay.instance.drawDistance);
+            ZyinMod.config.save();
+            return;
         }
-        
+
         ZyinMod.SafeOverlayMode++;
 
         //0=off, 1=on

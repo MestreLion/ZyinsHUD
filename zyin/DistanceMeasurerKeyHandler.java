@@ -28,10 +28,14 @@ class DistanceMeasurerKeyHandler extends KeyHandler
     public void keyDown(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd, boolean isRepeat)
     {
         if (!tickEnd)
-            return;	//this fixes an issue with the method being called twice
-        
-        if(mc.currentScreen != null)
-        	return;	//don't activate if the user is looking at a GUI
+        {
+            return;    //this fixes an issue with the method being called twice
+        }
+
+        if (mc.currentScreen != null)
+        {
+            return;    //don't activate if the user is looking at a GUI
+        }
 
         ZyinMod.DistanceMeasurerMode++;
 
