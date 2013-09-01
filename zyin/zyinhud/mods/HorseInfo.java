@@ -49,9 +49,9 @@ public class HorseInfo
     public static boolean ShowHorseStatsOnF3Menu;
     
     /** Sets the number of decimal places that will be rendered when displaying horse stats */
-    public static int NumberOfDecimalsDisplayed;
-    public static int MinNumberOfDecimalsDisplayed = 0;
-    public static int MaxNumberOfDecimalsDisplayed = 20;
+    public static int numberOfDecimalsDisplayed = 1;
+    public static int minNumberOfDecimalsDisplayed = 0;
+    public static int maxNumberOfDecimalsDisplayed = 20;
     
     
     private static Minecraft mc = Minecraft.getMinecraft();
@@ -75,12 +75,12 @@ public class HorseInfo
     
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
     
-    
-    public static int minViewDistance = 0;
-    public static int maxViewDistance = 120;
     /** Horses that are farther away than this will not have their info shown */
     public static int viewDistanceCutoff = 8;		//how far away we will render the overlay
-    private static final DecimalFormat decimalFormat = GetDecimalFormat();
+    public static int minViewDistance = 0;
+    public static int maxViewDistance = 120;
+    
+    private static DecimalFormat decimalFormat = GetDecimalFormat();
     
     
     /**
@@ -89,14 +89,34 @@ public class HorseInfo
      */
     private static DecimalFormat GetDecimalFormat()
     {
-    	if(NumberOfDecimalsDisplayed < 1)
+    	if(numberOfDecimalsDisplayed < 1)
     		return new DecimalFormat("#");
     	
     	String format = "#.";
-    	for(int i = 1; i <= NumberOfDecimalsDisplayed; i++)
+    	for(int i = 1; i <= numberOfDecimalsDisplayed; i++)
     		format += "#";
     	
     	return new DecimalFormat(format);
+    }
+    
+    /**
+     * Gets the number of deciamls used to display the horse stats.
+     * @return
+     */
+    public static int GetNumberOfDecimalsDisplayed()
+    {
+    	return numberOfDecimalsDisplayed;
+    }
+    
+    /**
+     * Sets the number of deciamls used to display the horse stats.
+     * @param numDecimals
+     * @return
+     */
+    public static void SetNumberOfDecimalsDisplayed(int numDecimals)
+    {
+    	numberOfDecimalsDisplayed = numDecimals;
+    	decimalFormat = GetDecimalFormat();
     }
 
     /**

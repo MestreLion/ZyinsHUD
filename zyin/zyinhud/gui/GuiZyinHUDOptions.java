@@ -320,7 +320,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.minviewdistance"), HorseInfo.minViewDistance, HorseInfo.maxViewDistance, HorseInfo.viewDistanceCutoff, true));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.numdecimalsdisplayed"), HorseInfo.MinNumberOfDecimalsDisplayed, HorseInfo.MaxNumberOfDecimalsDisplayed, HorseInfo.NumberOfDecimalsDisplayed, true));
+    	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.numdecimalsdisplayed"), HorseInfo.minNumberOfDecimalsDisplayed, HorseInfo.maxNumberOfDecimalsDisplayed, HorseInfo.GetNumberOfDecimalsDisplayed(), true));
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiButton(905, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("horseinfo.showonf3menu", HorseInfo.ShowHorseStatsOnF3Menu)));
     	
@@ -745,7 +745,7 @@ public class GuiZyinHUDOptions extends GuiScreen
             else if (button.id == 904)	//Decimal slider
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
-            	HorseInfo.maxViewDistance = value;
+            	HorseInfo.SetNumberOfDecimalsDisplayed(value);
             }
             else if (button.id == 905)	//Show on F3 menu
             {

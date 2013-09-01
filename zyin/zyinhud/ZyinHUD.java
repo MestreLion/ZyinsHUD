@@ -53,7 +53,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -541,9 +541,9 @@ public class ZyinHUD
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoNumberOfDecimalsDisplayed", 1);
         p.comment = "How many decimal places will be used when displaying horse stats.";
         if(loadSettings)
-        	HorseInfo.NumberOfDecimalsDisplayed = p.getInt(1);
+        	HorseInfo.SetNumberOfDecimalsDisplayed(p.getInt(1));
         else
-        	p.set(HorseInfo.NumberOfDecimalsDisplayed );
+        	p.set(HorseInfo.GetNumberOfDecimalsDisplayed());
         
         
         //CATEGORY_ENDERPEARLAID
