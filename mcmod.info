@@ -2,9 +2,9 @@
 {
     "modid": "ZyinMod",
     "name": "Zyin's HUD",
-    "description": "Displays your coordinates, breaking equipment, and measures distances",
+    "description": "Displays your coordinates, breaking equipment, measures distances, and displays unsafe areas",
     "mcversion": "1.5.2",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "url": "http://www.minecraftforum.net/topic/1851472-152forgesspsmp-zyins-hud/",
     "updateUrl": "",
     "authors": [

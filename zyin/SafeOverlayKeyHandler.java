@@ -2,18 +2,19 @@ package zyin;
 
 import java.util.EnumSet;
 
+import org.lwjgl.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.settings.KeyBinding;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-class DistanceMeasurerKeyHandler extends KeyHandler
+class SafeOverlayKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
-    public DistanceMeasurerKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public SafeOverlayKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -21,7 +22,7 @@ class DistanceMeasurerKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Distance Measurer Key Handler";
+        return "Safe Overlay Key Handler";
     }
 
     @Override
@@ -29,16 +30,24 @@ class DistanceMeasurerKeyHandler extends KeyHandler
     {
         if (!tickEnd)
             return;	//this fixes an issue with the method being called twice
-        
+
         if(mc.currentScreen != null)
         	return;	//don't activate if the user is looking at a GUI
-
-        ZyinMod.DistanceMeasurerMode++;
-
-        //0=off, 1=simple, 2=complex
-        if (ZyinMod.DistanceMeasurerMode > 2)
+        
+        //if Control is pressed, enable see through mode
+        if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
+        	|| Keyboard.isKeyDown(Keyboard.KEY_RCONTROL))
         {
-            ZyinMod.DistanceMeasurerMode = 0;
+        	SafeOverlay.instance.renderUnsafePositionsThroughWalls = !SafeOverlay.instance.renderUnsafePositionsThroughWalls;	//toggle
+        	return;
+        }
+        
+        ZyinMod.SafeOverlayMode++;
+
+        //0=off, 1=on
+        if (ZyinMod.SafeOverlayMode > 1)
+        {
+            ZyinMod.SafeOverlayMode = 0;
         }
     }
 

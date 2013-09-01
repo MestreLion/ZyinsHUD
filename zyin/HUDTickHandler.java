@@ -2,7 +2,6 @@ package zyin;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiIngame;
@@ -17,7 +16,6 @@ import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
-
 import org.lwjgl.opengl.GL11;
 
 import cpw.mods.fml.common.ITickHandler;
@@ -46,7 +44,9 @@ public class HUDTickHandler implements ITickHandler {
     public int equipmentLocX = durabalityLocX + armorDurabilityX;
     public int equipmentLocY = durabalityLocY;
     
-    private Minecraft mc = Minecraft.getMinecraft();
+    private String messageLineSpacer = " ";
+    
+    private static Minecraft mc = Minecraft.getMinecraft();
     private GuiIngame gig = new GuiIngame(mc);
     private int renderTickCount = 0;
     private ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
@@ -85,7 +85,7 @@ public class HUDTickHandler implements ITickHandler {
 		}
 		else if(type.equals(EnumSet.of(TickType.CLIENT)))
 		{
-			GuiScreen guiScreen = this.mc.currentScreen;
+			GuiScreen guiScreen = HUDTickHandler.mc.currentScreen;
 			if(guiScreen == null)
 			{
 				onTickInGame();
@@ -104,12 +104,6 @@ public class HUDTickHandler implements ITickHandler {
 
 	protected void onRenderTick() 
 	{
-		//don't waste time recalculating things every tick
-		if(renderTickCount % ZyinMod.UpdateFrequency == 0)	//default: 1 out of every 50 ticks
-		{
-			CalculateDurabilityIcons();
-		}
-		
 		RenderOnScreenMessages();
 		RenderDurabilityIcons();
 		
@@ -123,17 +117,33 @@ public class HUDTickHandler implements ITickHandler {
 	
 	
 	
+	
+	
+	
 	/**
 	 * Renders the on screen message consisting of everything that gets put into the top let message area
 	 */
 	public void RenderOnScreenMessages()
 	{
-		String coordinates = CalculateCoordinates();
-		String distance = CalculateDistanceMeasurer();
-		
-		String message = coordinates + " " + distance;
 
-		mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
+		//if the player is in the world
+		//and not looking at a menu
+		//and F3 not pressed
+		if (ZyinMod.ShowInfoLine
+			&& mc.inGameHasFocus
+			&& mc.currentScreen == null
+			&& !mc.gameSettings.showDebugInfo)
+		{
+
+			String coordinates = CalculateCoordinates();
+			String compass = CalculateCompass();
+			String distance = CalculateDistanceMeasurer();
+			String safe = CalculateIsSafeOverlayEnabled();
+			
+			String message = coordinates + compass + distance + safe;
+	
+			mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
+		}
 	}
 	
 	/**
@@ -147,6 +157,13 @@ public class HUDTickHandler implements ITickHandler {
 		if ((mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
 				&& !mc.gameSettings.showDebugInfo)
 		{
+			
+			//don't waste time recalculating things every tick
+			if(renderTickCount % ZyinMod.DurabilityUpdateFrequency == 0)	//default: 1 out of every 50 ticks
+			{
+				CalculateDurabilityIcons();
+			}
+			
 			Boolean armorExists = false;
 
 			for(ItemStack toolStack : damagedItemsList)
@@ -204,6 +221,7 @@ public class HUDTickHandler implements ITickHandler {
 			mc.renderEngine.resetBoundTexture();
 		}
 	}
+	
 	
 	/**
 	 * Finds items in the players hotbar and equipped armor that is damaged and adds them to the damagedItemsList list.
@@ -279,119 +297,132 @@ public class HUDTickHandler implements ITickHandler {
 	
 	
 	/**
-	 * Calculates the coordinates and the direction the player is facing
-	 * @return (x, z, y) coordinates format
+	 * Calculates the players coordinates
+	 * @return "(x, z, y)" coordinates formatted string if the Coordinates are enabled, otherwise "".
 	 */
 	protected String CalculateCoordinates()
 	{
-		//if the player is in the world
-		//and chat not shown
-		//and F3 not pressed
-		//and tab not pressed
-		if ((mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
-			&& !mc.gameSettings.showDebugInfo
-			&& !mc.gameSettings.keyBindPlayerList.pressed)
+		if(ZyinMod.ShowCoordinates)
 		{
-			if(ZyinMod.ShowCoordinates)
-			{
-				int coordX = mc.thePlayer.getPlayerCoordinates().posX;
-				int coordY = mc.thePlayer.getPlayerCoordinates().posY;
-				int coordZ = mc.thePlayer.getPlayerCoordinates().posZ;
+			int coordX = mc.thePlayer.getPlayerCoordinates().posX;
+			int coordY = mc.thePlayer.getPlayerCoordinates().posY;
+			int coordZ = mc.thePlayer.getPlayerCoordinates().posZ;
 
-				String coordinatesString = ColorCode.WHITE + "[" + coordX + ", " + coordZ + ", " + coordY + "]";
-				
-				
-				
-				int yaw = (int)mc.thePlayer.rotationYaw;
+			String coordinatesString = ColorCode.WHITE + "[" + coordX + ", " + coordZ + ", " + coordY + "]";
+			return coordinatesString + messageLineSpacer;
+		}
+        return "";
+	}
+	
 
-				if (yaw<0)		//due to the yaw running a -360 to positive 360
-					yaw+=360;	//not sure why it's that way
-				yaw+=22;		//centers coordinates you may want to drop this line
-				yaw%=360;		//and this one if you want a strict interpretation of the zones
-				int facing = yaw/45;   //  360degrees divided by 45 == 8 zones
-				
-				String compassDirection = "";
+	/**
+	 * Calculates the direction the player is facing
+	 * @return "[Direction]" compass formatted string if the Compass is enabled, otherwise "".
+	 */
+	protected String CalculateCompass()
+	{
+		if(ZyinMod.ShowCompass)
+		{
+			
+			int yaw = (int)mc.thePlayer.rotationYaw;
 
-				if(facing == 0)
-					compassDirection = "S";
-				else if(facing == 1)
-					compassDirection = "SW";
-				else if(facing == 2)
-					compassDirection = "W";
-				else if(facing == 3)
-					compassDirection = "NW";
-				else if(facing == 4)
-					compassDirection = "N";
-				else if(facing == 5)
-					compassDirection = "NE";
-				else if(facing == 6)
-					compassDirection = "E";
-				else// if(facing == 7)
-					compassDirection = "SE";
+			if (yaw<0)		//due to the yaw running a -360 to positive 360
+				yaw+=360;	//not sure why it's that way
+			yaw+=22;		//centers coordinates you may want to drop this line
+			yaw%=360;		//and this one if you want a strict interpretation of the zones
+			int facing = yaw/45;   //  360degrees divided by 45 == 8 zones
+			
+			String compassDirection = "";
+
+			if(facing == 0)
+				compassDirection = "S";
+			else if(facing == 1)
+				compassDirection = "SW";
+			else if(facing == 2)
+				compassDirection = "W";
+			else if(facing == 3)
+				compassDirection = "NW";
+			else if(facing == 4)
+				compassDirection = "N";
+			else if(facing == 5)
+				compassDirection = "NE";
+			else if(facing == 6)
+				compassDirection = "E";
+			else// if(facing == 7)
+				compassDirection = "SE";
+			
+			String compassString = ColorCode.LIGHT_GREY + "[" + ColorCode.RED + compassDirection + ColorCode.LIGHT_GREY + "]";
+			return compassString + messageLineSpacer;
+		}
+		return "";
+	}
+	/**
+	 * Calculates the distance of the block the player is pointing at
+	 * @return if the Distance Measurer is enabled, the string "[FarthestHorizontalDistance]" or 
+	 * "[x, z, y (absolute)]" is returned, otherwise "".
+	 */
+	protected String CalculateDistanceMeasurer()
+	{
+		if(ZyinMod.DistanceMeasurerMode > 0)
+		{
+	   		 MovingObjectPosition objectMouseOver;
+	
+	   		 objectMouseOver = mc.thePlayer.rayTrace(300, 1);
+
+			 String distanceMeasurerString = "";
+	   		 if(objectMouseOver != null && objectMouseOver.typeOfHit == EnumMovingObjectType.TILE)
+	   		 {
+				double coordX = mc.thePlayer.posX - 0.5;
+				double coordY = mc.thePlayer.posY - mc.thePlayer.height;
+				double coordZ = mc.thePlayer.posZ - 0.5;
 				
-				String compassString = ColorCode.LIGHT_GREY + "[" + ColorCode.RED + compassDirection + ColorCode.LIGHT_GREY + "]";
+				double blockX = objectMouseOver.blockX;
+				double blockY = objectMouseOver.blockY;
+				double blockZ = objectMouseOver.blockZ;
 				
-				return coordinatesString + " " + compassString + ColorCode.WHITE;
-			}
-        }
+				double deltaX = coordX - blockX;
+				double deltaY = coordY - blockY;
+				double deltaZ = coordZ - blockZ;
+				double delta = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
+				
+				double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
+
+				String x = String.format("%1$,.1f", deltaX);
+				String y = String.format("%1$,.1f", deltaY);
+				String z = String.format("%1$,.1f", deltaZ);
+				String distance = String.format("%1$,.1f", delta);
+
+				String farthestHorizontalDistanceStr = String.format("%1$,.1f", farthestHorizontalDistance);
+				
+				if(ZyinMod.DistanceMeasurerMode == 1)
+					distanceMeasurerString = ColorCode.CYAN + "[" + farthestHorizontalDistanceStr + "]";
+				else if(ZyinMod.DistanceMeasurerMode == 2)
+					distanceMeasurerString = ColorCode.CYAN + "[" + x + ", " + z + ", " + y + " (" + distance + ")]";
+				else
+					distanceMeasurerString = ColorCode.CYAN + "[???]";
+	   		 }
+	   		 else
+	   			distanceMeasurerString = ColorCode.CYAN + "[far]";
+	   		 
+	   		return distanceMeasurerString + messageLineSpacer;
+		}
 		return "";
 	}
 	
 	/**
-	 * Calculates the distance of the block the player is pointing at
-	 * @return (x, z, y (absolute)) distance format
+	 * Gets the status of Safe Overlay
+	 * @return the string "safe" if the Safe Overlay is enabled, otherwise "".
 	 */
-	protected String CalculateDistanceMeasurer()
+	public String CalculateIsSafeOverlayEnabled()
 	{
-
-		//if the player is in the world
-		//and not in a menu
-		//and F3 not shown
-		if ((mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
-				&& !mc.gameSettings.showDebugInfo)
-		{
-			if(ZyinMod.DistanceMeasurerMode > 0)
-			{
-		   		 MovingObjectPosition objectMouseOver;
+		String safeOverlayString = "";
+		if(ZyinMod.SafeOverlayMode == 0)	//off
+			safeOverlayString = ColorCode.WHITE + "";
+		else if(ZyinMod.SafeOverlayMode == 1)	//on
+			safeOverlayString = ColorCode.WHITE + "safe";
+		else
+			safeOverlayString = ColorCode.WHITE + "???";
 		
-		   		 objectMouseOver = mc.thePlayer.rayTrace(300, 1);
-		   		                 
-		   		 if(objectMouseOver != null && objectMouseOver.typeOfHit == EnumMovingObjectType.TILE)
-		   		 {
-					double coordX = mc.thePlayer.posX - 0.5;
-					double coordY = mc.thePlayer.posY - mc.thePlayer.height;
-					double coordZ = mc.thePlayer.posZ - 0.5;
-					
-					double blockX = objectMouseOver.blockX;
-					double blockY = objectMouseOver.blockY;
-					double blockZ = objectMouseOver.blockZ;
-					
-					double deltaX = coordX - blockX;
-					double deltaY = coordY - blockY;
-					double deltaZ = coordZ - blockZ;
-					double delta = Math.sqrt(deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ);
-					
-					double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
-
-					String x = String.format("%1$,.1f", deltaX);
-					String y = String.format("%1$,.1f", deltaY);
-					String z = String.format("%1$,.1f", deltaZ);
-					String distance = String.format("%1$,.1f", delta);
-
-					String farthestHorizontalDistanceStr = String.format("%1$,.1f", farthestHorizontalDistance);
-					
-					
-					if(ZyinMod.DistanceMeasurerMode == 1)
-						return ColorCode.CYAN + "[" + farthestHorizontalDistanceStr + "]";
-					else if(ZyinMod.DistanceMeasurerMode == 2)
-						return ColorCode.CYAN + "[" + x + ", " + z + ", " + y + " (" + distance + ")]";
-					else
-						return "";
-		   		 }
-		   		 else
-		   			 return ColorCode.CYAN + "[far]";
-			}
-		}
-		return "";
+		return safeOverlayString + messageLineSpacer;
 	}
 }
