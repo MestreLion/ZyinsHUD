@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 
 public class Fps
 {
-    private static int fps = 0;
+    private static int currentFps = 0;
 
     private static final Timer timer = new Timer();
 
@@ -28,7 +28,7 @@ public class Fps
     {
         if (ZyinHUD.ShowFPS)
         {
-            return fps + " " + Localization.get("fps.infoline") + InfoLine.SPACER;
+            return currentFps + " " + Localization.get("fps.infoline") + InfoLine.SPACER;
         }
         else
         {
@@ -48,7 +48,7 @@ public class Fps
         public void run()
         {
             currentRenderTickCount = HUDTickHandler.renderTickCount;
-            fps = currentRenderTickCount - lastRenderTickCount;
+            currentFps = currentRenderTickCount - lastRenderTickCount;
             lastRenderTickCount = HUDTickHandler.renderTickCount;
         }
     }

@@ -186,7 +186,7 @@ public class EatingAid
         eatTimerTask = new StopEatingTimerTask(r);
         timer.schedule(eatTimerTask, eatingDurationInMilliseconds);
         swapTimerTask = InventoryUtil.instance.SwapWithDelay(currentItemInventoryIndex, foodInventoryIndex,
-        eatingDurationInMilliseconds + InventoryUtil.suggestedItemSwapDelay);
+        		eatingDurationInMilliseconds + InventoryUtil.suggestedItemSwapDelay);
     }
     
     

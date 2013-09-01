@@ -77,14 +77,29 @@ public class HorseInfo
                 String horseSpeedMessage = Localization.get("horseinfo.debug.speed") + " " + GetHorseSpeedText(horse) + " m/s";
                 String horseJumpMessage = Localization.get("horseinfo.debug.jump") + " " + GetHorseJumpText(horse) + " blocks";
                 String horseHPMessage = Localization.get("horseinfo.debug.hp") + " " + GetHorseHPText(horse);
-                String horseColor = Localization.get("horseinfo.debug.color") + " " + GetHorseColoringText(horse);
-                String horseMarking = Localization.get("horseinfo.debug.markings") + " " + GetHorseMarkingText(horse);
+
+                String coloring = GetHorseColoringText(horse);
+                String marking = GetHorseMarkingText(horse);
+                
+                String horseColor = Localization.get("horseinfo.debug.color") + " " + coloring;
+                String horseMarking = Localization.get("horseinfo.debug.markings") + " " + marking;
                 
                 mc.fontRenderer.drawStringWithShadow(horseSpeedMessage, 1, 130, 0xffffff);
                 mc.fontRenderer.drawStringWithShadow(horseJumpMessage, 1, 140, 0xffffff);
                 mc.fontRenderer.drawStringWithShadow(horseHPMessage, 1, 150, 0xffffff);
-                mc.fontRenderer.drawStringWithShadow(horseColor, 1, 170, 0xffffff);
-                mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
+                
+                if(!coloring.isEmpty())	//not a donkey
+                {
+                    mc.fontRenderer.drawStringWithShadow(horseColor, 1, 170, 0xffffff);
+                    
+                    if(marking.isEmpty())	//plain markings
+                    {
+                    	horseMarking = Localization.get("horseinfo.debug.markings") + " " + Localization.get("horseinfo.debug.markings.plain");
+                        mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
+                    }
+                    else	//normal markings
+                    	mc.fontRenderer.drawStringWithShadow(horseMarking, 1, 180, 0xffffff);
+                }
             }
         }
     }
@@ -340,6 +355,10 @@ public class HorseInfo
     private static String GetHorseColoringText(EntityHorse horse)
     {
         String texture = horse.func_110212_cp()[0];
+        
+        if(texture == null || texture.isEmpty())
+        	return "";
+        
         String[] textureArray = texture.split("/");			//"textures/entity/horse/horse_creamy.png"
         texture = textureArray[textureArray.length-1];		//"horse_creamy.png"
         texture = texture.substring(6, texture.length()-4);	//"creamy"
@@ -356,6 +375,10 @@ public class HorseInfo
     private static String GetHorseMarkingText(EntityHorse horse)
     {
         String texture = horse.func_110212_cp()[1];
+        
+        if(texture == null || texture.isEmpty())
+        	return "";
+        
         String[] textureArray = texture.split("/");				//"textures/entity/horse/horse_markings_blackdots.png"
         texture = textureArray[textureArray.length-1];			//"horse_markings_blackdots.png"
         texture = texture.substring(15, texture.length()-4);	//"blackdots"

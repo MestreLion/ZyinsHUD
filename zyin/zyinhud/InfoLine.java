@@ -38,6 +38,7 @@ public class InfoLine
                 (mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
                 && !mc.gameSettings.showDebugInfo)
         {
+            String clock = Clock.CalculateMessageForInfoLine();
             String coordinates = Coordinates.CalculateMessageForInfoLine();
             String compass = Compass.CalculateMessageForInfoLine();
             String distance = DistanceMeasurer.CalculateMessageForInfoLine();
@@ -46,7 +47,7 @@ public class InfoLine
             String horse = HorseInfo.CalculateMessageForInfoLine();
             String fps = Fps.CalculateMessageForInfoLine();
             
-            String message = coordinates + compass + distance + safe + locator + horse + fps;
+            String message = clock + coordinates + compass + distance + safe + locator + horse + fps;
             mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
         }
 

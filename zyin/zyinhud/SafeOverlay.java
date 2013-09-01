@@ -256,8 +256,9 @@ public class SafeOverlay
         SafeCalculatorThread(int y)
         {
             super("Safe Overlay Calculator Thread at y=" + y);
-            //Start the thread
             this.y = y;
+
+            //Start the thread
             start();
         }
 
@@ -267,18 +268,25 @@ public class SafeOverlay
             Position pos = new Position();
 
             for (int x = -drawDistance; x < drawDistance; x++)
-                for (int z = -drawDistance; z < drawDistance; z++)
+            for (int z = -drawDistance; z < drawDistance; z++)
+            {
+                pos.x = playerPosition.x + x;
+                pos.y = playerPosition.y + y;
+                pos.z = playerPosition.z + z;
+                
+                
+                //if a mob can spawn here, add it to the unsafe positions cache so it can be rendered as unsafe
+                //4 things must be true for a mob to be able to spawn here:
+                //1) mobs need to be able to spawn on top of this block (block with a solid top surface)
+                //2) mobs need to be able to spawn inside of the block above (air, button, lever, etc)
+                //3) 2 blocks above needs to be transparent (air, glass, stairs, etc)
+                //4) needs < 8 light level
+                if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0) && !pos.IsOpaqueBlock(0, 2, 0)
+                        && pos.GetLightLevelWithoutSky() < 8)
                 {
-                    pos.x = playerPosition.x + x;
-                    pos.y = playerPosition.y + y;
-                    pos.z = playerPosition.z + z;
-
-                    if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0)
-                            && pos.GetLightLevelWithoutSky() < 8)
-                    {
-                        unsafePositionCache.add(new Position(pos));
-                    }
+                    unsafePositionCache.add(new Position(pos));
                 }
+            }
         }
     }
 
@@ -641,10 +649,6 @@ public class SafeOverlay
         double percent = (double)newDrawDistance / maxDrawDistance;
         updateFrequency = (int)((double)(updateFrequencyMax - updateFrequencyMin) * percent  + updateFrequencyMin);
         RecalculateUnsafePositions();
-        //save the new draw distance
-        Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
-        p.set(drawDistance);
         return drawDistance;
     }
 
@@ -687,7 +691,7 @@ public class SafeOverlay
      * Checks if see through walls mode is enabled.
      * @return
      */
-    public boolean canSeeUnsafePositionsThroughWalls()
+    public boolean getSeeUnsafePositionsThroughWalls()
     {
         return renderUnsafePositionsThroughWalls;
     }
@@ -699,10 +703,6 @@ public class SafeOverlay
     public boolean setSeeUnsafePositionsThroughWalls(Boolean safeOverlaySeeThroughWalls)
     {
         renderUnsafePositionsThroughWalls = safeOverlaySeeThroughWalls;
-        //save this new setting
-        Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
-        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
-        p.set(renderUnsafePositionsThroughWalls);
         return renderUnsafePositionsThroughWalls;
     }
     /**
@@ -768,6 +768,11 @@ public class SafeOverlay
         {
             int blockId = GetBlockId(dx, dy, dz);
             Block block = Block.blocksList[blockId];
+
+            if (block == null)	//air block
+            {
+                return false;
+            }
 
             if (blockId > 0 && block.isOpaqueCube())
             {
@@ -835,6 +840,26 @@ public class SafeOverlay
                      || block instanceof BlockPistonExtension
                      || block instanceof BlockPistonMoving
                      || block instanceof BlockCake);
+        }
+        
+        /**
+         * Checks if a block is an opqaue cube.
+         * @param dx x location relative to this block
+         * @param dy y location relative to this block
+         * @param dz z location relative to this block
+         * @return true if the block is opaque (like dirt, stone, etc.)
+         */
+        public boolean IsOpaqueBlock(int dx, int dy, int dz)
+        {
+        	int blockId = GetBlockId(dx, dy, dz);
+            Block block = Block.blocksList[blockId];
+            
+            if (block == null)	//air block
+            {
+                return false;
+            }
+
+            return block.isOpaqueCube();
         }
 
         /**

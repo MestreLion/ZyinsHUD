@@ -3,7 +3,7 @@ package zyin.zyinhud.util;
 /**
  * Insert into strings to add some flavor.
  * <p>
- * See: http://www.minecraftwiki.net/wiki/Formatting_codes
+ * @See {@link http://www.minecraftwiki.net/wiki/Formatting_codes}
  */
 public class FontCodes
 {

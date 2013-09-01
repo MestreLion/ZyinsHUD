@@ -19,6 +19,12 @@ public class SafeOverlayKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
+    
+    /**
+     * Since we enable this key handler to repeat when the user holds the key down, we
+     * want to be able to execute some code only on the initial key press.
+     */
+    private static boolean isFirstKeypress = true;
 
     public SafeOverlayKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
@@ -60,6 +66,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
             }
 
             SafeOverlay.instance.RecalculateUnsafePositions();
+
+            isFirstKeypress = false;
             return;
         }
 
@@ -79,6 +87,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
             }
 
             SafeOverlay.instance.RecalculateUnsafePositions();
+
+            isFirstKeypress = false;
             return;
         }
 
@@ -88,6 +98,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
             int drawDistance = SafeOverlay.instance.decreaseDrawDistance();
             InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + drawDistance);
             SafeOverlay.instance.RecalculateUnsafePositions();
+
+            isFirstKeypress = false;
             return;
         }
 
@@ -98,8 +110,14 @@ public class SafeOverlayKeyHandler extends KeyHandler
             SafeOverlay.instance.setSeeUnsafePositionsThroughWalls(false);
             InfoLine.DisplayNotification(Localization.get("safeoverlay.distance") + " " + Localization.get("safeoverlay.distance.default") + " (" + drawDistance + ")");
             SafeOverlay.instance.RecalculateUnsafePositions();
+
+            isFirstKeypress = false;
             return;
         }
+        
+        if(!isFirstKeypress)
+        	return;
+        isFirstKeypress = false;
 
         ZyinHUD.SafeOverlayMode++;
 
@@ -123,6 +141,8 @@ public class SafeOverlayKeyHandler extends KeyHandler
         {
             return;    //this fixes an issue with the method being called twice
         }
+        
+        isFirstKeypress = true;
     }
 
     @Override

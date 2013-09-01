@@ -34,12 +34,13 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStoppedEvent;
 import cpw.mods.fml.common.event.FMLServerStoppingEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.8.1")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.9.0")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -48,23 +49,23 @@ public class ZyinHUD
      * Recreate the config file, or just the variable "SupportedLanguages" (located in the config file)
      * to see these values updated.
      */
-    private static final String DefaultSupportedLanguages = "en_US"; //"en_US, zh_CN"
-    
+    private static final String DefaultSupportedLanguages = "en_US"; //"en_US, zh_CN";
     
     public static final String CATEGORY_LANGUAGE = "language";
-    public static final String CATEGORY_INFOLINE = "info line";
+    public static final String CATEGORY_INFOLINE = "infoline";
     public static final String CATEGORY_COORDINATES = "coordinates";
     public static final String CATEGORY_COMPASS = "compass";
-    public static final String CATEGORY_DISTANCEMEASURER = "distance measurer";
-    public static final String CATEGORY_DURABILITYINFO = "durability info";
-    public static final String CATEGORY_SAFEOVERLAY = "safe overlay";
-    public static final String CATEGORY_POTIONTIMERS = "potion timers";
-    public static final String CATEGORY_PLAYERLOCATOR = "player locator";
-    public static final String CATEGORY_EATINGAID = "eating aid";
-    public static final String CATEGORY_WEAPONSWAP = "weapon swap";
+    public static final String CATEGORY_DISTANCEMEASURER = "distancemeasurer";
+    public static final String CATEGORY_DURABILITYINFO = "durabilityinfo";
+    public static final String CATEGORY_SAFEOVERLAY = "safeoverlay";
+    public static final String CATEGORY_POTIONTIMERS = "potiontimers";
+    public static final String CATEGORY_PLAYERLOCATOR = "playerlocator";
+    public static final String CATEGORY_EATINGAID = "eatingaid";
+    public static final String CATEGORY_WEAPONSWAP = "weaponswap";
     public static final String CATEGORY_FPS = "fps";
-    public static final String CATEGORY_HORSEINFO = "horse info";
-    public static final String CATEGORY_ENDERPEARLAID = "ender pearl aid";
+    public static final String CATEGORY_HORSEINFO = "horseinfo";
+    public static final String CATEGORY_ENDERPEARLAID = "enderpearlaid";
+    public static final String CATEGORY_CLOCK = "clock";
 
     //Configurable values - language
     public static String SupportedLanguages;
@@ -128,6 +129,9 @@ public class ZyinHUD
     //Configurable values - ender pearl aid
     public static String EnderPearlAidHotkey;
     public static boolean EnableEnderPearlAid;
+
+    //Configurable values - clock
+    public static boolean ShowClock;
     
     
     //Key bindings
@@ -155,6 +159,7 @@ public class ZyinHUD
     public static int SafeOverlayMode = 0;		//0=off, 1=on
     public static int PlayerLocatorMode = 0;	//0=off, 1=on
     public static int HorseInfoMode = 0;		//0=off, 1=on
+    public static int ClockMode = 0;			//0=standard clock, 1=time till night/day
     
     
     Minecraft mc = Minecraft.getMinecraft();
@@ -205,13 +210,36 @@ public class ZyinHUD
     @Mod.EventHandler
     public void serverStopping(FMLServerStoppingEvent event)
     {
+    	//this event is not called on SMP worlds, which means we change the config file
+    	//while in game
+    	UpdateConfigFileWithModifiedValues();
     	UpdateConfigFileWithModifiedHotkeys();
         config.save();
     }
+
+    
+    private String[] GetSupportedLanguages()
+    {
+    	return SupportedLanguages.replace(" ","").split(",");
+    }
     
     
-    
-    
+    /**
+     * If the user changes any values during gameplay, then update our config file.
+     */
+    private void UpdateConfigFileWithModifiedValues()
+    {
+    	Property p;
+    	
+        //Safe Overlay
+        p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
+        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
+        p.set(SafeOverlay.instance.getDrawDistance());
+        
+        p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
+        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
+        p.set(SafeOverlay.instance.getSeeUnsafePositionsThroughWalls());
+    }
     
     /**
      * If the user changes any hotkeys in the Options > Controls menu in game, then update our config file.
@@ -256,25 +284,38 @@ public class ZyinHUD
         p.comment = "Default: " + DefaultEnderPearlAidHotkey;
         p.set(hotkey);
 	}
-
-    
-    private String[] GetSupportedLanguages()
-    {
-    	return SupportedLanguages.replace(" ","").split(",");
-    }
     
 
     private void LoadConfigSettings(File configFile)
     {
         //load configuration settings
+    	//NOTE: doing config.save() multiple times will bug out and add additional quotes to
+    	//categories with more than 1 word
         config = new Configuration(configFile);
-        config.load();	//config.save() is done in serverStopping() event
+        config.load();
         Property p;
         
 
+        config.addCustomCategoryComment(CATEGORY_LANGUAGE, "Language support for other languages");
+        config.addCustomCategoryComment(CATEGORY_INFOLINE, "Info Line displays the status of other features in the top left corner of the screen.");
+        config.addCustomCategoryComment(CATEGORY_COORDINATES, "Coordinates displays your coordinates. Nuff said.");
+        config.addCustomCategoryComment(CATEGORY_COMPASS, "Compass displays a text compass.");
+        config.addCustomCategoryComment(CATEGORY_DISTANCEMEASURER, "Distance Measurer can calculate distances between you and blocks that you aim at.");
+        config.addCustomCategoryComment(CATEGORY_DURABILITYINFO, "Durability Info will display your breaking armor and equipment.");
+        config.addCustomCategoryComment(CATEGORY_SAFEOVERLAY, "Safe Overlay shows you which blocks are dark enough to spawn mobs.");
+        config.addCustomCategoryComment(CATEGORY_POTIONTIMERS, "Potion Timers shows the duration remaining on potions that you drink.");
+        config.addCustomCategoryComment(CATEGORY_PLAYERLOCATOR, "Player Locator gives you a radar-like ability to easily see where other people are.");
+        config.addCustomCategoryComment(CATEGORY_EATINGAID, "Eating Aid makes eating food quick and easy.");
+        config.addCustomCategoryComment(CATEGORY_WEAPONSWAP, "Weapon Swap allows you to quickly select your sword and bow.");
+        config.addCustomCategoryComment(CATEGORY_FPS, "FPS shows your frames per second without having to go into the F3 menu.");
+        config.addCustomCategoryComment(CATEGORY_HORSEINFO, "Horse Info gives you information about horse stats, such as speed and jump height.");
+        config.addCustomCategoryComment(CATEGORY_ENDERPEARLAID, "Ender Pearl Aid makes it easier to quickly throw ender pearls.");
+        config.addCustomCategoryComment(CATEGORY_CLOCK, "Clock shows you time relevant to Minecraft time.");
+        
+        
         //CATEGORY_LANGUAGE
         p = config.get(CATEGORY_LANGUAGE, "SupportedLanguages", DefaultSupportedLanguages);
-        p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud.";
+        p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud/";
         SupportedLanguages = p.getString();
         
         
@@ -440,6 +481,17 @@ public class ZyinHUD
         EnableEnderPearlAid = p.getBoolean(true);
         
         
+        //CATEGORY_CLOCK
+        p = config.get(CATEGORY_CLOCK, "ShowClock", true);
+        p.comment = "Enable/Disable showing the in game time.";
+        ShowClock = p.getBoolean(true);
+        
+        p = config.get(CATEGORY_CLOCK, "ClockMode", 0);
+        p.comment = "0 = standard Minecraft time in game, 1 = countdown till morning/night.";
+        ClockMode = p.getInt(0);
+        
+
+        config.save();
     }
 
 
@@ -447,7 +499,7 @@ public class ZyinHUD
     {
         //Key Bind Handlers (for hotkeys) are defined here
         boolean[] repeatFalse = {false};
-        //boolean[] repeatTrue = {true};
+        boolean[] repeatTrue = {true};
         
         int hotkey;
         
@@ -459,7 +511,7 @@ public class ZyinHUD
         hotkey = GetKeyboardKeyFromString(SafeOverlayHotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultSafeOverlayHotkeyHotkey) : hotkey;
         key_L = new KeyBinding[] {new KeyBinding("Safe Overlay Toggle", hotkey)};
-        KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatFalse));
+        KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatTrue));
 
         hotkey = GetKeyboardKeyFromString(PlayerLocatorHotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultPlayerLocatorHotkey) : hotkey;
