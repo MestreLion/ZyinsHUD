@@ -36,7 +36,7 @@ import zyin.zyinhud.mods.PotionAid;
 import zyin.zyinhud.mods.PotionTimers;
 import zyin.zyinhud.mods.SafeOverlay;
 import zyin.zyinhud.mods.WeaponSwapper;
-import zyin.zyinhud.tickhandler.GUITickHandler;
+import zyin.zyinhud.tickhandler.GuiTickHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.tickhandler.RenderTickHandler;
 import zyin.zyinhud.util.Localization;
@@ -53,7 +53,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.4")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.5")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -140,7 +140,7 @@ public class ZyinHUD
         MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);	//needed for @ForgeSubscribe method subscriptions
 
         TickRegistry.registerTickHandler(new HUDTickHandler(), Side.CLIENT);
-        TickRegistry.registerTickHandler(new GUITickHandler(), Side.CLIENT);
+        TickRegistry.registerTickHandler(new GuiTickHandler(), Side.CLIENT);
         
         
     	LoadKeyHandlers();
@@ -333,8 +333,8 @@ public class ZyinHUD
         else
         	p.set(DurabilityInfo.DurabilityDisplayThresholdForItem);
         
-        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityUpdateFrequency", 50);
-        p.comment = "Update the HUD every XX render ticks (60 = 1 second at 60 fps)";
+        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityUpdateFrequency", 1000);
+        p.comment = "Update the the durability info display every XX ms.";
         if(loadSettings)
         	DurabilityInfo.DurabilityUpdateFrequency = p.getInt();
         else

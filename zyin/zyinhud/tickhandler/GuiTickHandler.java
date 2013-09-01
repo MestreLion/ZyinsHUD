@@ -2,7 +2,7 @@ package zyin.zyinhud.tickhandler;
 
 import java.util.EnumSet;
 
-import zyin.zyinhud.gui.OverrideGuiOptions;
+import zyin.zyinhud.gui.GuiOptionsOverride;
 import zyin.zyinhud.helper.EntityTrackerHelper;
 import zyin.zyinhud.mods.DurabilityInfo;
 import zyin.zyinhud.mods.HorseInfo;
@@ -20,11 +20,11 @@ import net.minecraft.client.gui.achievement.GuiStats;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 
-public class GUITickHandler implements ITickHandler
+public class GuiTickHandler implements ITickHandler
 {
     private static Minecraft mc = Minecraft.getMinecraft();
 
-    public GUITickHandler()
+    public GuiTickHandler()
     {
     }
 
@@ -48,19 +48,11 @@ public class GUITickHandler implements ITickHandler
     @Override
     public void tickEnd(EnumSet<TickType> type, Object... tickData)
     {
-        if (type.equals(EnumSet.of(TickType.RENDER)))
-        {
-            onRenderTick();
-        }
-        else if (type.equals(EnumSet.of(TickType.CLIENT)))
+        if (type.equals(EnumSet.of(TickType.CLIENT)))
         {
             GuiScreen guiScreen = mc.currentScreen;
 
-            if (guiScreen == null)
-            {
-                onTickInGame();
-            }
-            else
+            if (guiScreen != null)
             {
                 onTickInGUI(guiScreen);
             }
@@ -73,16 +65,16 @@ public class GUITickHandler implements ITickHandler
      */
     protected void onTickInGUI(GuiScreen guiScreen)
     {
-    	if (guiScreen instanceof GuiOptions)
+    	if (guiScreen instanceof GuiOptionsOverride)
         {
-        	mc.displayGuiScreen(new OverrideGuiOptions(new GuiIngameMenu(), mc.gameSettings));
+    		//don't do anything if we're looking at the new override screen
+        }
+    	else if (guiScreen instanceof GuiOptions)
+        {
+    		mc.displayGuiScreen(new GuiOptionsOverride(new GuiIngameMenu(), mc.gameSettings));
         }
     }
     
-    protected void onRenderTick()
-    {
-    }
-
     protected void onTickInGame()
     {
     }

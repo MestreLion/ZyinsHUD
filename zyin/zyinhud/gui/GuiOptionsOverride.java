@@ -22,10 +22,10 @@ import net.minecraft.client.settings.GameSettings;
  * <p>
  * This is able to replace the default one by utilizing a hook in the GUITickHandler class.
  */
-public class OverrideGuiOptions extends GuiOptions
+public class GuiOptionsOverride extends GuiOptions
 {
 
-    public OverrideGuiOptions(GuiScreen par1GuiScreen, GameSettings par2GameSettings)
+    public GuiOptionsOverride(GuiScreen par1GuiScreen, GameSettings par2GameSettings)
     {
 		super(par1GuiScreen, par2GameSettings);
 	}
@@ -36,7 +36,7 @@ public class OverrideGuiOptions extends GuiOptions
     public void initGui()
     {
     	super.initGui();
-    	this.buttonList.add(new GuiButton(1337, this.width / 2 + 5, this.height / 6 + 59, 150, 20, Localization.get("gui.override.options.buttons.options")));
+    	this.buttonList.add(new GuiButton(123456, this.width / 2 + 5, this.height / 6 + 59, 150, 20, Localization.get("gui.override.options.buttons.options")));
 
     }
     
@@ -49,7 +49,7 @@ public class OverrideGuiOptions extends GuiOptions
     	
         if (par1GuiButton.enabled)
         {
-            if (par1GuiButton.id == 1337)
+            if (par1GuiButton.id == 123456)
             {
                 this.mc.gameSettings.saveOptions();
                 this.mc.displayGuiScreen(new GuiZyinHUDOptions(this));

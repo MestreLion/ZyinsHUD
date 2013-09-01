@@ -55,6 +55,9 @@ import zyin.zyinhud.util.Localization;
  * We are able to access this screen by using a hotkey (Ctrl + Alt + Z), or navigating through the
  * default options window. We put an additional button into the Options window by using the GUITickHandler
  * class and replacing the normal GuiOptions class with our custom OverrideGuiOptions class.
+ * <p>
+ * In order to get the GuiNumberSlider to work when we click and drag it, we override and modify 3 methods:
+ * mouseClicked(), mouseMovedOrUp(), and actionPerformed_MouseUp().
  */
 public class GuiZyinHUDOptions extends GuiScreen
 {
@@ -188,7 +191,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     			"v." + ZyinHUD.GetVersion(),
     			"",
     			"To reset values to their default",
-    			"setting, delete it in the onfiguration",
+    			"setting, delete it in the configuration",
     			"file at /.minecraft/config/ZyinHUD.cfg"
     			};
     	
@@ -290,7 +293,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiSafeOverlayHotkeyButton(702, buttonX_column1, Y, buttonWidth_half, buttonHeight, SafeOverlay.Hotkey));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(706, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("safeoverlay.drawdistance"), SafeOverlay.minDrawDistance, SafeOverlay.maxDrawDistance, SafeOverlay.instance.getDrawDistance(), true));
+    	buttonList.add(new GuiNumberSlider(703, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("safeoverlay.drawdistance"), SafeOverlay.minDrawDistance, SafeOverlay.maxDrawDistance, SafeOverlay.instance.getDrawDistance(), true));
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiNumberSlider(704, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("safeoverlay.transparency"), SafeOverlay.instance.getUnsafeOverlayMinTransparency(), SafeOverlay.instance.getUnsafeOverlayMaxTransparency(), SafeOverlay.instance.getUnsafeOverlayTransparency(), false));
     	Y += buttonHeight + buttonSpacing;
@@ -318,7 +321,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiHorseInfoHotkeyButton(902, buttonX_column1, Y, buttonWidth_half, buttonHeight, HorseInfo.Hotkey));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.minviewdistance"), HorseInfo.minViewDistanceCutoff, HorseInfo.maxViewDistanceCutoff, HorseInfo.viewDistanceCutoff, true));
+    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.maxviewdistance"), HorseInfo.minViewDistanceCutoff, HorseInfo.maxViewDistanceCutoff, HorseInfo.viewDistanceCutoff, true));
     	Y += buttonHeight + buttonSpacing;
     	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.numdecimalsdisplayed"), HorseInfo.minNumberOfDecimalsDisplayed, HorseInfo.maxNumberOfDecimalsDisplayed, HorseInfo.GetNumberOfDecimalsDisplayed(), true));
     	Y += buttonHeight + buttonSpacing;
@@ -340,19 +343,23 @@ public class GuiZyinHUDOptions extends GuiScreen
     	buttonList.add(new GuiButton(1102, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("durabilityinfo.showarmordurability", DurabilityInfo.ShowArmorDurability)));
     	buttonList.add(new GuiNumberSlider(1103, buttonX_column2, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.armordurabilitythreshold"), 0f, 1f, DurabilityInfo.DurabilityDisplayThresholdForArmor, false));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiButton(1104, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("durabilityinfo.showindividualarmoricons", DurabilityInfo.ShowIndividualArmorIcons)));
-    	Y += buttonHeight + buttonSpacing;
     	
     	buttonList.add(new GuiButton(1105, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("durabilityinfo.showitemdurability", DurabilityInfo.ShowItemDurability)));
     	buttonList.add(new GuiNumberSlider(1106, buttonX_column2, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.itemdurabilitythreshold"), 0f, 1f, DurabilityInfo.DurabilityDisplayThresholdForItem, false));
     	Y += buttonHeight + buttonSpacing;
     	
-    	buttonList.add(new GuiNumberSlider(1107, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.updatefrequency"), 10, 2000, DurabilityInfo.DurabilityUpdateFrequency, true));
+    	
+    	buttonList.add(new GuiButton(1104, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("durabilityinfo.showindividualarmoricons", DurabilityInfo.ShowIndividualArmorIcons)));
+    	buttonList.add(new GuiButton(1110, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("durabilityinfo.showdamageaspercent", DurabilityInfo.ShowDamageAsPercentage)));
     	Y += buttonHeight + buttonSpacing;
     	
-    	buttonList.add(new GuiNumberSlider(1108, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.offsetx"), 0, 390, DurabilityInfo.durabalityLocX, true));
+    	
+    	buttonList.add(new GuiNumberSlider(1107, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.updatefrequency"), 10, 4000, DurabilityInfo.DurabilityUpdateFrequency, true));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(1109, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.offsety"), 0, 225, DurabilityInfo.durabalityLocY, true));
+    	
+    	buttonList.add(new GuiNumberSlider(1108, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.offsetx"), 0, width - DurabilityInfo.toolX, DurabilityInfo.durabalityLocX, true));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiNumberSlider(1109, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("durabilityinfo.offsety"), 0, height - DurabilityInfo.toolY, DurabilityInfo.durabalityLocY, true));
     	
     }
     private void DrawEnderPearlAidButtons()
@@ -821,6 +828,11 @@ public class GuiZyinHUDOptions extends GuiScreen
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
             	DurabilityInfo.SetDurabalityVerticalLocation(value);
+            }
+            else if (button.id == 1110)	//Show as Percent
+            {
+            	DurabilityInfo.ToggleShowDamageAsPercent();
+            	button.displayString = GetButtonLabel_Boolean("durabilityinfo.showdamageaspercent", DurabilityInfo.ShowDamageAsPercentage);
             }
         	
             

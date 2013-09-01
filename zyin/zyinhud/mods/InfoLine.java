@@ -51,13 +51,13 @@ public class InfoLine
             String clock = Clock.CalculateMessageForInfoLine();
             String coordinates = Coordinates.CalculateMessageForInfoLine();
             String compass = Compass.CalculateMessageForInfoLine();
-            String fps = Fps.CalculateMessageForInfoLine();
             String distance = DistanceMeasurer.CalculateMessageForInfoLine();
+            String fps = Fps.CalculateMessageForInfoLine();
             String safe = SafeOverlay.CalculateMessageForInfoLine();
-            String locator = PlayerLocator.CalculateMessageForInfoLine();
+            String players = PlayerLocator.CalculateMessageForInfoLine();
             String horse = HorseInfo.CalculateMessageForInfoLine();
             
-            String message = clock + coordinates + compass + fps + distance + safe + locator + horse;
+            String message = clock + coordinates + compass + distance + fps + safe + players + horse;
             mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
         }
 

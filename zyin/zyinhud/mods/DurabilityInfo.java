@@ -43,8 +43,10 @@ public class DurabilityInfo
     public static float DurabilityDisplayThresholdForArmor;
     public static float DurabilityDisplayThresholdForItem;
     public static boolean ShowIndividualArmorIcons;
+    public static boolean ShowDamageAsPercentage;
 	
-    protected static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation("textures/durability_icons.png");
+
+	protected static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation("textures/durability_icons.png");
 
     //U and V is the top left part of the image
     //X and Y is the width and height of the image
@@ -54,16 +56,16 @@ public class DurabilityInfo
     protected static int armorDurabilityY = 2 * 16;
 
     //the height/width of the tools being rendered
-    protected static int toolX = 1 * 16;
-    protected static int toolY = 1 * 16;
+    public static int toolX = 1 * 16;
+    public static int toolY = 1 * 16;
 
     //where the armor icon is rendered (these values replaced by the config settings)
     public static int durabalityLocX = 20;
     public static int durabalityLocY = 20;
 
     //where the tool icons are rendered (these values replaced by the config settings)
-    public static int equipmentLocX = 20 + armorDurabilityX;
-    public static int equipmentLocY = 20;
+    protected static int equipmentLocX = 20 + armorDurabilityX;
+    protected static int equipmentLocY = 20;
 
     private static Minecraft mc = Minecraft.getMinecraft();
     private static ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
@@ -127,12 +129,14 @@ public class DurabilityInfo
                             itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
                             //render the armor's durability bar
                             itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
-                            String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
-                            int damageX = (horizontalPosition) + toolX / 2;
-                            int damageY = (verticalSpacer) + toolY - 9;
+                            
+                            String damageString = GetDamageString(toolStack.getItemDamage(), toolStack.getMaxDamage());
+                            
                             GL11.glDisable(GL11.GL_LIGHTING);	//this is needed because the itemRenderer.renderItem() method enables lighting
                             mc.fontRenderer.setUnicodeFlag(true);
-                            mc.fontRenderer.drawStringWithShadow(damage, damageX, damageY, 0xffffff);
+                            int damageX = horizontalPosition + toolX - mc.fontRenderer.getStringWidth(damageString);
+                            int damageY = verticalSpacer + toolY - mc.fontRenderer.FONT_HEIGHT - 1;
+                            mc.fontRenderer.drawStringWithShadow(damageString, damageX, damageY, 0xffffff);
                             mc.fontRenderer.setUnicodeFlag(false);
                             numArmors++;
                     	}
@@ -170,12 +174,14 @@ public class DurabilityInfo
                         itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
                         //render the item's durability bar
                         itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
-                        String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
-                        int damageX = (horizontalPosition) + toolX / 2;
-                        int damageY = (verticalSpacer) + toolY - 9;
+                        
+                        String damageString = GetDamageString(toolStack.getItemDamage(), toolStack.getMaxDamage());
+                        
                         GL11.glDisable(GL11.GL_LIGHTING);	//this is needed because the itemRenderer.renderItem() method enables lighting
                         mc.fontRenderer.setUnicodeFlag(true);
-                        mc.fontRenderer.drawStringWithShadow(damage, damageX, damageY, 0xffffff);
+                        int damageX = horizontalPosition + toolX - mc.fontRenderer.getStringWidth(damageString);
+                        int damageY = verticalSpacer + toolY - mc.fontRenderer.FONT_HEIGHT - 1;
+                        mc.fontRenderer.drawStringWithShadow(damageString, damageX, damageY, 0xffffff);
                         mc.fontRenderer.setUnicodeFlag(false);
                         numTools++;
                     }
@@ -259,6 +265,14 @@ public class DurabilityInfo
             }
         }
     }
+    
+    private static String GetDamageString(int currentDamage, int maxDamage)
+    {
+        if(ShowDamageAsPercentage)
+        	return (int)((double)currentDamage / maxDamage * 100) + "%";
+        else
+        	return (maxDamage - currentDamage) + "";
+    }
 
     /**
      * Gets the horizontal location where the durability icons are rendered.
@@ -311,7 +325,7 @@ public class DurabilityInfo
     	equipmentLocY = durabalityLocY;
     	return durabalityLocY;
     }
-
+    
     /**
      * Toggles showing durability for armor
      * @return 
@@ -329,6 +343,15 @@ public class DurabilityInfo
     {
     	ShowItemDurability = !ShowItemDurability;
     	return ShowItemDurability;
+    }
+    /**
+     * Toggles showing percentages for item durability
+     * @return 
+     */
+    public static boolean ToggleShowDamageAsPercent()
+    {
+    	ShowDamageAsPercentage = !ShowDamageAsPercentage;
+    	return ShowDamageAsPercentage;
     }
     /**
      * Toggles showing icons or an image for broken armor
