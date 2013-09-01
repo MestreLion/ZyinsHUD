@@ -4,9 +4,9 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.EatingAid;
-import zyin.zyinhud.EnderPearlAid;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.EatingAid;
+import zyin.zyinhud.mods.EnderPearlAid;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
@@ -42,10 +42,8 @@ public class EnderPearlAidKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        if (ZyinHUD.EnableEnderPearlAid)
-        {
+        if (EnderPearlAid.Enabled)
             EnderPearlAid.UseEnderPearl();
-        }
     }
 
     @Override

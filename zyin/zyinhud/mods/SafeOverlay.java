@@ -1,7 +1,4 @@
-package zyin.zyinhud;
-
-import zyin.zyinhud.util.FontCodes;
-import zyin.zyinhud.util.Localization;
+package zyin.zyinhud.mods;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +12,6 @@ import net.minecraft.block.BlockCactus;
 import net.minecraft.block.BlockCake;
 import net.minecraft.block.BlockCarpet;
 import net.minecraft.block.BlockChest;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFarmland;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -35,17 +31,16 @@ import net.minecraft.block.BlockStairs;
 import net.minecraft.block.BlockWall;
 import net.minecraft.block.BlockWeb;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.Property;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 
 import org.lwjgl.opengl.GL11;
+
+import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 /**
  * The Safe Overlay renders an overlay onto the game world showing which areas
@@ -53,6 +48,30 @@ import org.lwjgl.opengl.GL11;
  */
 public class SafeOverlay
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Safe Overlay";
+    
+	/**
+	 * 0=off<br>
+	 * 1=on<br>
+	 */
+    public static int Mode = 0;
+    
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 2;
+    
     /**
      * Time in MS between re-calculations. This value changes based on the drawDistance
      * from updateFrequencyMin to updateFrequencyMax.
@@ -89,7 +108,7 @@ public class SafeOverlay
      * <br>
      * drawDistance = 175 = 42,875,000 blocks (max)
      */
-    protected int drawDistance;
+    protected int drawDistance = 20;
     public static final int defaultDrawDistance = 20;
     public static final int minDrawDistance = 2;	//can't go lower than 2. setting this to 1 dispays nothing
     public static final int maxDrawDistance = 175;	//175 is the edge of the visible map on far
@@ -98,13 +117,15 @@ public class SafeOverlay
      * The transprancy of the "X" marks when rendered, between (0.1 and 1]
      */
     private float unsafeOverlayTransparency;
+    private float unsafeOverlayMinTransparency = 0.11f;
+    private float unsafeOverlayMaxTransparency = 1f;
 
     /**
      * The last time the overlay cache was generated
      */
     private long lastGenerate;
 
-    public boolean displayInNether;
+    public boolean displayInNether = false;
     private boolean renderUnsafePositionsThroughWalls = false;
 
     private Position playerPosition;
@@ -112,8 +133,6 @@ public class SafeOverlay
     private static List<Position> unsafePositionCache;
 
     private Minecraft mc;
-    private RenderGlobal renderGlobal;
-    private RenderBlocks renderBlocks;
     private EntityPlayer player;
 
     /**
@@ -130,19 +149,11 @@ public class SafeOverlay
     protected SafeOverlay()
     {
         mc = Minecraft.getMinecraft();
-        renderGlobal = mc.renderGlobal;
-        renderBlocks = renderGlobal.globalRenderBlocks;
         player = mc.thePlayer;
         playerPosition = new Position();
+        
         //Don't let multiple threads access this list at the same time by making it a Synchronized List
         unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());
-        //grab configuration settings
-        setDrawDistance(ZyinHUD.SafeOverlayDrawDistance);
-        setSeeUnsafePositionsThroughWalls(ZyinHUD.SafeOverlaySeeThroughWalls);
-        unsafeOverlayTransparency = (float)ZyinHUD.SafeOverlayTransparency;	//must be between (0.1, 1]
-        unsafeOverlayTransparency = (unsafeOverlayTransparency <= 0.1f) ? 0.101f : unsafeOverlayTransparency;	//check lower bounds
-        unsafeOverlayTransparency = (unsafeOverlayTransparency >= 1f) ? 1f : unsafeOverlayTransparency;	//check upper bounds
-        displayInNether = ZyinHUD.SafeOverlayDisplayInNether;
     }
 
     /**
@@ -203,6 +214,7 @@ public class SafeOverlay
     }
 
     /**
+     * ONLY WORKS IN SINGLE PLAYER<p>
      * Psuedo event handler for blocks being placed.
      * Will fire when the player ATTEMPTS to placed a block
      * (it will fire even if the block isn't succesfully placed).
@@ -221,6 +233,7 @@ public class SafeOverlay
     }
 
     /**
+     * ONLY WORKS IN SINGLE PLAYER<p>
      * Psuedo event handler for a light emitting block being placed.
      * Will fire when the player ATTEMPTS to placed a block
      * (it will fire even if the block isn't succesfully placed).
@@ -238,19 +251,20 @@ public class SafeOverlay
     /**
      * This thead will calculate unsafe positions around the player given a Y coordinate.
      * <p>
-     * <b>Single threaded</b> performance (with drawDistance=80 [max]):
+     * <b>Single threaded</b> performance (with drawDistance=80):
      * <br>Average CPU usage: 24%
      * <br>Time to calculate all unsafe areas: <b>305 ms</b>
      * <p>
-     * <b>Multi threaded</b> performance (with drawDistance=80 [max]):
+     * <b>Multi threaded</b> performance (with drawDistance=80):
      * <br>Average CPU usage: 25-35%
      * <br>Time to calculate all unsafe areas: <b>100 ms</b>
      * <p>
      * Machine specs when this test took place: Core i7 2.3GHz, 8GB DDR3, GTX 260
-     * <br>With vanilla textures, far render distance, flatland map.
+     * <br>With vanilla textures, far render distance, superflat map.
      */
     class SafeCalculatorThread extends Thread
     {
+    	//this is the y-coordinate this thread is responsible for calculating
         private int y;
 
         SafeCalculatorThread(int y)
@@ -274,20 +288,50 @@ public class SafeOverlay
                 pos.y = playerPosition.y + y;
                 pos.z = playerPosition.z + z;
                 
-                
-                //if a mob can spawn here, add it to the unsafe positions cache so it can be rendered as unsafe
-                //4 things must be true for a mob to be able to spawn here:
-                //1) mobs need to be able to spawn on top of this block (block with a solid top surface)
-                //2) mobs need to be able to spawn inside of the block above (air, button, lever, etc)
-                //3) 2 blocks above needs to be transparent (air, glass, stairs, etc)
-                //4) needs < 8 light level
-                if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0) && !pos.IsOpaqueBlock(0, 2, 0)
-                        && pos.GetLightLevelWithoutSky() < 8)
+                if(CanMobsSpawnAtPosition(pos))
                 {
                     unsafePositionCache.add(new Position(pos));
                 }
             }
         }
+    }
+    
+    /**
+     * Determines if any mob can spawn at a position. Works very well at detecting
+     * if bipeds or spiders can spawn there.
+     * @param pos Position of the block whos surface gets checked
+     * @return
+     */
+    public static boolean CanMobsSpawnAtPosition(Position pos)
+    {
+        //if a mob can spawn here, add it to the unsafe positions cache so it can be rendered as unsafe
+        //4 things must be true for a mob to be able to spawn here:
+        //1) mobs need to be able to spawn on top of this block (block with a solid top surface)
+        //2) mobs need to be able to spawn inside of the block above (air, button, lever, etc)
+        //3) needs < 8 light level
+        if (pos.CanMobsSpawnOnBlock(0, 0, 0) && pos.CanMobsSpawnInBlock(0, 1, 0) && pos.GetLightLevelWithoutSky() < 8)
+        {
+            //4) 2 blocks above needs to be air for bipeds
+        	if(pos.IsAirBlock(0, 2, 0))
+        		return true;
+
+            //4.5) 2 blocks above needs to be transparent (air, glass, stairs, etc) for spiders
+        	if(!pos.IsOpaqueBlock(0, 2, 0))	//block is see through like air, stairs, glass, etc.
+        	{
+        		//check to see if a spider can spawn here by checking the 8 neighboring blocks
+        		if(pos.CanMobsSpawnInBlock(-1, 1, 1) &&
+						pos.CanMobsSpawnInBlock(-1, 1, 0) &&
+						pos.CanMobsSpawnInBlock(-1, 1, -1) &&
+						pos.CanMobsSpawnInBlock(0, 1, -1) &&
+						pos.CanMobsSpawnInBlock(0, 1, 1) &&
+						pos.CanMobsSpawnInBlock(1, 1, 1) &&
+						pos.CanMobsSpawnInBlock(1, 1, 0) &&
+						pos.CanMobsSpawnInBlock(1, 1, -1))
+        			return true;
+        	}
+        }
+    	
+    	return false;
     }
 
     /**
@@ -299,7 +343,7 @@ public class SafeOverlay
     @Deprecated
     protected void RenderAllUnsafePositions(float partialTickTime)
     {
-        if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
+        if (Mode == 0)	//0 = off, 1 = on
         {
             return;
         }
@@ -359,7 +403,7 @@ public class SafeOverlay
      */
     public void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
     {
-        if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
+        if (!SafeOverlay.Enabled || Mode == 0)	//0 = off, 1 = on
         {
             return;
         }
@@ -472,31 +516,12 @@ public class SafeOverlay
         //Minecraft bug: the Y-bounds for half slabs change if the user is aimed at them, so set them manually
         if (block instanceof BlockHalfSlab)
         {
-            //0 = normal half slab, 0 = double slab, 8 = upside down slab
-            /*boolean isUpsideDown = (renderBlocks.blockAccess.getBlockMetadata(position.x, position.y, position.z) & 8) == 8;
-
-            boolean isDoubleSlab = block.isOpaqueCube();
-
-            if (isUpsideDown || isDoubleSlab)
-            {
-                boundingBoxMaxY = 1.0;
-            }
-            else //normal half slab
-            	return;*/
             boundingBoxMaxY = 1.0;
         }
 
-        /*
-        //Minecraft bug: the X and Z bounds for stairs are wrong, so set them manually
-        else if(block instanceof BlockStairs)
-        {
-            boundingBoxMinX = 0;
-            boundingBoxMinZ = 0;
-        }
-        */
-
         if (blockAbove != null)	//if block above is not an Air block
         {
+        	//Minecraft bug: the Y-bounds for stacked snow blocks changes based on the last on you looked at
             if (blockAbove instanceof BlockSnow
                     || blockAbove instanceof BlockRailBase
                     || blockAbove instanceof BlockBasePressurePlate
@@ -508,13 +533,16 @@ public class SafeOverlay
             }
         }
 
-        double minX = position.x + boundingBoxMinX + 0.02;
-        double maxX = position.x + boundingBoxMaxX - 0.02;
-        double maxY = position.y + boundingBoxMaxY + 0.02;
-        double minZ = position.z + boundingBoxMinZ + 0.02;
-        double maxZ = position.z + boundingBoxMaxZ - 0.02;
-        
-        //render an "X" slightly above the block
+        double minX = position.x + boundingBoxMinX + 0.02f;
+        double maxX = position.x + boundingBoxMaxX - 0.02f;
+        double maxY = position.y + boundingBoxMaxY + 0.02f;
+        double minZ = position.z + boundingBoxMinZ + 0.02f;
+        double maxZ = position.z + boundingBoxMaxZ - 0.02f;
+
+        //render the "X" mark
+        //since we are using doubles it causes the marks to 'flicker' when very far from spawn (~5000 blocks)
+        //if we use GL11.glVertex3i(int, int, int) it fixes the issue but then we can't render the marks
+        //precisely where we want to
         GL11.glColor4f(r, g, b, alpha);	//alpha must be > 0.1
         GL11.glVertex3d(maxX, maxY, maxZ);
         GL11.glVertex3d(minX, maxY, minZ);
@@ -607,11 +635,11 @@ public class SafeOverlay
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.SafeOverlayMode == 0)	//off
+        if (Mode == 0)	//off
         {
             return FontCodes.WHITE + "";
         }
-        else if (ZyinHUD.SafeOverlayMode == 1)	//on
+        else if (Mode == 1)	//on
         {
             return FontCodes.WHITE + Localization.get("safeoverlay.infoline") + InfoLine.SPACER;
         }
@@ -654,7 +682,7 @@ public class SafeOverlay
     }
 
     /**
-     * Increases the current draw distance by 3.
+     * Increases the current draw distance by 3 blocks.
      * @return the updated draw distance
      */
     public int increaseDrawDistance()
@@ -662,7 +690,7 @@ public class SafeOverlay
         return setDrawDistance(drawDistance + 3);
     }
     /**
-     * Decreases the current draw distance by 3.
+     * Decreases the current draw distance by 3 blocks.
      * @return the updated draw distance
      */
     public int decreaseDrawDistance()
@@ -697,6 +725,32 @@ public class SafeOverlay
         return renderUnsafePositionsThroughWalls;
     }
     /**
+     * Sets seeing unsafe areas in the Nether
+     * @param displayInUnsafeAreasInNether true or false
+     * @return the updated see Nether viewing mode
+     */
+    public boolean setDisplayInNether(Boolean displayInUnsafeAreasInNether)
+    {
+    	displayInNether = displayInUnsafeAreasInNether;
+        return displayInNether;
+    }
+    /**
+     * Gets if you can see unsafe areas in the Nether
+     * @return the Nether viewing mode
+     */
+    public boolean getDisplayInNether()
+    {
+        return displayInNether;
+    }
+    /**
+     * Toggles the current display in Nether mode
+     * @return the updated see display in Nether mode
+     */
+    public boolean toggleDisplayInNether()
+    {
+        return setDisplayInNether(!displayInNether);
+    }
+    /**
      * Sets the see through wall mode
      * @param safeOverlaySeeThroughWalls true or false
      * @return the updated see through wall mode
@@ -714,7 +768,57 @@ public class SafeOverlay
     {
         return setSeeUnsafePositionsThroughWalls(!renderUnsafePositionsThroughWalls);
     }
-
+    /**
+     * Sets the alpha value of the unsafe marks
+     * @param alpha the alpha value of the unsafe marks
+     * @return the updated alpha value
+     */
+    public float setUnsafeOverlayTransparency(float alpha)
+    {
+    	//must be between (0.101, 1]
+        unsafeOverlayTransparency = (alpha <= unsafeOverlayMinTransparency) ? unsafeOverlayMinTransparency : alpha;	//check lower bounds
+        unsafeOverlayTransparency = (alpha >= unsafeOverlayMaxTransparency) ? unsafeOverlayMaxTransparency : alpha;	//check upper bounds
+        return unsafeOverlayTransparency;
+    }
+    /**
+     * gets the alpha value of the unsafe marks
+     * @return the alpha value
+     */
+    public float getUnsafeOverlayTransparency()
+    {
+        return unsafeOverlayTransparency;
+    }
+    /**
+     * gets the smallest allowed alpha value of the unsafe marks
+     * @return the alpha value
+     */
+    public float getUnsafeOverlayMinTransparency()
+    {
+        return unsafeOverlayMinTransparency;
+    }
+    /**
+     * gets the largest allowed alpha value of the unsafe marks
+     * @return the alpha value
+     */
+    public float getUnsafeOverlayMaxTransparency()
+    {
+        return unsafeOverlayMaxTransparency;
+    }
+    
+    /**
+     * Increments the Clock mode
+     * @return The new Clock mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
+    }
+    
+    
+    
     /**
      * Helper class to storing information about a location in the world.
      * <p>
@@ -861,6 +965,26 @@ public class SafeOverlay
             }
 
             return block.isOpaqueCube();
+        }
+
+        /**
+         * Checks if a block is air.
+         * @param dx x location relative to this block
+         * @param dy y location relative to this block
+         * @param dz z location relative to this block
+         * @return true if the block is opaque (like dirt, stone, etc.)
+         */
+        public boolean IsAirBlock(int dx, int dy, int dz)
+        {
+        	int blockId = GetBlockId(dx, dy, dz);
+            Block block = Block.blocksList[blockId];
+            
+            if (block == null)	//air block
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /**

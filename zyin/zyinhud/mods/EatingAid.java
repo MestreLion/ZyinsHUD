@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import java.awt.AWTException;
 import java.awt.Robot;
@@ -21,6 +21,36 @@ import zyin.zyinhud.util.ZyinHUDUtil;
  */
 public class EatingAid
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Eating Aid";
+    
+	/**
+	 * 0=basic<br>
+	 * 1=intelligent<br>
+	 */
+    public static int Mode = 0;
+    
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 2;
+    
+    /** Such as golden carrots, golden apples */
+    public static boolean EatGoldenFood;
+    public static boolean PrioritizeFoodInHotbar;
+    
+    
     private Minecraft mc = Minecraft.getMinecraft();
     private Timer timer = new Timer();
     private TimerTask swapTimerTask;
@@ -199,12 +229,12 @@ public class EatingAid
     
     public int GetFoodItemIndexFromInventory()
     {
-    	if(ZyinHUD.EatingAidMode == 0)
+    	if(Mode == 0)
     	{
     		//basic mode
     		return GetStrongestFoodItemIndexFromInventory();
     	}
-    	else if(ZyinHUD.EatingAidMode == 1)
+    	else if(Mode == 1)
     	{
     		//intelligent mode
     		return GetBestFoodItemIndexFromInventory();
@@ -229,7 +259,7 @@ public class EatingAid
         //iterate over the hotbar (36-44), then main inventory (9-35)
         for (int i = inventorySlots.size() - 1; i > 8; i--)
         {
-        	if(ZyinHUD.PrioritizeFoodInHotbar
+        	if(PrioritizeFoodInHotbar
         		&& i == 35 && bestFoodMatchIndex > -1)
         		return bestFoodMatchIndex;
         	
@@ -252,7 +282,7 @@ public class EatingAid
                 if (item.equals(item.goldenCarrot)
                         || item.equals(item.appleGold))
                 {
-                    if (ZyinHUD.DontEatGoldenFood)
+                    if (!EatGoldenFood)
                     {
                         continue;
                     }
@@ -298,7 +328,7 @@ public class EatingAid
         //iterate over the hotbar (36-44), then main inventory (9-35)
         for (int i = inventorySlots.size() - 1; i > 8; i--)
         {
-        	if(ZyinHUD.PrioritizeFoodInHotbar
+        	if(PrioritizeFoodInHotbar
         		&& i == 35 && bestFoodMatchIndex > -1)
         		return bestFoodMatchIndex;
         	
@@ -324,7 +354,7 @@ public class EatingAid
                 if (item.equals(item.goldenCarrot)
                         || item.equals(item.appleGold))
                 {
-                    if (ZyinHUD.DontEatGoldenFood)
+                    if (!EatGoldenFood)
                     {
                         continue;
                     }
@@ -356,6 +386,39 @@ public class EatingAid
             return -1;
     }
 
+
+    /**
+     * Toggles the whether you eat golden food or not
+     * @return The state it was changed to
+     */
+    public static boolean ToggleEatingGoldenFood()
+    {
+    	EatGoldenFood = !EatGoldenFood;
+    	return EatGoldenFood;
+    }
+    
+    /**
+     * Toggles the prioritizing food in hotbar
+     * @return The state it was changed to
+     */
+    public static boolean TogglePrioritizeFoodInHotbar()
+    {
+    	PrioritizeFoodInHotbar = !PrioritizeFoodInHotbar;
+    	return PrioritizeFoodInHotbar;
+    }
+    
+    /**
+     * Increments the Eating Aid mode
+     * @return The new Eating Aid mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
+    }
+    
     
     private class StopEatingTimerTask extends TimerTask
     {

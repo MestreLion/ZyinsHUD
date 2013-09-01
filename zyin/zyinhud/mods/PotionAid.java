@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import java.awt.AWTException;
 import java.awt.Robot;
@@ -24,6 +24,21 @@ import zyin.zyinhud.util.ZyinHUDUtil;
  */
 public class PotionAid
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Potion Aid";
+    
     private Minecraft mc = Minecraft.getMinecraft();
     private Timer timer = new Timer();
     private TimerTask swapTimerTask;

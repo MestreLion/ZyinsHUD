@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -6,10 +6,20 @@ import java.util.TimerTask;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.util.Localization;
 
-import net.minecraft.client.Minecraft;
-
 public class Fps
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
     private static int currentFps = 0;
 
     private static final Timer timer = new Timer();
@@ -23,7 +33,7 @@ public class Fps
 
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.ShowFPS)
+        if (Fps.Enabled)
         {
             return currentFps + " " + Localization.get("fps.infoline") + InfoLine.SPACER;
         }

@@ -7,9 +7,9 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.util.Vec3;
-import zyin.zyinhud.HorseInfo;
-import zyin.zyinhud.PlayerLocator;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.PlayerLocator;
 
 /**
  * The EntityTrackerHelper calculates the (x,y) position on the HUD for entities in the game world.
@@ -58,7 +58,7 @@ public class EntityTrackerHelper
      */
     public static void RenderAllEntityOverlays()
     {
-        if ((ZyinHUD.PlayerLocatorMode == 1 || ZyinHUD.HorseInfoMode == 1)
+        if ((PlayerLocator.Mode == 1 || HorseInfo.Mode == 1)
                 && mc.inGameHasFocus)
         {
             me = mc.thePlayer;

@@ -2,21 +2,24 @@ package zyin.zyinhud.keyhandler;
 
 import java.util.EnumSet;
 
+import org.lwjgl.input.Keyboard;
+
 import zyin.zyinhud.ZyinHUD;
-import zyin.zyinhud.mods.HorseInfo;
-import zyin.zyinhud.mods.InfoLine;
+import zyin.zyinhud.gui.GuiZyinHUDOptions;
+import zyin.zyinhud.mods.DistanceMeasurer;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.settings.KeyBinding;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class HorseInfoKeyHandler extends KeyHandler
+public class GuiZyinHUDOptionsKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
-    public HorseInfoKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public GuiZyinHUDOptionsKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -24,7 +27,7 @@ public class HorseInfoKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Horse Info Key Handler";
+        return "ZyinHUD Options Key Handler";
     }
 
     @Override
@@ -40,8 +43,14 @@ public class HorseInfoKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
         
-        if(HorseInfo.Enabled)
-        	HorseInfo.ToggleMode();
+
+        //if "Ctrl" and "Alt" is pressed
+        if ((Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) &&
+            (Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU)) )
+        {
+            //display the GUI
+            mc.displayGuiScreen(new GuiZyinHUDOptions(null));
+        }
     }
 
     @Override

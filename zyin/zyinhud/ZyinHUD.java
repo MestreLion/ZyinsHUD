@@ -1,17 +1,7 @@
-/*
- * IDEAS
- * =====
- * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
- * //dont render other player's armor (or just helmet?) in multiplayer
- * 		cant just change the texture because theres 1 texture for helm/armor/pants/boots.
- * horse tracker integrated into player locator, uses the horses name to render on the screen
- */
-
 package zyin.zyinhud;
 
 import java.io.File;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,14 +10,33 @@ import net.minecraftforge.common.Property;
 import org.lwjgl.input.Keyboard;
 
 import zyin.zyinhud.command.CommandFps;
+import zyin.zyinhud.command.CommandZyinHUDOptions;
+import zyin.zyinhud.gui.GuiZyinHUDOptions;
 import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
 import zyin.zyinhud.keyhandler.EatingAidKeyHandler;
 import zyin.zyinhud.keyhandler.EnderPearlAidKeyHandler;
+import zyin.zyinhud.keyhandler.GuiZyinHUDOptionsKeyHandler;
 import zyin.zyinhud.keyhandler.HorseInfoKeyHandler;
 import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
 import zyin.zyinhud.keyhandler.PotionAidKeyHandler;
 import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
 import zyin.zyinhud.keyhandler.WeaponSwapperKeyHandler;
+import zyin.zyinhud.mods.Clock;
+import zyin.zyinhud.mods.Compass;
+import zyin.zyinhud.mods.Coordinates;
+import zyin.zyinhud.mods.DistanceMeasurer;
+import zyin.zyinhud.mods.DurabilityInfo;
+import zyin.zyinhud.mods.EatingAid;
+import zyin.zyinhud.mods.EnderPearlAid;
+import zyin.zyinhud.mods.Fps;
+import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.InfoLine;
+import zyin.zyinhud.mods.PlayerLocator;
+import zyin.zyinhud.mods.PotionAid;
+import zyin.zyinhud.mods.PotionTimers;
+import zyin.zyinhud.mods.SafeOverlay;
+import zyin.zyinhud.mods.WeaponSwapper;
+import zyin.zyinhud.tickhandler.GUITickHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.tickhandler.RenderTickHandler;
 import zyin.zyinhud.util.Localization;
@@ -44,7 +53,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.10.2")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.0")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -55,7 +64,8 @@ public class ZyinHUD
      */
     private static final String DefaultSupportedLanguages = "en_US"; //"en_US, zh_CN";
     
-    public static final String CATEGORY_LANGUAGE = "language";
+    //this should match the text used in the en_US.properties file
+    public static final String CATEGORY_MISC = "misc";
     public static final String CATEGORY_INFOLINE = "infoline";
     public static final String CATEGORY_COORDINATES = "coordinates";
     public static final String CATEGORY_COMPASS = "compass";
@@ -72,79 +82,7 @@ public class ZyinHUD
     public static final String CATEGORY_CLOCK = "clock";
     public static final String CATEGORY_POTIONAID = "potionaid";
 
-    //Configurable values - language
     public static String SupportedLanguages;
-    
-    //Configurable values - info line
-    public static boolean ShowInfoLine;
-
-    //Configurable values - coordinates
-    public static boolean ShowCoordinates;
-    public static boolean UseYCoordinateColors;
-
-    //Configurable values - compass
-    public static boolean ShowCompass;
-
-    //Configurable values - distance measurer
-    public static String DistanceMeasurerHotkey;
-
-    //Configurable values - durability info
-    public static boolean ShowDurabilityInfo;
-    public static boolean ShowArmorDurability;
-    public static boolean ShowItemDurability;
-    public static int DurabilityUpdateFrequency;
-    public static double DurabilityDisplayThresholdForArmor;
-    public static double DurabilityDisplayThresholdForItem;
-    public static int DurabilityLocationHorizontal;
-    public static int DurabilityLocationVertical;
-
-    //Configurable values - safe overlay
-    public static String SafeOverlayHotkey;
-    public static int SafeOverlayDrawDistance;
-    public static double SafeOverlayTransparency;
-    public static boolean SafeOverlayDisplayInNether;
-    public static boolean SafeOverlaySeeThroughWalls;
-
-    //Configurable values - potion timers
-    public static boolean ShowPotionTimers;
-
-    //Configurable values - player locator
-    public static String PlayerLocatorHotkey;
-    public static boolean ShowDistanceToPlayers;
-    public static int PlayerLocatorMinViewDistance;
-
-    //Configurable values - eating aid
-    public static String EatingAidHotkey;
-    public static boolean EnableEatingAid;
-    public static boolean DontEatGoldenFood;
-    public static boolean PrioritizeFoodInHotbar;
-    public static int EatingAidMode = 0;	//0=basic, 1=intelligent
-
-    //Configurable values - weapon swap
-    public static String WeaponSwapHotkey;
-    public static boolean EnableWeaponSwap;
-    public static boolean ScanHotbarForWeaponsFromLeftToRight;
-
-    //Configurable values - fps
-    public static boolean ShowFPS;
-
-    //Configurable values - horse info
-    public static String HorseInfoHotkey;
-    public static boolean ShowHorseStatsOnF3Menu;
-    public static int HorseInfoMaxViewDistance;
-    public static int HorseInfoNumberOfDecimalsDisplayed;
-    
-    //Configurable values - ender pearl aid
-    public static String EnderPearlAidHotkey;
-    public static boolean EnableEnderPearlAid;
-
-    //Configurable values - clock
-    public static boolean ShowClock;
-
-    //Configurable values - potion aid
-    public static String PotionAidHotkey;
-    public static boolean EnablePotionAid;
-    
     
     //Key bindings
     private static KeyBinding[] key_K;
@@ -155,6 +93,7 @@ public class ZyinHUD
     private static KeyBinding[] key_O;
     private static KeyBinding[] key_C;
     private static KeyBinding[] key_V;
+    private static KeyBinding[] key_Z;
     
     
     //default hotkeys
@@ -163,22 +102,14 @@ public class ZyinHUD
     private static String DefaultPlayerLocatorHotkey = "P";
     private static String DefaultEatingAidHotkey = "G";
     private static String DefaultWeaponSwapHotkey = "F";
-    private static String DefaultHorseInfoHotkey = "O";
+    private static String DefaultHorseInfoHotkey = "O";	//also: 0 + L, - + L, + + L
     private static String DefaultEnderPearlAidHotkey = "C";
     private static String DefaultPotionAidHotkey = "V";
+    private static String DefaultOptionsHotkey = "Z";	//Ctrl + Alt + Z
     
     
-    //the current state of various mods (everything is turned off initially)
-    public static int DistanceMeasurerMode = 0;	//0=off, 1=simple, 2=complex
-    public static int SafeOverlayMode = 0;		//0=off, 1=on
-    public static int PlayerLocatorMode = 0;	//0=off, 1=on
-    public static int HorseInfoMode = 0;		//0=off, 1=on
-    public static int ClockMode = 0;			//0=standard clock, 1=time till night/day
-    
-    
-    Minecraft mc = Minecraft.getMinecraft();
+    //private static Minecraft mc = Minecraft.getMinecraft();
     public static Configuration config = null;
-
     
     @Instance("ZyinHUD")
     public static ZyinHUD instance;
@@ -191,7 +122,7 @@ public class ZyinHUD
     {
     	
     }
-
+    
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -207,8 +138,10 @@ public class ZyinHUD
         proxy.registerRenderers();
         
         MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);	//needed for @ForgeSubscribe method subscriptions
-        
+
         TickRegistry.registerTickHandler(new HUDTickHandler(), Side.CLIENT);
+        TickRegistry.registerTickHandler(new GUITickHandler(), Side.CLIENT);
+        
         
     	LoadKeyHandlers();
     }
@@ -216,7 +149,7 @@ public class ZyinHUD
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
-    	
+
     }
 
     @Mod.EventHandler
@@ -224,15 +157,14 @@ public class ZyinHUD
     {
     	//THIS EVENT IS NOT FIRED ON SMP SERVERS
     	event.registerServerCommand(new CommandFps());
+    	event.registerServerCommand(new CommandZyinHUDOptions());
     }
     
     @Mod.EventHandler
     public void serverStopping(FMLServerStoppingEvent event)
     {
     	//THIS EVENT IS NOT FIRED ON SMP SERVERS
-    	UpdateConfigFileWithModifiedValues();
-    	UpdateConfigFileWithModifiedHotkeys();
-        config.save();
+    	SaveConfigSettings();
     }
 
     
@@ -241,90 +173,43 @@ public class ZyinHUD
     	return SupportedLanguages.replace(" ","").split(",");
     }
     
-    
     /**
-     * If the user changes any values during gameplay, then update our config file.
+     * Loads every value from the configuration file.
+     * @param configFile
      */
-    private void UpdateConfigFileWithModifiedValues()
+    private static void LoadConfigSettings(File configFile)
     {
-    	Property p;
-    	
-        //CATEGORY_SAFEOVERLAY
-        p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
-        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
-        p.set(SafeOverlay.instance.getDrawDistance());
-        
-        p = config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
-        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
-        p.set(SafeOverlay.instance.getSeeUnsafePositionsThroughWalls());
-        
-        //CATEGORY_FPS
-        p = config.get(CATEGORY_FPS, "ShowFPS", false);
-        p.comment = "Enable/Disable showing your FPS at the end of the Info Line.";
-        p.set(ShowFPS);
+    	ReadConfigSettings(configFile, true);
     }
     
     /**
-     * If the user changes any hotkeys in the Options > Controls menu in game, then update our config file.
+     * Saves every value that could be changed while in game back to the config file.
      */
-    private void UpdateConfigFileWithModifiedHotkeys()
+    public static void SaveConfigSettings()
     {
-    	Property p;
-    	String hotkey;
-    	
-    	hotkey = Keyboard.getKeyName(key_K[0].keyCode);
-        p = config.get(CATEGORY_DISTANCEMEASURER, "DistanceMeasurerHotkey", DefaultDistanceMeasurerHotkey);
-        p.comment = "Default: " + DefaultDistanceMeasurerHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_L[0].keyCode);
-        p = config.get(CATEGORY_SAFEOVERLAY, "SafeoverlayHotkey", DefaultSafeOverlayHotkey);
-        p.comment = "Default: " + DefaultSafeOverlayHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_P[0].keyCode);
-        p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", DefaultPlayerLocatorHotkey);
-        p.comment = "Default: " + DefaultPlayerLocatorHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_G[0].keyCode);
-        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", DefaultEatingAidHotkey);
-        p.comment = "Default: " + DefaultEatingAidHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_F[0].keyCode);
-        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", DefaultWeaponSwapHotkey);
-        p.comment = "Default: " + DefaultWeaponSwapHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_O[0].keyCode);
-        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", DefaultHorseInfoHotkey);
-        p.comment = "Default: " + DefaultHorseInfoHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_C[0].keyCode);
-        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
-        p.comment = "Default: " + DefaultEnderPearlAidHotkey;
-        p.set(hotkey);
-    	
-    	hotkey = Keyboard.getKeyName(key_V[0].keyCode);
-        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", DefaultPotionAidHotkey);
-        p.comment = "Default: " + DefaultPotionAidHotkey;
-        p.set(hotkey);
-	}
+    	ReadConfigSettings(null, false);
+    }
     
-
-    private void LoadConfigSettings(File configFile)
+    /**
+     * Creates the config file if it doesn't already exist.
+     * It loads/saves config values from/to the config file.
+     * @param configFile Standard Forge configuration file
+     * @param loadSettings set to true to load the settings from the config file, 
+     * or false to save the settings to the config file
+     */
+    private static void ReadConfigSettings(File configFile, boolean loadSettings)
     {
-        //load configuration settings
     	//NOTE: doing config.save() multiple times will bug out and add additional quotes to
     	//categories with more than 1 word
-        config = new Configuration(configFile);
-        config.load();
+    	if(loadSettings)
+    	{
+            config = new Configuration(configFile);
+            config.load();
+    	}
+        
         Property p;
         
-
-        config.addCustomCategoryComment(CATEGORY_LANGUAGE, "Language support for other languages (you probably wont ever need to change this)");
+        config.addCustomCategoryComment(CATEGORY_MISC, "Other settings not related to any specific functionality.");
         config.addCustomCategoryComment(CATEGORY_INFOLINE, "Info Line displays the status of other features in the top left corner of the screen.");
         config.addCustomCategoryComment(CATEGORY_COORDINATES, "Coordinates displays your coordinates. Nuff said.");
         config.addCustomCategoryComment(CATEGORY_COMPASS, "Compass displays a text compass.");
@@ -342,262 +227,435 @@ public class ZyinHUD
         config.addCustomCategoryComment(CATEGORY_POTIONAID, "Potion Aid helps you quickly drink potions based on your circumstance.");
         
         
-        //CATEGORY_LANGUAGE
-        p = config.get(CATEGORY_LANGUAGE, "SupportedLanguages", DefaultSupportedLanguages);
+        //CATEGORY_MISC
+        p = config.get(CATEGORY_MISC, "SupportedLanguages", DefaultSupportedLanguages);
         p.comment = "Languages must be added here in order to get loaded, in addition to adding a .properties file at /lang/zyinhud/. Values are comma seperated.";
         SupportedLanguages = p.getString();
         
+        p = config.get(CATEGORY_MISC, "OptionsHotkey", DefaultOptionsHotkey);
+        p.comment = "Default: "+DefaultOptionsHotkey;
+        if(loadSettings)
+        	GuiZyinHUDOptions.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_Z[0].keyCode));
+        
         
         //CATEGORY_INFOLINE
-        p = config.get(CATEGORY_INFOLINE, "ShowInfoLine", true);
+        p = config.get(CATEGORY_INFOLINE, "EnableInfoLine", true);
         p.comment = "Enable/Disable the entire info line in the top left part of the screen. This includes coordinates, compass, mod status, etc.";
-        ShowInfoLine = p.getBoolean(true);
+        if(loadSettings)
+        	InfoLine.Enabled = p.getBoolean(true);
+        else
+        	p.set(InfoLine.Enabled);
         
         
         //CATEGORY_COORDINATES
-        p = config.get(CATEGORY_COORDINATES, "ShowCoordinates", true);
+        p = config.get(CATEGORY_COORDINATES, "EnableCoordinates", true);
         p.comment = "Enable/Disable showing your coordinates.";
-        ShowCoordinates = p.getBoolean(true);
+        if(loadSettings)
+        	Coordinates.Enabled = p.getBoolean(true);
+        else
+        	p.set(Coordinates.Enabled);
         
         p = config.get(CATEGORY_COORDINATES, "UseYCoordinateColors", true);
         p.comment = "Color code the Y (height) coordinate based on what ores can spawn at that level.";
-        UseYCoordinateColors = p.getBoolean(true);
+        if(loadSettings)
+        	Coordinates.UseYCoordinateColors = p.getBoolean(true);
+        else
+        	p.set(Coordinates.UseYCoordinateColors);
         
         
         //CATEGORY_COMPASS
-        p = config.get(CATEGORY_COMPASS, "ShowCompass", true);
+        p = config.get(CATEGORY_COMPASS, "EnableCompass", true);
         p.comment = "Enable/Disable showing the compass.";
-        ShowCompass = p.getBoolean(true);
+        if(loadSettings)
+        	Compass.Enabled = p.getBoolean(true);
+        else
+        	p.set(Compass.Enabled);
         
 
         //CATEGORY_DISTANCEMEASURER
+        p = config.get(CATEGORY_DISTANCEMEASURER, "EnableDistanceMeasurer", true);
+        p.comment = "Enable/Disable the distance measurer.";
+        if(loadSettings)
+        	DistanceMeasurer.Enabled = p.getBoolean(true);
+        else
+        	p.set(DistanceMeasurer.Enabled);
+        
         p = config.get(CATEGORY_DISTANCEMEASURER, "DistanceMeasurerHotkey", DefaultDistanceMeasurerHotkey);
         p.comment = "Default: " + DefaultDistanceMeasurerHotkey;
-        DistanceMeasurerHotkey = p.getString();
+        if(loadSettings)
+        	DistanceMeasurer.Hotkey = p.getString();
+        else
+        	p.set(DistanceMeasurer.Hotkey);
         
         
         //CATEGORY_DURABILITYINFO
-        p = config.get(CATEGORY_DURABILITYINFO, "ShowDurabilityInfo", true);
+        p = config.get(CATEGORY_DURABILITYINFO, "EnableDurabilityInfo", true);
         p.comment = "Enable/Disable showing all durability info.";
-        ShowDurabilityInfo = p.getBoolean(true);
+        if(loadSettings)
+        	DurabilityInfo.Enabled = p.getBoolean(true);
+        else
+        	p.set(DurabilityInfo.Enabled);
         
         p = config.get(CATEGORY_DURABILITYINFO, "ShowArmorDurability", true);
         p.comment = "Enable/Disable showing breaking armor.";
-        ShowArmorDurability = p.getBoolean(true);
-        
+        if(loadSettings)
+        	DurabilityInfo.ShowArmorDurability = p.getBoolean(true);
+        else
+        	p.set(DurabilityInfo.ShowArmorDurability);
+
         p = config.get(CATEGORY_DURABILITYINFO, "ShowItemDurability", true);
         p.comment = "Enable/Disable showing breaking items.";
-        ShowItemDurability = p.getBoolean(true);
+        if(loadSettings)
+        	DurabilityInfo.ShowItemDurability = p.getBoolean(true);
+        else
+        	p.set(DurabilityInfo.ShowItemDurability);
+
+        p = config.get(CATEGORY_DURABILITYINFO, "ShowIndividualArmorIcons", false);
+        p.comment = "Enable/Disable showing armor peices instead of the big broken armor icon.";
+        if(loadSettings)
+        	DurabilityInfo.ShowIndividualArmorIcons = p.getBoolean(false);
+        else
+        	p.set(DurabilityInfo.ShowIndividualArmorIcons);
         
-        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityDisplayThresholdForArmor", 0.9);
-        p.comment = "Display when armor gets damaged more than this fraction of its durability.";
-        DurabilityDisplayThresholdForArmor = p.getDouble(0.9);
+        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityDisplayThresholdForArmor", 0.1);
+        p.comment = "Display when armor gets damaged less than this fraction of its durability.";
+        if(loadSettings)
+        	DurabilityInfo.DurabilityDisplayThresholdForArmor = (float)p.getDouble(0.1);
+        else
+        	p.set(DurabilityInfo.DurabilityDisplayThresholdForArmor);
         
-        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityDisplayThresholdForItem", 0.9);
-        p.comment = "Display when an item gets damaged more than this fraction of its durability.";
-        DurabilityDisplayThresholdForItem = p.getDouble(0.9);
+        p = config.get(CATEGORY_DURABILITYINFO, "DurabilityDisplayThresholdForItem", 0.1);
+        p.comment = "Display when an item gets damaged less than this fraction of its durability.";
+        if(loadSettings)
+        	DurabilityInfo.DurabilityDisplayThresholdForItem = (float)p.getDouble(0.1);
+        else
+        	p.set(DurabilityInfo.DurabilityDisplayThresholdForItem);
         
         p = config.get(CATEGORY_DURABILITYINFO, "DurabilityUpdateFrequency", 50);
         p.comment = "Update the HUD every XX render ticks (60 = 1 second at 60 fps)";
-        DurabilityUpdateFrequency = p.getInt();
+        if(loadSettings)
+        	DurabilityInfo.DurabilityUpdateFrequency = p.getInt();
+        else
+        	p.set(DurabilityInfo.DurabilityUpdateFrequency);
         
         p = config.get(CATEGORY_DURABILITYINFO, "DurabilityLocationHorizontal", 20);
         p.comment = "The horizontal position of the durability icons. 0 is left, 400 is far right.";
-        DurabilityLocationHorizontal = p.getInt();
+        if(loadSettings)
+        	DurabilityInfo.SetDurabalityHorizontalLocation(p.getInt());
+        else
+        	p.set(DurabilityInfo.GetDurabalityHorizontalLocation());
         
         p = config.get(CATEGORY_DURABILITYINFO, "DurabilityLocationVertical", 20);
         p.comment = "The vertical position of the durability icons. 0 is top, 200 is very bottom.";
-        DurabilityLocationVertical = p.getInt();
+        if(loadSettings)
+        	DurabilityInfo.SetDurabalityVerticalLocation(p.getInt());
+        else
+        	p.set(DurabilityInfo.GetDurabalityVerticalLocation());
         
         
         //CATEGORY_SAFEOVERLAY
+        p = config.get(CATEGORY_SAFEOVERLAY, "EnableSafeOverlay", true);
+        p.comment = "Enable/Disable the Safe Overlay.";
+        if(loadSettings)
+        	SafeOverlay.Enabled = p.getBoolean(true);
+        else
+        	p.set(SafeOverlay.Enabled);
+        
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayHotkey", DefaultSafeOverlayHotkey);
         p.comment = "Default: "+DefaultSafeOverlayHotkey;
-        SafeOverlayHotkey = p.getString();
+        if(loadSettings)
+        	SafeOverlay.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_L[0].keyCode));
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
         p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game with - + "+DefaultSafeOverlayHotkey+" and + + "+DefaultSafeOverlayHotkey+".";
-        SafeOverlayDrawDistance = p.getInt(20);
+        if(loadSettings)
+        	SafeOverlay.instance.setDrawDistance(p.getInt(20));
+        else
+        	p.set(SafeOverlay.instance.getDrawDistance());
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayTransparency", 0.3);
         p.comment = "The transparency of the unsafe marks. Must be between greater than 0.1 and less than or equal to 1.";
-        SafeOverlayTransparency = p.getDouble(0.3);
+        if(loadSettings)
+        	SafeOverlay.instance.setUnsafeOverlayTransparency((float)p.getDouble(0.3));
+        else
+        	p.set(SafeOverlay.instance.getUnsafeOverlayTransparency());
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlayDisplayInNether", false);
         p.comment = "Enable/Disable showing unsafe areas in the Nether.";
-        SafeOverlayDisplayInNether = p.getBoolean(false);
+        if(loadSettings)
+        	SafeOverlay.instance.setDisplayInNether(p.getBoolean(false));
+        else
+        	p.set(SafeOverlay.instance.getDisplayInNether());
         
         p = config.get(CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", false);
         p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + "+DefaultSafeOverlayHotkey+".";
-        SafeOverlaySeeThroughWalls = p.getBoolean(false);
+        if(loadSettings)
+        	SafeOverlay.instance.setSeeUnsafePositionsThroughWalls(p.getBoolean(false));
+        else
+        	p.set(SafeOverlay.instance.getSeeUnsafePositionsThroughWalls());
         
         
         //CATEGORY_POTIONTIMERS
-        p = config.get(CATEGORY_POTIONTIMERS, "ShowPotionTimers", true);
+        p = config.get(CATEGORY_POTIONTIMERS, "EnablePotionTimers", true);
         p.comment = "Enable/Disable showing the time remaining on potions.";
-        ShowPotionTimers = p.getBoolean(true);
+        if(loadSettings)
+        	PotionTimers.Enabled = p.getBoolean(true);
+        else
+        	p.set(PotionTimers.Enabled);
         
         
         //CATEGORY_PLAYERLOCATOR
+        p = config.get(CATEGORY_PLAYERLOCATOR, "EnablePlayerLocator", true);
+        p.comment = "Enable/Disable the Player Locator.";
+        if(loadSettings)
+        	PlayerLocator.Enabled = p.getBoolean(true);
+        else
+        	p.set(PlayerLocator.Enabled);
+        
         p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorHotkey", DefaultPlayerLocatorHotkey);
         p.comment = "Default: "+DefaultPlayerLocatorHotkey;
-        PlayerLocatorHotkey = p.getString();
+        if(loadSettings)
+        	PlayerLocator.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_P[0].keyCode));
         
         p = config.get(CATEGORY_PLAYERLOCATOR, "ShowDistanceToPlayers", false);
         p.comment = "Show how far away you are from the other players next to their name.";
-        ShowDistanceToPlayers = p.getBoolean(false);
+        if(loadSettings)
+        	PlayerLocator.ShowDistanceToPlayers = p.getBoolean(false);
+        else
+        	p.set(PlayerLocator.ShowDistanceToPlayers);
         
         p = config.get(CATEGORY_PLAYERLOCATOR, "PlayerLocatorMinViewDistance", 10);
         p.comment = "Stop showing player names when they are this close (distance measured in blocks).";
-        PlayerLocatorMinViewDistance = p.getInt(10);
+        if(loadSettings)
+        	PlayerLocator.viewDistanceCutoff = p.getInt(10);
+        else
+        	p.set(PlayerLocator.viewDistanceCutoff);
         
         
         //CATEGORY_EATINGAID
-        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", DefaultEatingAidHotkey);
-        p.comment = "Default: "+DefaultEatingAidHotkey;
-        EatingAidHotkey = p.getString();
-        
         p = config.get(CATEGORY_EATINGAID, "EnableEatingAid", true);
         p.comment = "Enables pressing a hotkey (default="+DefaultEatingAidHotkey+") to eat food even if it is  in your inventory and not your hotbar.";
-        EnableEatingAid = p.getBoolean(true);
+        if(loadSettings)
+        	EatingAid.Enabled = p.getBoolean(true);
+        else
+        	p.set(EatingAid.Enabled);
         
-        p = config.get(CATEGORY_EATINGAID, "DontEatGoldenFood", true);
+        p = config.get(CATEGORY_EATINGAID, "EatingAidHotkey", DefaultEatingAidHotkey);
+        p.comment = "Default: "+DefaultEatingAidHotkey;
+        if(loadSettings)
+        	EatingAid.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_G[0].keyCode));
+        
+        p = config.get(CATEGORY_EATINGAID, "EatGoldenFood", true);
         p.comment = "Enable/Disable using golden apples and golden carrots as food.";
-        DontEatGoldenFood = p.getBoolean(true);
+        if(loadSettings)
+        	EatingAid.EatGoldenFood = p.getBoolean(true);
+        else
+        	p.set(EatingAid.EatGoldenFood);
         
         p = config.get(CATEGORY_EATINGAID, "PrioritizeFoodInHotbar", false);
         p.comment = "Use food that is in your hotbar before looking for food in your main inventory.";
-        PrioritizeFoodInHotbar = p.getBoolean(false);
+        if(loadSettings)
+        	EatingAid.PrioritizeFoodInHotbar = p.getBoolean(false);
+        else
+        	p.set(EatingAid.PrioritizeFoodInHotbar);
         
         p = config.get(CATEGORY_EATINGAID, "EatingAidMode", 1);
         p.comment = "Set the eating aid mode:" + config.NEW_LINE +
 					"0 = always eat food with the highest saturation value" + config.NEW_LINE +
 					"1 = intelligently select food so that you don't overeat and waste anything";
-        EatingAidMode = p.getInt(1);
+        if(loadSettings)
+        	EatingAid.Mode = p.getInt(1);
+        else
+        	p.set(EatingAid.Mode);
         
         
         //CATEGORY_WEAPONSWAP
-        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", DefaultWeaponSwapHotkey);
-        p.comment = "Default: "+DefaultWeaponSwapHotkey;
-        WeaponSwapHotkey = p.getString();
-        
         p = config.get(CATEGORY_WEAPONSWAP, "EnableWeaponSwap", true);
         p.comment = "Enables pressing a hotkey (default="+DefaultWeaponSwapHotkey+") to swap between your sword and bow.";
-        EnableWeaponSwap = p.getBoolean(true);
+        if(loadSettings)
+        	WeaponSwapper.Enabled = p.getBoolean(true);
+        else
+        	p.set(WeaponSwapper.Enabled);
+        
+        p = config.get(CATEGORY_WEAPONSWAP, "WeaponSwapHotkey", DefaultWeaponSwapHotkey);
+        p.comment = "Default: "+DefaultWeaponSwapHotkey;
+        if(loadSettings)
+        	WeaponSwapper.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_F[0].keyCode));
         
         p = config.get(CATEGORY_WEAPONSWAP, "ScanHotbarForWeaponsFromLeftToRight", true);
         p.comment = "Set to false to scan the hotbar for swords and bows from right to left. Only matters if you have multiple swords/bows in your hotbar.";
-        ScanHotbarForWeaponsFromLeftToRight = p.getBoolean(true);
+        if(loadSettings)
+        	WeaponSwapper.ScanHotbarForWeaponsFromLeftToRight = p.getBoolean(true);
+        else
+        	p.set(WeaponSwapper.ScanHotbarForWeaponsFromLeftToRight);
         
         
         //CATEGORY_FPS
-        p = config.get(CATEGORY_FPS, "ShowFPS", false);
+        p = config.get(CATEGORY_FPS, "EnableFPS", false);
         p.comment = "Enable/Disable showing your FPS at the end of the Info Line.";
-        ShowFPS = p.getBoolean(false);
+        if(loadSettings)
+        	Fps.Enabled = p.getBoolean(false);
+        else
+        	p.set(Fps.Enabled);
         
         
         //CATEGORY_HORSEINFO
+        p = config.get(CATEGORY_HORSEINFO, "EnableHorseInfo", false);
+        p.comment = "Enable/Disable Horse Info.";
+        if(loadSettings)
+        	HorseInfo.Enabled = p.getBoolean(false);
+        else
+        	p.set(HorseInfo.Enabled);
+        
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", DefaultHorseInfoHotkey);
         p.comment = "Default: "+DefaultHorseInfoHotkey;
-        HorseInfoHotkey = p.getString();
+        if(loadSettings)
+        	HorseInfo.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_O[0].keyCode));
         
         p = config.get(CATEGORY_HORSEINFO, "ShowHorseStatsOnF3Menu", true);
         p.comment = "Enable/Disable showing the stats of the horse you're riding on the F3 screen.";
-        ShowHorseStatsOnF3Menu = p.getBoolean(true);
+        if(loadSettings)
+        	HorseInfo.ShowHorseStatsOnF3Menu = p.getBoolean(true);
+        else
+        	p.set(HorseInfo.ShowHorseStatsOnF3Menu);
         
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoMaxViewDistance", 8);
         p.comment = "How far away horse stats will be rendered on the screen (distance measured in blocks).";
-        HorseInfoMaxViewDistance = p.getInt(8);
+        if(loadSettings)
+        	HorseInfo.viewDistanceCutoff = p.getInt(8);
+        else
+        	p.set(HorseInfo.viewDistanceCutoff);
         
         p = config.get(CATEGORY_HORSEINFO, "HorseInfoNumberOfDecimalsDisplayed", 1);
         p.comment = "How many decimal places will be used when displaying horse stats.";
-        HorseInfoNumberOfDecimalsDisplayed = p.getInt(1);
+        if(loadSettings)
+        	HorseInfo.NumberOfDecimalsDisplayed = p.getInt(1);
+        else
+        	p.set(HorseInfo.NumberOfDecimalsDisplayed );
         
         
         //CATEGORY_ENDERPEARLAID
-        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
-        p.comment = "Default: "+DefaultEnderPearlAidHotkey;
-        EnderPearlAidHotkey = p.getString();
-        
         p = config.get(CATEGORY_ENDERPEARLAID, "EnableEnderPearlAid", true);
         p.comment = "Enables pressing a hotkey (default="+DefaultEnderPearlAidHotkey+") to use an enderpearl even if it is  in your inventory and not your hotbar.";
-        EnableEnderPearlAid = p.getBoolean(true);
+        if(loadSettings)
+        	EnderPearlAid.Enabled = p.getBoolean(true);
+        else
+        	p.set(EnderPearlAid.Enabled);
+        
+        p = config.get(CATEGORY_ENDERPEARLAID, "EnderPearlAidHotkey", DefaultEnderPearlAidHotkey);
+        p.comment = "Default: "+DefaultEnderPearlAidHotkey;
+        if(loadSettings)
+        	EnderPearlAid.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_C[0].keyCode));
         
         
         //CATEGORY_CLOCK
-        p = config.get(CATEGORY_CLOCK, "ShowClock", true);
-        p.comment = "Enable/Disable showing the clock.";
-        ShowClock = p.getBoolean(true);
+        p = config.get(CATEGORY_CLOCK, "EnableClock", true);
+        p.comment = "Enable/Disable showing the Clock.";
+        if(loadSettings)
+        	Clock.Enabled = p.getBoolean(true);
+        else
+        	p.set(Clock.Enabled);
         
         p = config.get(CATEGORY_CLOCK, "ClockMode", 0);
         p.comment = "Set the clock mode:" + config.NEW_LINE +
         			"0 = standard Minecraft time in game" + config.NEW_LINE +
         			"1 = countdown timer till morning/night.";
-        ClockMode = p.getInt(0);
+        if(loadSettings)
+        	Clock.Mode = p.getInt(0);
+        else
+        	p.set(Clock.Mode);
 
         
         //CATEGORY_POTIONAID
-        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", DefaultPotionAidHotkey);
-        p.comment = "Default: " + DefaultPotionAidHotkey;
-        PotionAidHotkey = p.getString();
-        
         p = config.get(CATEGORY_POTIONAID, "EnablePotionAid", true);
         p.comment = "Enables pressing a hotkey (default="+DefaultPotionAidHotkey+") to drink a potion even if it is  in your inventory and not your hotbar.";
-        EnablePotionAid = p.getBoolean(true);
+        if(loadSettings)
+        	PotionAid.Enabled = p.getBoolean(true);
+        else
+        	p.set(PotionAid.Enabled);
+        
+        p = config.get(CATEGORY_POTIONAID, "PotionAidHotkey", DefaultPotionAidHotkey);
+        p.comment = "Default: " + DefaultPotionAidHotkey;
+        if(loadSettings)
+        	PotionAid.Hotkey = p.getString();
+        else
+        	p.set(Keyboard.getKeyName(key_V[0].keyCode));
         
         
 
         config.save();
     }
-
-
-    private void LoadKeyHandlers()
+    
+    public static void LoadKeyHandlers()
     {
         //Key Bind Handlers (for hotkeys) are defined here
+
+        KeyBinding.resetKeyBindingArrayAndHash();
         boolean[] repeatFalse = {false};
         boolean[] repeatTrue = {true};
         
         int hotkey;
         
-        hotkey = GetKeyboardKeyFromString(DistanceMeasurerHotkey);
+        hotkey = GetKeyboardKeyFromString(DistanceMeasurer.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultDistanceMeasurerHotkey) : hotkey;
-        key_K = new KeyBinding[] {new KeyBinding("Distance Measurer Toggle", hotkey)};
+        key_K = new KeyBinding[] {new KeyBinding(DistanceMeasurer.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new DistanceMeasurerKeyHandler(key_K, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(SafeOverlayHotkey);
+        hotkey = GetKeyboardKeyFromString(SafeOverlay.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultSafeOverlayHotkey) : hotkey;
-        key_L = new KeyBinding[] {new KeyBinding("Safe Overlay Toggle", hotkey)};
+        key_L = new KeyBinding[] {new KeyBinding(SafeOverlay.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new SafeOverlayKeyHandler(key_L, repeatTrue));
 
-        hotkey = GetKeyboardKeyFromString(PlayerLocatorHotkey);
+        hotkey = GetKeyboardKeyFromString(PlayerLocator.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultPlayerLocatorHotkey) : hotkey;
-        key_P = new KeyBinding[] {new KeyBinding("Player Locator Toggle", hotkey)};
+        key_P = new KeyBinding[] {new KeyBinding(PlayerLocator.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new PlayerLocatorKeyHandler(key_P, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(EatingAidHotkey);
+        hotkey = GetKeyboardKeyFromString(EatingAid.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEatingAidHotkey) : hotkey;
-        key_G = new KeyBinding[] {new KeyBinding("Eating Aid Hotkey", hotkey)};
+        key_G = new KeyBinding[] {new KeyBinding(EatingAid.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new EatingAidKeyHandler(key_G, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(WeaponSwapHotkey);
+        hotkey = GetKeyboardKeyFromString(WeaponSwapper.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultWeaponSwapHotkey) : hotkey;
-        key_F = new KeyBinding[] {new KeyBinding("Weapon Swap Hotkey", 	hotkey)};
+        key_F = new KeyBinding[] {new KeyBinding(WeaponSwapper.HotkeyDescription, 	hotkey)};
         KeyBindingRegistry.registerKeyBinding(new WeaponSwapperKeyHandler(key_F, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(HorseInfoHotkey);
+        hotkey = GetKeyboardKeyFromString(HorseInfo.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultHorseInfoHotkey) : hotkey;
-        key_O = new KeyBinding[] {new KeyBinding("Horse Info Hotkey", hotkey)};
+        key_O = new KeyBinding[] {new KeyBinding(HorseInfo.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(EnderPearlAidHotkey);
+        hotkey = GetKeyboardKeyFromString(EnderPearlAid.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEnderPearlAidHotkey) : hotkey;
-        key_C = new KeyBinding[] {new KeyBinding("Ender Pearl Aid Hotkey", hotkey)};
+        key_C = new KeyBinding[] {new KeyBinding(EnderPearlAid.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new EnderPearlAidKeyHandler(key_C, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(PotionAidHotkey);
+        hotkey = GetKeyboardKeyFromString(PotionAid.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultPotionAidHotkey) : hotkey;
-        key_V = new KeyBinding[] {new KeyBinding("Potion Aid Hotkey", hotkey)};
+        key_V = new KeyBinding[] {new KeyBinding(PotionAid.HotkeyDescription, hotkey)};
         KeyBindingRegistry.registerKeyBinding(new PotionAidKeyHandler(key_V, repeatFalse));
+
+        hotkey = GetKeyboardKeyFromString(GuiZyinHUDOptions.Hotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultOptionsHotkey) : hotkey;
+        key_Z = new KeyBinding[] {new KeyBinding(GuiZyinHUDOptions.HotkeyDescription, hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new GuiZyinHUDOptionsKeyHandler(key_Z, repeatFalse));
+        
+
     }
     
     /**
@@ -605,16 +663,58 @@ public class ZyinHUD
      * @param key example: "L", "G", "NUMPAD2"
      * @return an integer representation of this key
      */
-    private static int GetKeyboardKeyFromString(String key)
+    public static int GetKeyboardKeyFromString(String key)
     {
     	key = key.trim();
     	int keyIndex = Keyboard.getKeyIndex(key.toUpperCase());
     	if(keyIndex == 0)
     	{
     		System.out.println("=========================================================================");
-    		System.out.println("[WARNING] ZyinHUD.cfg: \"" + key + "\" is not a valid hotkey! Setting to default.");
+    		System.out.println("[WARNING] ZyinHUD.cfg: \"" + key + "\" is not a valid hotkey!");
     		System.out.println("=========================================================================");
     	}
     	return keyIndex;
+    }
+    
+
+	 
+    public static String GetVersion()
+    {
+    	try
+    	{
+    		Mod header = (Mod)(ZyinHUD.class.getAnnotation(Mod.class));
+    		return header.version();
+    	}
+    	catch (Exception exception)
+    	{
+    		exception.printStackTrace();
+    	}
+    	return "";
+    }
+    public static String GetModId()
+    {
+    	try
+    	{
+    		Mod header = (Mod)(ZyinHUD.class.getAnnotation(Mod.class));
+    		return header.modid();
+    	}
+    	catch (Exception exception)
+    	{
+    		exception.printStackTrace();
+    	}
+    	return "";
+    }
+    public static String GetName()
+    {
+    	try
+    	{
+    		Mod header = (Mod)(ZyinHUD.class.getAnnotation(Mod.class));
+    		return header.name();
+    	}
+    	catch (Exception exception)
+    	{
+    		exception.printStackTrace();
+    	}
+    	return "";
     }
 }

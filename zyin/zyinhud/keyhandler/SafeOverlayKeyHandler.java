@@ -4,9 +4,9 @@ import java.util.EnumSet;
 
 import org.lwjgl.input.Keyboard;
 
-import zyin.zyinhud.InfoLine;
-import zyin.zyinhud.SafeOverlay;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.InfoLine;
+import zyin.zyinhud.mods.SafeOverlay;
 import zyin.zyinhud.util.Localization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
@@ -49,6 +49,9 @@ public class SafeOverlayKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
+        
+        if(!SafeOverlay.Enabled)
+        	return;
 
         //if "+" is pressed, increase the draw distance
         if (Keyboard.isKeyDown(Keyboard.KEY_EQUALS) || 	//keyboard "+" ("=")
@@ -122,17 +125,11 @@ public class SafeOverlayKeyHandler extends KeyHandler
         
         
 
-        ZyinHUD.SafeOverlayMode++;
+        SafeOverlay.ToggleMode();
 
-        //0=off, 1=on
-        if (ZyinHUD.SafeOverlayMode > 1)
+        if (SafeOverlay.Mode == 1)
         {
-            ZyinHUD.SafeOverlayMode = 0;
-        }
-
-        if (ZyinHUD.SafeOverlayMode == 1)
-        {
-            //if we enable the mod, calculate unsafe areas immediately
+            //if we enable the mod, recalculate unsafe areas immediately
             SafeOverlay.instance.RecalculateUnsafePositions();
         }
     }

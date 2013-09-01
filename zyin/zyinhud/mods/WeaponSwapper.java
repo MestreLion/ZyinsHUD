@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Item;
@@ -11,6 +11,25 @@ import net.minecraft.item.ItemSword;
  */
 public class WeaponSwapper
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Weapon Swapper";
+	
+    public static boolean ScanHotbarForWeaponsFromLeftToRight;
+    
+    
     protected static Minecraft mc = Minecraft.getMinecraft();
 
     /**
@@ -88,7 +107,7 @@ public class WeaponSwapper
     {
         ItemStack[] items = mc.thePlayer.inventory.mainInventory;
 
-        if (ZyinHUD.ScanHotbarForWeaponsFromLeftToRight)
+        if (ScanHotbarForWeaponsFromLeftToRight)
         {
             for (int i = 0; i < 9; i++)
             {
@@ -124,5 +143,15 @@ public class WeaponSwapper
         }
 
         return -1;
+    }
+    
+    /**
+     * Toggles between scanning the hotbar starting from left or right
+     * @return The state new scanning method
+     */
+    public static boolean ToggleScanHotbarFromLeftToRight()
+    {
+    	ScanHotbarForWeaponsFromLeftToRight = !ScanHotbarForWeaponsFromLeftToRight;
+    	return ScanHotbarForWeaponsFromLeftToRight;
     }
 }

@@ -2,7 +2,7 @@ package zyin.zyinhud.tickhandler;
 
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.ForgeSubscribe;
-import zyin.zyinhud.SafeOverlay;
+import zyin.zyinhud.mods.SafeOverlay;
 
 public class RenderTickHandler
 {

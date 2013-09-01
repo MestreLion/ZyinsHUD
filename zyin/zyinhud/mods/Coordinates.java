@@ -1,14 +1,29 @@
-package zyin.zyinhud;
-
-import zyin.zyinhud.util.FontCodes;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
+import zyin.zyinhud.util.FontCodes;
 
 /**
  * The Coordinates calculates the player's position.
  */
 public class Coordinates
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+    /** Use colors to show what ores spawn at the elevation level */
+    public static boolean UseYCoordinateColors;
+    
     private static Minecraft mc = Minecraft.getMinecraft();
 
     private static final int oreBoundaries[] =
@@ -34,14 +49,14 @@ public class Coordinates
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.ShowCoordinates)
+        if(Coordinates.Enabled)
         {
             int coordX = (int) Math.floor(mc.thePlayer.posX);
             int coordY = (int) Math.floor(mc.thePlayer.posY);
             int coordZ = (int) Math.floor(mc.thePlayer.posZ);
             String yColor = FontCodes.WHITE;
 
-            if (ZyinHUD.UseYCoordinateColors)
+            if (UseYCoordinateColors)
             {
                 for (int y = 0; y < oreBoundaries.length; y++)
                 {
@@ -59,4 +74,15 @@ public class Coordinates
 
         return "";
     }
+
+    /**
+     * Toggles using color coded y coordinates
+     * @return The state it was changed to
+     */
+    public static boolean ToggleUseYCoordinateColors()
+    {
+    	UseYCoordinateColors = !UseYCoordinateColors;
+    	return UseYCoordinateColors;
+    }
+    
 }

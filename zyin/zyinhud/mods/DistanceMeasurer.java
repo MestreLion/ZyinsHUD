@@ -1,9 +1,10 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
-import zyin.zyinhud.util.FontCodes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
+import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 /**
  * The Distance Measurer calculates the distance from the player to whatever the player's
@@ -14,7 +15,35 @@ import net.minecraft.util.MovingObjectPosition;
  */
 public class DistanceMeasurer
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+    
+	/**
+	 * 0=off<br>
+	 * 1=simple<br>
+	 * 2=complex<br>
+	 */
+    public static int Mode = 0;
+
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 3;
+    
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Distance Measurer";
+    
     private static Minecraft mc = Minecraft.getMinecraft();
+    private static String far = Localization.get("distancemeasurer.far");
 
     /**
      * Calculates the distance of the block the player is pointing at
@@ -22,7 +51,7 @@ public class DistanceMeasurer
      */
     protected static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.DistanceMeasurerMode > 0)
+        if (DistanceMeasurer.Enabled && Mode > 0)
         {
             MovingObjectPosition objectMouseOver = mc.thePlayer.rayTrace(300, 1);
             String distanceMeasurerString = "";
@@ -64,13 +93,13 @@ public class DistanceMeasurer
                 	deltaZ = coordZ - blockZ;
                 
 
-                if (ZyinHUD.DistanceMeasurerMode == 1)	//1=simple
+                if (Mode == 1)	//1=simple
                 {
                 	double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
                     double farthestDistance = Math.max(Math.abs(deltaY), farthestHorizontalDistance);
                     return FontCodes.ORANGE + "[" + String.format("%1$,.1f", farthestDistance) + "]" + InfoLine.SPACER;
                 }
-                else if (ZyinHUD.DistanceMeasurerMode == 2)	//2=complex
+                else if (Mode == 2)	//2=complex
                 {
                     double delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
                     String x = String.format("%1$,.1f", deltaX);
@@ -85,10 +114,22 @@ public class DistanceMeasurer
             }
             else
             {
-            	return FontCodes.ORANGE + "[far]" + InfoLine.SPACER;
+            	return FontCodes.ORANGE + "["+far+"]" + InfoLine.SPACER;
             }
         }
 
         return "";
+    }
+    
+    /**
+     * Increments the Distance Measurer mode
+     * @return The new Distance Measurer mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
     }
 }

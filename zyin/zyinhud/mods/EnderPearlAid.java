@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import net.minecraft.item.ItemEnderPearl;
 import zyin.zyinhud.util.InventoryUtil;
@@ -9,6 +9,21 @@ import zyin.zyinhud.util.Localization;
  */
 public class EnderPearlAid
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Ender Pearl Aid";
+    
     /**
      * Makes the player throw an ender pearl if there is one on their hotbar.
      */

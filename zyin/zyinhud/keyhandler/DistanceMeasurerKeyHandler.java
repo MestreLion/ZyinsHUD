@@ -3,6 +3,7 @@ package zyin.zyinhud.keyhandler;
 import java.util.EnumSet;
 
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.DistanceMeasurer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
@@ -38,14 +39,9 @@ public class DistanceMeasurerKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-
-        ZyinHUD.DistanceMeasurerMode++;
-
-        //0=off, 1=simple, 2=complex
-        if (ZyinHUD.DistanceMeasurerMode > 2)
-        {
-            ZyinHUD.DistanceMeasurerMode = 0;
-        }
+        
+        if(DistanceMeasurer.Enabled)
+        	DistanceMeasurer.ToggleMode();
     }
 
     @Override

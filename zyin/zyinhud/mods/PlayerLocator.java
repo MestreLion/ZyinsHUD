@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -7,17 +7,16 @@ import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.passive.EntityPig;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Icon;
+import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
@@ -29,6 +28,33 @@ import zyin.zyinhud.util.Localization;
  */
 public class PlayerLocator
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Player Locator";
+
+	/**
+	 * 0=off<br>
+	 * 1=on<br>
+	 */
+    public static int Mode = 0;
+    
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 2;
+    
+    /** Shows how far you are from other players next to their name */
+    public static boolean ShowDistanceToPlayers;
+    
     private static Minecraft mc = Minecraft.getMinecraft();
     private static final RenderItem itemRenderer = new RenderItem();
     private static final TextureManager textureManager = mc.func_110434_K();
@@ -48,8 +74,10 @@ public class PlayerLocator
     private static final String SneakingMessagePrefix = FontCodes.ITALICS;
     private static final String RidingMessagePrefix = "     ";	//space for the saddle/minecart/boat icon
 
-    public static int maxViewDistance = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
-    public static int minViewDistance = ZyinHUD.PlayerLocatorMinViewDistance;		//don't render players that are closer than this
+    public static int maxViewDistanceCutoff = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
+    public static int minViewDistanceCutoff = 0;
+    /** Don't render players that are closer than this */
+    public static int viewDistanceCutoff = 10;
 
     /**
      * Renders nearby players's names on the screen.
@@ -69,7 +97,7 @@ public class PlayerLocator
         //if the player is in the world
         //and not looking at a menu
         //and F3 not pressed
-        if (ZyinHUD.PlayerLocatorMode == 1 &&
+        if (PlayerLocator.Enabled && Mode == 1 &&
                 (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && !mc.gameSettings.showDebugInfo)
         {
@@ -78,8 +106,8 @@ public class PlayerLocator
             //only show entities that are close by
             double distanceFromMe = me.getDistanceToEntity(otherPlayer);
 
-            if (distanceFromMe > maxViewDistance
-                    || distanceFromMe < minViewDistance
+            if (distanceFromMe > maxViewDistanceCutoff
+                    || distanceFromMe < viewDistanceCutoff
                     || distanceFromMe == 0) //don't render ourself!
             {
                 return;
@@ -89,7 +117,7 @@ public class PlayerLocator
             String overlayMessage = otherPlayerName;
 
             //add distance to this player into the message
-            if (ZyinHUD.ShowDistanceToPlayers)
+            if (ShowDistanceToPlayers)
             {
                 overlayMessage = "" + (int)distanceFromMe + " " + overlayMessage;
             }
@@ -125,7 +153,7 @@ public class PlayerLocator
             }
 
             //calculate the color of the overlayMessage based on the distance from me
-            int alpha = (int)(0x11 + 0xEE * ((maxViewDistance - distanceFromMe) / maxViewDistance));
+            int alpha = (int)(0x11 + 0xEE * ((maxViewDistanceCutoff - distanceFromMe) / maxViewDistanceCutoff));
             alpha = alpha << 24;	//turns it into the format: 0x##000000
             int rgb = 0xFFFFFF;
             int color = rgb + alpha;	//alpha:r:g:b
@@ -188,11 +216,11 @@ public class PlayerLocator
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.PlayerLocatorMode == 0)	//off
+        if (Mode == 0)	//off
         {
             return FontCodes.WHITE + "";
         }
-        else if (ZyinHUD.PlayerLocatorMode == 1)	//on
+        else if (Mode == 1)	//on
         {
             return FontCodes.WHITE + Localization.get("playerlocator.infoline") + InfoLine.SPACER;
         }
@@ -200,5 +228,29 @@ public class PlayerLocator
         {
             return FontCodes.WHITE + "???" + InfoLine.SPACER;
         }
+    }
+    
+
+    
+    /**
+     * Increments the Clock mode
+     * @return The new Clock mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
+    }
+    
+    /**
+     * Toggle showing the distance to players
+     * @return The new Clock mode
+     */
+    public static boolean ToggleShowDistanceToPlayers()
+    {
+    	ShowDistanceToPlayers = !ShowDistanceToPlayers;
+    	return ShowDistanceToPlayers;
     }
 }

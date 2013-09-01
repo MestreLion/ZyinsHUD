@@ -2,6 +2,7 @@ package zyin.zyinhud.tickhandler;
 
 import java.util.EnumSet;
 
+import zyin.zyinhud.gui.OverrideGuiOptions;
 import zyin.zyinhud.helper.EntityTrackerHelper;
 import zyin.zyinhud.mods.DurabilityInfo;
 import zyin.zyinhud.mods.HorseInfo;
@@ -10,16 +11,20 @@ import zyin.zyinhud.mods.PlayerLocator;
 import zyin.zyinhud.mods.PotionTimers;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiControls;
+import net.minecraft.client.gui.GuiIngameMenu;
+import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.achievement.GuiAchievement;
+import net.minecraft.client.gui.achievement.GuiStats;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 
-public class HUDTickHandler implements ITickHandler
+public class GUITickHandler implements ITickHandler
 {
-    public static int renderTickCount = 0;
     private static Minecraft mc = Minecraft.getMinecraft();
 
-    public HUDTickHandler()
+    public GUITickHandler()
     {
     }
 
@@ -32,7 +37,7 @@ public class HUDTickHandler implements ITickHandler
     @Override
     public String getLabel()
     {
-        return "HUD Tick Handler";
+        return "GUI Tick Handler";
     }
 
     @Override
@@ -61,23 +66,21 @@ public class HUDTickHandler implements ITickHandler
             }
         }
     }
-
+    
+    /**
+     * We override any default GUIs with our custom GUI classes here
+     * @param guiScreen
+     */
     protected void onTickInGUI(GuiScreen guiScreen)
     {
+    	if (guiScreen instanceof GuiOptions)
+        {
+        	mc.displayGuiScreen(new OverrideGuiOptions(new GuiIngameMenu(), mc.gameSettings));
+        }
     }
-
-    /**
-     * Render any things that need to be rendered onto the user's HUD (on the screen, NOT in the game
-     * world - that is done in the RenderWorldLastEvent of RenderTickHandler.java)
-     */
+    
     protected void onRenderTick()
     {
-        InfoLine.RenderOntoHUD();
-        DurabilityInfo.RenderOntoHUD();
-        PotionTimers.RenderOntoHUD();
-        HorseInfo.RenderOntoDebugMenu();
-        EntityTrackerHelper.RenderAllEntityOverlays();	//PlayerLocator.RenderEntityOverlay(), HorseInfo.RenderEntityOverlay()
-        renderTickCount++;
     }
 
     protected void onTickInGame()

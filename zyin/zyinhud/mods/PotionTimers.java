@@ -1,6 +1,4 @@
-package zyin.zyinhud;
-
-import zyin.zyinhud.util.FontCodes;
+package zyin.zyinhud.mods;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -15,6 +13,18 @@ import net.minecraft.potion.PotionEffect;
  */
 public class PotionTimers
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
     private static Minecraft mc = Minecraft.getMinecraft();
 
     private static final int[] blinkingThresholds = {3 * 20, 6 * 20, 16 * 20};	//the time at which blinking starts
@@ -29,7 +39,7 @@ public class PotionTimers
         //if the player is in the world
         //and not in a menu
         //and F3 not shown
-        if (ZyinHUD.ShowPotionTimers &&
+        if (PotionTimers.Enabled &&
                 (mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
                 && !mc.gameSettings.showDebugInfo)
         {

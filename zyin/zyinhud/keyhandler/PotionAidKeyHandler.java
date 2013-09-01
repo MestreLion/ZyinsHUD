@@ -4,8 +4,8 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.PotionAid;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.PotionAid;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
@@ -39,10 +39,8 @@ public class PotionAidKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        if (ZyinHUD.EnablePotionAid)
-        {
+        if (PotionAid.Enabled)
             PotionAid.instance.Drink();
-        }
     }
 
     @Override

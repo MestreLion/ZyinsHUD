@@ -2,8 +2,9 @@ package zyin.zyinhud.keyhandler;
 
 import java.util.EnumSet;
 
-import zyin.zyinhud.InfoLine;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.InfoLine;
+import zyin.zyinhud.mods.PlayerLocator;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
@@ -38,19 +39,9 @@ public class PlayerLocatorKeyHandler extends KeyHandler
         {
             return;    //don't activate if the user is looking at a GUI
         }
-
-        ZyinHUD.PlayerLocatorMode++;
-
-        //0=off, 1=on
-        if (ZyinHUD.PlayerLocatorMode > 1)
-        {
-            ZyinHUD.PlayerLocatorMode = 0;
-        }
-
-        /*if(ZyinHUD.PlayerLocatorMode == 0)
-        	InfoLine.DisplayNotification("Player Locator: disabled");
-        else if(ZyinHUD.PlayerLocatorMode == 1)
-        	InfoLine.DisplayNotification("Player Locator: enabled");*/
+        
+        if(PlayerLocator.Enabled)
+        	PlayerLocator.ToggleMode();
     }
 
     @Override

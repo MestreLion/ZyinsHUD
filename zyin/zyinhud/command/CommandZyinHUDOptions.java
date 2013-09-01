@@ -1,27 +1,29 @@
 package zyin.zyinhud.command;
 
-import zyin.zyinhud.ZyinHUD;
-import zyin.zyinhud.mods.Fps;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import zyin.zyinhud.gui.GuiZyinHUDOptions;
 
-public class CommandFps  extends CommandBase
+public class CommandZyinHUDOptions  extends CommandBase
 {
+	private static Minecraft mc = Minecraft.getMinecraft();
+	
 	@Override
 	public String getCommandName()
 	{
-		return "fps";
+		return "zyinhud";
 	}
 
 	@Override
 	public String getCommandUsage(ICommandSender iCommandSender)
 	{
-		return "commands.fps.usage";
+		return "commands.zyinhud.usage";
 	}
 
 	@Override
 	public void processCommand(ICommandSender iCommandSender, String[] parameters)
 	{
-		Fps.ToggleEnabled();
+		mc.displayGuiScreen(new GuiZyinHUDOptions(null));
 	}
 }

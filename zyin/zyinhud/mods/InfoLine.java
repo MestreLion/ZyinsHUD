@@ -1,17 +1,8 @@
-package zyin.zyinhud;
-
-import java.util.List;
-
-import zyin.zyinhud.util.FontCodes;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.inventory.Slot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemPotion;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.PotionEffect;
 
 /**
  * The Info Line consists of everything that gets displayed in the top-left portion
@@ -20,6 +11,18 @@ import net.minecraft.potion.PotionEffect;
  */
 public class InfoLine
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
     private static Minecraft mc = Minecraft.getMinecraft();
 
     /**
@@ -41,7 +44,7 @@ public class InfoLine
         //if the player is in the world
         //and not looking at a menu
         //and F3 not pressed
-        if (ZyinHUD.ShowInfoLine &&
+        if (InfoLine.Enabled &&
                 (mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
                 && !mc.gameSettings.showDebugInfo)
         {
@@ -109,4 +112,5 @@ public class InfoLine
 
         notificationTimer = notificationStartTime - System.currentTimeMillis() + notificationDuration;	//counts down from 1000 to 0
     }
+    
 }

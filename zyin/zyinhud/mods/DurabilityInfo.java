@@ -1,8 +1,4 @@
-package zyin.zyinhud;
-
-import zyin.zyinhud.util.FontCodes;
-
-import zyin.zyinhud.util.FontCodes;
+package zyin.zyinhud.mods;
 
 import java.util.ArrayList;
 
@@ -11,7 +7,6 @@ import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemBow;
@@ -19,7 +14,7 @@ import net.minecraft.item.ItemHoe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
-import net.minecraft.util.Icon;
+import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.opengl.GL11;
 
@@ -29,6 +24,26 @@ import org.lwjgl.opengl.GL11;
  */
 public class DurabilityInfo
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+    public static boolean ShowArmorDurability;
+    public static boolean ShowItemDurability;
+    public static int DurabilityUpdateFrequency;
+    public static float DurabilityDisplayThresholdForArmor;
+    public static float DurabilityDisplayThresholdForItem;
+    public static boolean ShowIndividualArmorIcons;
+	
     protected static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation("textures/durability_icons.png");
 
     //U and V is the top left part of the image
@@ -42,13 +57,13 @@ public class DurabilityInfo
     protected static int toolX = 1 * 16;
     protected static int toolY = 1 * 16;
 
-    //where the armor icon is rendered
-    public static int durabalityLocX = ZyinHUD.DurabilityLocationHorizontal;
-    public static int durabalityLocY = ZyinHUD.DurabilityLocationVertical;
+    //where the armor icon is rendered (these values replaced by the config settings)
+    public static int durabalityLocX = 20;
+    public static int durabalityLocY = 20;
 
-    //where the tool icons are rendered
-    public static int equipmentLocX = durabalityLocX + armorDurabilityX;
-    public static int equipmentLocY = durabalityLocY;
+    //where the tool icons are rendered (these values replaced by the config settings)
+    public static int equipmentLocX = 20 + armorDurabilityX;
+    public static int equipmentLocY = 20;
 
     private static Minecraft mc = Minecraft.getMinecraft();
     private static ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
@@ -56,7 +71,10 @@ public class DurabilityInfo
     private static final GuiIngame gig = new GuiIngame(mc);
     private static final TextureManager textureManager = mc.func_110434_K();
 
-    private static int renderTickCount = 0;
+    /**
+     * The last time the item cache was generated
+     */
+    private static long lastGenerate;
 
     /**
      * Renders the main durability icon and any damaged tools onto the screen.
@@ -66,17 +84,18 @@ public class DurabilityInfo
         //if the player is in the world
         //and not in a menu
         //and F3 not shown
-        if (ZyinHUD.ShowDurabilityInfo &&
+        if (DurabilityInfo.Enabled &&
                 (mc.inGameHasFocus || mc.currentScreen == null || (mc.currentScreen instanceof GuiChat))
                 && !mc.gameSettings.showDebugInfo)
         {
             //don't waste time recalculating things every tick
-            if (renderTickCount % ZyinHUD.DurabilityUpdateFrequency == 0)	//default: 1 out of every 50 ticks
+        	long frameTime = System.currentTimeMillis();
+        	if(frameTime - lastGenerate > DurabilityUpdateFrequency)
             {
                 CalculateDurabilityIcons();
             }
 
-            Boolean armorExists = false;
+            boolean armorExists = false;
 
             for (ItemStack toolStack : damagedItemsList)
             {
@@ -87,6 +106,7 @@ public class DurabilityInfo
             }
 
             int numTools = 0;
+            int numArmors = 0;
 
             for (ItemStack toolStack : damagedItemsList)
             {
@@ -95,26 +115,53 @@ public class DurabilityInfo
                 //if this tool is an armor
                 if (tool instanceof ItemArmor)
                 {
-                    if (ZyinHUD.ShowArmorDurability)
+                    if (ShowArmorDurability)
                     {
-                        GL11.glDisable(GL11.GL_LIGHTING);	//disable lighting so it renders at full brightness
-                        //TODO: glBindTexture
-                        //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));	//ORIGINAL
-                        //bind texture
-                        textureManager.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
-                        GL11.glColor4f(255f, 255f, 255f, 255f);	//fixes transparency issue when a InfoLine Notification is displayed
-                        gig.drawTexturedModalRect(durabalityLocX, durabalityLocY, armorDurabilityU, armorDurabilityV, armorDurabilityX, armorDurabilityY);
+                    	if(ShowIndividualArmorIcons)
+                    	{
+                            int verticalPadding = 0;
+                            int verticalSpacer = durabalityLocY + (numArmors * toolY) + verticalPadding;
+                            int horizontalPosition = durabalityLocX;
+                            
+                            //render the armor with enchant effect
+                            itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                            //render the armor's durability bar
+                            itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
+                            String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
+                            int damageX = (horizontalPosition) + toolX / 2;
+                            int damageY = (verticalSpacer) + toolY - 9;
+                            GL11.glDisable(GL11.GL_LIGHTING);	//this is needed because the itemRenderer.renderItem() method enables lighting
+                            mc.fontRenderer.setUnicodeFlag(true);
+                            mc.fontRenderer.drawStringWithShadow(damage, damageX, damageY, 0xffffff);
+                            mc.fontRenderer.setUnicodeFlag(false);
+                            numArmors++;
+                    	}
+                    	else
+                    	{
+                            GL11.glDisable(GL11.GL_LIGHTING);	//disable lighting so it renders at full brightness
+                            
+                            GL11.glEnable (GL11.GL_BLEND);	//for a transparent texture
+                            GL11.glBlendFunc (GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                            
+                            //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));	//ORIGINAL
+                            //bind texture
+                            textureManager.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
+                            GL11.glColor4f(255f, 255f, 255f, 255f);	//fixes transparency issue when a InfoLine Notification is displayed
+                            gig.drawTexturedModalRect(durabalityLocX, durabalityLocY, armorDurabilityU, armorDurabilityV, armorDurabilityX, armorDurabilityY);
+
+                            GL11.glDisable (GL11.GL_BLEND);
+                    	}
                     }
                 }
                 else //if this tool is an equipment/tool
                 {
-                    if (ZyinHUD.ShowItemDurability)
+                    if (ShowItemDurability)
                     {
                         int verticalPadding = 0;
                         int verticalSpacer = equipmentLocY + (numTools * toolY) + verticalPadding;
                         int horizontalPosition = durabalityLocX;
 
-                        if (armorExists && ZyinHUD.ShowArmorDurability)
+                        if (armorExists && ShowArmorDurability)
                         {
                             horizontalPosition = equipmentLocX;    //if armor is being rendered then push this to the right
                         }
@@ -130,18 +177,14 @@ public class DurabilityInfo
                         mc.fontRenderer.setUnicodeFlag(true);
                         mc.fontRenderer.drawStringWithShadow(damage, damageX, damageY, 0xffffff);
                         mc.fontRenderer.setUnicodeFlag(false);
-                        //GL11.glEnable(GL11.GL_LIGHTING); 		not needed
                         numTools++;
                     }
                 }
             }
-
-            //TODO: resetBoundTexture
-            //mc.renderEngine.resetBoundTexture();
-            renderTickCount++;
+            
         }
     }
-
+    
     /**
      * Finds items in the players hot bar and equipped armor that is damaged and adds them to the damagedItemsList list.
      */
@@ -156,6 +199,7 @@ public class DurabilityInfo
             damagedItemsList.clear();
             CalculateDurabilityIconsForItems();
             CalculateDurabilityIconsForArmor();
+            lastGenerate = System.currentTimeMillis();
         }
     }
 
@@ -181,7 +225,7 @@ public class DurabilityInfo
                     int maxDamage = itemStack.getMaxDamage();
 
                     if (maxDamage != 0 &&
-                            (double)itemDamage / maxDamage > ZyinHUD.DurabilityDisplayThresholdForItem)
+                    		(1-(double)itemDamage / maxDamage) < DurabilityDisplayThresholdForItem)
                     {
                         damagedItemsList.add(itemStack);
                     }
@@ -197,20 +241,102 @@ public class DurabilityInfo
     private static void CalculateDurabilityIconsForArmor()
     {
         ItemStack[] armorStacks = mc.thePlayer.inventory.armorInventory;
-
-        for (ItemStack armorStack : armorStacks)
+        
+        //iterate backwards over the armor the user is wearing so the helm is displayed first
+        for(int i = armorStacks.length-1; i >= 0 ; i--)
         {
+        	ItemStack armorStack = armorStacks[i];
             if (armorStack != null)
             {
                 int itemDamage = armorStack.getItemDamage();
                 int maxDamage = armorStack.getMaxDamage();
 
                 if (maxDamage != 0 &&
-                        (double)itemDamage / maxDamage > ZyinHUD.DurabilityDisplayThresholdForArmor)
+                        (1-(double)itemDamage / maxDamage) < DurabilityDisplayThresholdForArmor)
                 {
                     damagedItemsList.add(armorStack);
                 }
             }
         }
+    }
+
+    /**
+     * Gets the horizontal location where the durability icons are rendered.
+     * @return
+     */
+    public static int GetDurabalityHorizontalLocation()
+    {
+    	return durabalityLocX;
+    }
+    
+    /**
+     * Sets the horizontal location where the durability icons are rendered.
+     * @param x
+     * @return the new x location
+     */
+    public static int SetDurabalityHorizontalLocation(int x)
+    {
+    	if(x < 0)
+    		x = 0;
+    	else if(x > mc.displayWidth)
+    		x = mc.displayWidth;
+    	
+    	durabalityLocX = x;
+    	equipmentLocX = durabalityLocX + armorDurabilityX;
+    	return durabalityLocX;
+    }
+    
+    /**
+     * Gets the vertical location where the durability icons are rendered.
+     * @return
+     */
+    public static int GetDurabalityVerticalLocation()
+    {
+    	return durabalityLocY;
+    }
+
+    /**
+     * Sets the vertical location where the durability icons are rendered.
+     * @param y
+     * @return the new y location
+     */
+    public static int SetDurabalityVerticalLocation(int y)
+    {
+    	if(y < 0)
+    		y = 0;
+    	else if(y > mc.displayHeight)
+    		y = mc.displayHeight;
+    	
+    	durabalityLocY = y;
+    	equipmentLocY = durabalityLocY;
+    	return durabalityLocY;
+    }
+
+    /**
+     * Toggles showing durability for armor
+     * @return 
+     */
+    public static boolean ToggleShowArmorDurability()
+    {
+    	ShowArmorDurability = !ShowArmorDurability;
+    	return ShowArmorDurability;
+    }
+    /**
+     * Toggles showing durability for items
+     * @return 
+     */
+    public static boolean ToggleShowItemDurability()
+    {
+    	ShowItemDurability = !ShowItemDurability;
+    	return ShowItemDurability;
+    }
+    /**
+     * Toggles showing icons or an image for broken armor
+     * @return 
+     */
+    public static boolean ToggleShowIndividualArmorIcons()
+    {
+    	ShowIndividualArmorIcons = !ShowIndividualArmorIcons;
+    	return ShowIndividualArmorIcons;
     }
 }

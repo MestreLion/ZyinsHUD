@@ -1,15 +1,27 @@
-package zyin.zyinhud;
-
-import zyin.zyinhud.util.FontCodes;
-import zyin.zyinhud.util.Localization;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
+import zyin.zyinhud.util.FontCodes;
+import zyin.zyinhud.util.Localization;
 
 /**
  * The Compass determines what direction the player is facing.
  */
 public class Compass
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
     private static Minecraft mc = Minecraft.getMinecraft();
 
     /**
@@ -18,7 +30,7 @@ public class Compass
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.ShowCompass)
+        if (Compass.Enabled)
         {
             int yaw = (int)mc.thePlayer.rotationYaw;
             yaw += 22;	//+22 centers the compass (45degrees/2)
@@ -71,4 +83,6 @@ public class Compass
 
         return "";
     }
+    
+    
 }

@@ -1,4 +1,4 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import net.minecraft.client.Minecraft;
 import zyin.zyinhud.util.FontCodes;
@@ -13,6 +13,29 @@ import zyin.zyinhud.util.FontCodes;
  */
 public class Clock
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    
+	/**
+	 * 0=standard clock<br>
+	 * 1=time till night/day<br>
+	 */
+    public static int Mode = 0;
+    
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 2;
+    
+    
 	private static Minecraft mc = Minecraft.getMinecraft();
 
 	private static long mobSpawningStartTime = 13187;
@@ -27,9 +50,9 @@ public class Clock
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.ShowClock)
+        if (Clock.Enabled)
         {
-        	if(ZyinHUD.ClockMode == 0)
+        	if(Clock.Mode == 0)
         	{
             	//0 game time is 6am, so add 6000
                 long time = (mc.theWorld.getWorldTime() + 6000) % 24000;
@@ -40,7 +63,7 @@ public class Clock
                 String clockString = FontCodes.WHITE + String.format("%02d", hours) + ":" + String.format("%02d", seconds) + InfoLine.SPACER;
                 return clockString;
         	}
-        	else if(ZyinHUD.ClockMode == 1)
+        	else if(Clock.Mode == 1)
         	{
                 long time = (mc.theWorld.getWorldTime()) % 24000;
                 
@@ -74,5 +97,17 @@ public class Clock
         }
 
         return "";
+    }
+    
+    /**
+     * Increments the Clock mode
+     * @return The new Clock mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
     }
 }

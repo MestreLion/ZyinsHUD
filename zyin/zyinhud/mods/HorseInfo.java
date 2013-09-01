@@ -1,11 +1,6 @@
-package zyin.zyinhud;
+package zyin.zyinhud.mods;
 
 import java.text.DecimalFormat;
-
-import org.apache.commons.lang3.text.WordUtils;
-import org.lwjgl.opengl.GL11;
-
-import cpw.mods.fml.common.registry.LanguageRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -14,12 +9,11 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.item.EntityBoat;
-import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.passive.EntityHorse;
-import net.minecraft.entity.passive.EntityPig;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+
+import org.apache.commons.lang3.text.WordUtils;
+import org.lwjgl.opengl.GL11;
+
 import zyin.zyinhud.util.FontCodes;
 import zyin.zyinhud.util.Localization;
 
@@ -28,6 +22,38 @@ import zyin.zyinhud.util.Localization;
  */
 public class HorseInfo
 {
+	/** Enables/Disables this Mod */
+	public static boolean Enabled;
+
+    /**
+     * Toggles this Mod on or off
+     * @return The state the Mod was changed to
+     */
+    public static boolean ToggleEnabled()
+    {
+    	Enabled = !Enabled;
+    	return Enabled;
+    }
+    public static String Hotkey;
+    public static final String HotkeyDescription = "ZyinHUD: Horse Info";
+    
+	/**
+	 * 0=off<br>
+	 * 1=on<br>
+	 */
+    public static int Mode = 0;
+    
+    /** The maximum number of modes that is supported */
+    public static int NumberOfModes = 2;
+    
+    public static boolean ShowHorseStatsOnF3Menu;
+    
+    /** Sets the number of decimal places that will be rendered when displaying horse stats */
+    public static int NumberOfDecimalsDisplayed;
+    public static int MinNumberOfDecimalsDisplayed = 0;
+    public static int MaxNumberOfDecimalsDisplayed = 20;
+    
+    
     private static Minecraft mc = Minecraft.getMinecraft();
     private static EntityClientPlayerMP me;
 
@@ -48,8 +74,12 @@ public class HorseInfo
     private static int badHorseHPThreshold = 20;			//min: ~14?
     
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
-
-    private static int maxViewDistance = ZyinHUD.HorseInfoMaxViewDistance;	//how far away we will render the overlay
+    
+    
+    public static int minViewDistance = 0;
+    public static int maxViewDistance = 120;
+    /** Horses that are farther away than this will not have their info shown */
+    public static int viewDistanceCutoff = 8;		//how far away we will render the overlay
     private static final DecimalFormat decimalFormat = GetDecimalFormat();
     
     
@@ -59,11 +89,11 @@ public class HorseInfo
      */
     private static DecimalFormat GetDecimalFormat()
     {
-    	if(ZyinHUD.HorseInfoNumberOfDecimalsDisplayed < 1)
+    	if(NumberOfDecimalsDisplayed < 1)
     		return new DecimalFormat("#");
     	
     	String format = "#.";
-    	for(int i = 1; i <= ZyinHUD.HorseInfoNumberOfDecimalsDisplayed; i++)
+    	for(int i = 1; i <= NumberOfDecimalsDisplayed; i++)
     		format += "#";
     	
     	return new DecimalFormat(format);
@@ -77,7 +107,7 @@ public class HorseInfo
         //if the player is in the world
         //and not in a menu
         //and F3 is shown
-        if (ZyinHUD.ShowHorseStatsOnF3Menu &&
+        if (HorseInfo.Enabled && ShowHorseStatsOnF3Menu &&
                 (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && mc.gameSettings.showDebugInfo)
         {
@@ -129,7 +159,7 @@ public class HorseInfo
         //if the player is in the world
         //and not looking at a menu
         //and F3 not pressed
-        if (ZyinHUD.HorseInfoMode == 1 &&
+        if (HorseInfo.Enabled && Mode == 1 &&
                 (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && !mc.gameSettings.showDebugInfo)
         {
@@ -149,7 +179,7 @@ public class HorseInfo
             //only show entities that are close by
             double distanceFromMe = me.getDistanceToEntity(horse);
 
-            if (distanceFromMe > maxViewDistance)
+            if (distanceFromMe > viewDistanceCutoff)
             {
                 return;
             }
@@ -202,11 +232,11 @@ public class HorseInfo
      */
     public static String CalculateMessageForInfoLine()
     {
-        if (ZyinHUD.HorseInfoMode == 0)	//off
+        if (Mode == 0)	//off
         {
             return FontCodes.WHITE + "";
         }
-        else if (ZyinHUD.HorseInfoMode == 1)	//on
+        else if (Mode == 1)	//on
         {
             return FontCodes.WHITE + "horse" + InfoLine.SPACER;
         }
@@ -472,5 +502,19 @@ public class HorseInfo
         //0.19427	~8.333 m/s
         //0.1		~4.3-4.5 m/s
         return entity.func_110148_a(SharedMonsterAttributes.field_111263_d).func_111125_b() * 43;
+    }
+    
+
+    
+    /**
+     * Increments the Clock mode
+     * @return The new Clock mode
+     */
+    public static int ToggleMode()
+    {
+    	Mode++;
+    	if(Mode >= NumberOfModes)
+    		Mode = 0;
+    	return Mode;
     }
 }

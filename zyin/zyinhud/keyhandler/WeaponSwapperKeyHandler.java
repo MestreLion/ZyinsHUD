@@ -4,8 +4,8 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.WeaponSwapper;
 import zyin.zyinhud.ZyinHUD;
+import zyin.zyinhud.mods.WeaponSwapper;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
@@ -38,10 +38,8 @@ public class WeaponSwapperKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
 
-        if (ZyinHUD.EnableWeaponSwap)
-        {
+        if (WeaponSwapper.Enabled)
             WeaponSwapper.SwapWeapons();
-        }
     }
 
     @Override
