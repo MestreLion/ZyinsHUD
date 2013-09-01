@@ -1,6 +1,6 @@
 package zyin.zyinhud;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumMovingObjectType;
 import net.minecraft.util.MovingObjectPosition;
@@ -16,8 +16,8 @@ public class DistanceMeasurer
 	
 	/**
      * Calculates the distance of the block the player is pointing at
-     * @return if the Distance Measurer is enabled, the string "[FarthestHorizontalDistance]" or
-     * "[x, z, y (absolute)]" is returned, otherwise "".
+     * @return if the Distance Measurer is enabled, the string "[FarthestDistance]" or
+     * "[x, z, y (AbsoluteDistance)]" is returned, otherwise "".
      */
     protected static String CalculateMessageForInfoLine()
     {
@@ -32,36 +32,41 @@ public class DistanceMeasurer
                 double coordX = mc.thePlayer.posX - 0.5;
                 double coordY = mc.thePlayer.posY - mc.thePlayer.height;
                 double coordZ = mc.thePlayer.posZ - 0.5;
+                
                 double blockX = objectMouseOver.blockX;
                 double blockY = objectMouseOver.blockY;
                 double blockZ = objectMouseOver.blockZ;
+                
                 double deltaX = coordX - blockX;
                 double deltaY = coordY - blockY;
                 double deltaZ = coordZ - blockZ;
                 double delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-                double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
+                
                 String x = String.format("%1$,.1f", deltaX);
                 String y = String.format("%1$,.1f", deltaY);
                 String z = String.format("%1$,.1f", deltaZ);
                 String distance = String.format("%1$,.1f", delta);
-                String farthestHorizontalDistanceStr = String.format("%1$,.1f", farthestHorizontalDistance);
+                
+                double farthestHorizontalDistance = Math.max(Math.abs(deltaX), Math.abs(deltaZ));
+                double farthestDistance = Math.max(Math.abs(deltaY), farthestHorizontalDistance);
+                String farthestDistanceDistanceStr = String.format("%1$,.1f", farthestDistance);
 
-                if (ZyinHUD.DistanceMeasurerMode == 1)
+                if (ZyinHUD.DistanceMeasurerMode == 1)	//1=simple
                 {
-                    distanceMeasurerString = FontCode.AQUA + "[" + farthestHorizontalDistanceStr + "]";
+                    distanceMeasurerString = FontCodes.ORANGE + "[" + farthestDistanceDistanceStr + "]";
                 }
-                else if (ZyinHUD.DistanceMeasurerMode == 2)
+                else if (ZyinHUD.DistanceMeasurerMode == 2)	//2=complex
                 {
-                    distanceMeasurerString = FontCode.AQUA + "[" + x + ", " + z + ", " + y + " (" + distance + ")]";
+                    distanceMeasurerString = FontCodes.ORANGE + "[" + x + ", " + z + ", " + y + " (" + distance + ")]";
                 }
                 else
                 {
-                    distanceMeasurerString = FontCode.AQUA + "[???]";
+                    distanceMeasurerString = FontCodes.ORANGE + "[???]";
                 }
             }
             else
             {
-                distanceMeasurerString = FontCode.AQUA + "[far]";
+                distanceMeasurerString = FontCodes.ORANGE + "[far]";
             }
 
             return distanceMeasurerString + InfoLine.SPACER;

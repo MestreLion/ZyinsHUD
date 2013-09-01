@@ -1,6 +1,6 @@
 package zyin.zyinhud;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 
 import java.util.Collection;
 import java.util.Iterator;

@@ -1,6 +1,6 @@
 package zyin.zyinhud;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 
 import net.minecraft.client.Minecraft;
 
@@ -44,7 +44,7 @@ public class Compass
             else// if(facing == 7)
                 compassDirection = "SE";
              
-            String compassString = FontCode.GRAY + "[" + FontCode.RED + compassDirection + FontCode.GRAY + "]";
+            String compassString = FontCodes.GRAY + "[" + FontCodes.RED + compassDirection + FontCodes.GRAY + "]";
             return compassString + InfoLine.SPACER;
         }
 

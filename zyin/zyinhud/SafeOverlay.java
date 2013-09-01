@@ -1,6 +1,6 @@
 package zyin.zyinhud;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,7 +72,7 @@ public class SafeOverlay
      * The slowest the update frequency should be set to, in milliseconds.
      * It will be set to this value when the drawDistance = maxDrawDistance.
      */
-    private static final int updateFrequencyMax = 2000;
+    private static final int updateFrequencyMax = 8000;
 
     /**
      * USE THE Getter/Setter METHODS FOR THIS!!
@@ -88,9 +88,9 @@ public class SafeOverlay
      * drawDistance = 80 = 4,096,000 blocks (max)
      */
     private int drawDistance;
-	public static final int minDrawDistance = 2;	//can't go lower than 2. setting to 1 dispays nothing
 	public static final int defaultDrawDistance = 20;
-    public static final int maxDrawDistance = 80;	//after 80 it really starts to lag
+	public static final int minDrawDistance = 2;	//can't go lower than 2. setting this to 1 dispays nothing
+    public static final int maxDrawDistance = 175;	//175 is the edge of the map
 
     /**
      * The transprancy of the "X" marks when rendered, between (0.1 and 1]
@@ -687,15 +687,15 @@ public class SafeOverlay
 
         if (ZyinHUD.SafeOverlayMode == 0)	//off
         {
-            safeOverlayString = FontCode.WHITE + "";
+            safeOverlayString = FontCodes.WHITE + "";
         }
         else if (ZyinHUD.SafeOverlayMode == 1)	//on
         {
-            safeOverlayString = FontCode.WHITE + "safe";
+            safeOverlayString = FontCodes.WHITE + "safe";
         }
         else
         {
-            safeOverlayString = FontCode.WHITE + "???";
+            safeOverlayString = FontCodes.WHITE + "???";
         }
 
         return safeOverlayString + InfoLine.SPACER;
@@ -906,11 +906,11 @@ public class SafeOverlay
                 return false;
             }
 
-            //list of transparent blocks mobs can not spawn inside of
+            //list of transparent blocks mobs can NOT spawn inside of.
+            //for example, they cannot spawn inside of leaves even though they are transparent.
             //  (I wonder if the list shorter for blocks that mobs CAN spawn in?
-            //  [lever, button, redstone  torches, reeds, rail, plants, crops, etc.])
-            return !(block instanceof BlockDoor
-                     || block instanceof BlockHalfSlab
+            //   lever, button, redstone  torches, reeds, rail, plants, crops, etc.)
+            return !(block instanceof BlockHalfSlab
                      || block instanceof BlockStairs
                      || block instanceof BlockFluid
                      || block instanceof BlockChest

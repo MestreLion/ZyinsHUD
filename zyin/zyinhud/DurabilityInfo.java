@@ -1,8 +1,8 @@
 package zyin.zyinhud;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 
-import zyin.zyinhud.util.FontCode;
+import zyin.zyinhud.util.FontCodes;
 
 import java.util.ArrayList;
 
@@ -105,7 +105,7 @@ public class DurabilityInfo
                         //TODO: glBindTexture
                         //GL11.glBindTexture(GL11.GL_TEXTURE_2D, mc.renderEngine.getTexture(DURABILITY_ICONS_PNG));	//ORIGINAL
                         
-                        
+                        //bind texture
                         textureManager.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
                         
                         gig.drawTexturedModalRect(durabalityLocX, durabalityLocY, armorDurabilityU, armorDurabilityV, armorDurabilityX, armorDurabilityY);

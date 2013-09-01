@@ -95,8 +95,9 @@ public class SafeOverlayKeyHandler extends KeyHandler
         if (Keyboard.isKeyDown(Keyboard.KEY_0))
         {
             int drawDistance = SafeOverlay.instance.setDrawDistance(SafeOverlay.defaultDrawDistance);
+        	SafeOverlay.instance.setSeeUnsafePositionsThroughWalls(false);
             
-        	InfoLine.DisplayNotification("Safe Overlay distance: "+drawDistance+" (default)");
+        	InfoLine.DisplayNotification("Safe Overlay settings: default ("+drawDistance+")");
             
             SafeOverlay.instance.RecalculateUnsafePositions();
             

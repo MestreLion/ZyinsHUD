@@ -45,7 +45,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.2")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.5.3")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -62,6 +62,7 @@ public class ZyinHUD
 
     //Configurable values - coordinates
     public static Boolean ShowCoordinates;
+    public static Boolean UseYCoordinateColors;
     
     //Configurable values - compass
     public static Boolean ShowCompass;
@@ -86,7 +87,7 @@ public class ZyinHUD
     public static boolean ShowPotionTimers;
 
     //Configurable values - player locator
-    //nothing here
+    public static boolean ShowDistanceToPlayers;
     
     
     public static int PlayerLocatorMode = 0;	//0=off, 1=on
@@ -174,6 +175,9 @@ public class ZyinHUD
         p = config.get(CATEGORY_COORDINATES, "ShowCoordinates", true);
         p.comment = "Enable/Disable showing your coordinates.";
         ShowCoordinates = p.getBoolean(true);
+        p = config.get(CATEGORY_COORDINATES, "UseYCoordinateColors", true);
+        p.comment = "Color code the Y (height) coordinate based on what ores can spawn at that level.";
+        UseYCoordinateColors = p.getBoolean(true);
         
         
         //CATEGORY_COMPASS
@@ -240,7 +244,10 @@ public class ZyinHUD
         
         
         //CATEGORY_PLAYERLOCATOR
-        //nothing here
+        p = config.get(CATEGORY_PLAYERLOCATOR, "ShowDistanceToPlayers", false);
+        p.comment = "Show how far away you are from the other players next to their name.";
+        ShowDistanceToPlayers = p.getBoolean(false);
+        
         
         
         config.save();
