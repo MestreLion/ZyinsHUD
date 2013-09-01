@@ -1,6 +1,6 @@
 package zyin.zyinhud.gui.buttons;
 
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 
 public class GuiHorseInfoHotkeyButton extends GuiHotkeyButton
 {
@@ -12,12 +12,12 @@ public class GuiHorseInfoHotkeyButton extends GuiHotkeyButton
 	@Override
 	protected void SetHotkey(String hotkey)
 	{
-		HorseInfo.Hotkey = hotkey;
+		AnimalInfo.Hotkey = hotkey;
 	}
 
 	@Override
 	protected String GetHotkeyDescription()
 	{
-		return HorseInfo.HotkeyDescription;
+		return AnimalInfo.HotkeyDescription;
 	}
 }

@@ -25,7 +25,7 @@ import zyin.zyinhud.mods.DurabilityInfo;
 import zyin.zyinhud.mods.EatingAid;
 import zyin.zyinhud.mods.EnderPearlAid;
 import zyin.zyinhud.mods.Fps;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.InfoLine;
 import zyin.zyinhud.mods.PlayerLocator;
 import zyin.zyinhud.mods.PotionAid;
@@ -81,7 +81,7 @@ public class GuiZyinHUDOptions extends GuiScreen
     		Localization.get("distancemeasurer.name"),
     		Localization.get("safeoverlay.name"),
     		Localization.get("playerlocator.name"),
-    		Localization.get("horseinfo.name"),
+    		Localization.get("animalinfo.name"),
     		Localization.get("potiontimers.name"),
     		Localization.get("durabilityinfo.name"),
     		Localization.get("enderpearlaid.name"),
@@ -314,18 +314,33 @@ public class GuiZyinHUDOptions extends GuiScreen
     	buttonList.add(new GuiButton(804, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("playerlocator.showdistancetoplayers", PlayerLocator.ShowDistanceToPlayers)));
     	
     }
-    private void DrawHorseInfoButtons()
+    private void DrawAnimalInfoButtons()
     {
     	int Y = buttonY;
-    	buttonList.add(new GuiButton(901, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Enabled(HorseInfo.Enabled)));
+    	buttonList.add(new GuiButton(901, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Enabled(AnimalInfo.Enabled)));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiHorseInfoHotkeyButton(902, buttonX_column1, Y, buttonWidth_half, buttonHeight, HorseInfo.Hotkey));
+    	buttonList.add(new GuiHorseInfoHotkeyButton(902, buttonX_column1, Y, buttonWidth_half, buttonHeight, AnimalInfo.Hotkey));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.maxviewdistance"), HorseInfo.minViewDistanceCutoff, HorseInfo.maxViewDistanceCutoff, HorseInfo.viewDistanceCutoff, true));
+    	buttonList.add(new GuiNumberSlider(903, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("animalinfo.maxviewdistance"), AnimalInfo.minViewDistanceCutoff, AnimalInfo.maxViewDistanceCutoff, AnimalInfo.viewDistanceCutoff, true));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("horseinfo.numdecimalsdisplayed"), HorseInfo.minNumberOfDecimalsDisplayed, HorseInfo.maxNumberOfDecimalsDisplayed, HorseInfo.GetNumberOfDecimalsDisplayed(), true));
+    	buttonList.add(new GuiNumberSlider(904, buttonX_column1, Y, buttonWidth_half, buttonHeight, Localization.get("animalinfo.numdecimalsdisplayed"), AnimalInfo.minNumberOfDecimalsDisplayed, AnimalInfo.maxNumberOfDecimalsDisplayed, AnimalInfo.GetNumberOfDecimalsDisplayed(), true));
     	Y += buttonHeight + buttonSpacing;
-    	buttonList.add(new GuiButton(905, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("horseinfo.showonf3menu", HorseInfo.ShowHorseStatsOnF3Menu)));
+    	buttonList.add(new GuiButton(905, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showhorsestatsonf3menu", AnimalInfo.ShowHorseStatsOnF3Menu)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(906, buttonX_column1, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showhorsestatsoverlay", AnimalInfo.ShowHorseStatsOverlay)));
+    	
+    	Y = buttonY;
+    	buttonList.add(new GuiButton(910, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedinghorse", AnimalInfo.ShowBreedingTimerForHorses)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(911, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedingvillagers", AnimalInfo.ShowBreedingTimerForVillagers)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(912, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedingcow", AnimalInfo.ShowBreedingTimerForCows)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(913, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedingsheep", AnimalInfo.ShowBreedingTimerForSheep)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(914, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedingpig", AnimalInfo.ShowBreedingTimerForPigs)));
+    	Y += buttonHeight + buttonSpacing;
+    	buttonList.add(new GuiButton(915, buttonX_column2, Y, buttonWidth_half, buttonHeight, GetButtonLabel_Boolean("animalinfo.showbreedingchicken", AnimalInfo.ShowBreedingTimerForChickens)));
     	
     }
     private void DrawPotionTimerButtons()
@@ -732,13 +747,13 @@ public class GuiZyinHUDOptions extends GuiScreen
             
             else if (button.id == 900)
             {
-            	screenTitle = Localization.get("horseinfo.name");
-            	DrawHorseInfoButtons();
+            	screenTitle = Localization.get("animalinfo.name");
+            	DrawAnimalInfoButtons();
             }
             else if (button.id == 901)	//Enable/Disable
             {
-            	HorseInfo.ToggleEnabled();
-            	button.displayString = GetButtonLabel_Enabled(HorseInfo.Enabled);
+            	AnimalInfo.ToggleEnabled();
+            	button.displayString = GetButtonLabel_Enabled(AnimalInfo.Enabled);
             }
             else if (button.id == 902)	//Hotkey
             {
@@ -747,18 +762,55 @@ public class GuiZyinHUDOptions extends GuiScreen
             else if (button.id == 903)	//Min view distance slider
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
-            	HorseInfo.viewDistanceCutoff = value;
+            	AnimalInfo.viewDistanceCutoff = value;
             }
             else if (button.id == 904)	//Decimal slider
             {
             	int value = ((GuiNumberSlider)button).GetValueAsInteger();
-            	HorseInfo.SetNumberOfDecimalsDisplayed(value);
+            	AnimalInfo.SetNumberOfDecimalsDisplayed(value);
             }
             else if (button.id == 905)	//Show on F3 menu
             {
-            	SafeOverlay.instance.toggleDisplayInNether();
-            	button.displayString = GetButtonLabel_Boolean("horseinfo.showonf3menu", HorseInfo.ShowHorseStatsOnF3Menu);
+            	AnimalInfo.ToggleShowHorseStatsOnF3Menu();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showhorsestatsonf3menu", AnimalInfo.ShowHorseStatsOnF3Menu);
             }
+            else if (button.id == 906)	//Show on F3 menu
+            {
+            	AnimalInfo.ToggleShowHorseStatsOverlay();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showhorsestatsoverlay", AnimalInfo.ShowHorseStatsOverlay);
+            }
+            
+            else if (button.id == 910)	//Toggle showing breeding horses
+            {
+            	AnimalInfo.ToggleShowBreedingHorses();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedinghorse", AnimalInfo.ShowBreedingTimerForHorses);
+            }
+            else if (button.id == 911)	//Toggle showing breeding villagers
+            {
+            	AnimalInfo.ToggleShowBreedingVillagers();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedingvillager", AnimalInfo.ShowBreedingTimerForVillagers);
+            }
+            else if (button.id == 912)	//Toggle showing breeding cows
+            {
+            	AnimalInfo.ToggleShowBreedingCows();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedingcow", AnimalInfo.ShowBreedingTimerForCows);
+            }
+            else if (button.id == 913)	//Toggle showing breeding sheep
+            {
+            	AnimalInfo.ToggleShowBreedingSheep();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedingsheep", AnimalInfo.ShowBreedingTimerForSheep);
+            }
+            else if (button.id == 914)	//Toggle showing breeding pig
+            {
+            	AnimalInfo.ToggleShowBreedingPigs();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedingpig", AnimalInfo.ShowBreedingTimerForPigs);
+            }
+            else if (button.id == 915)	//Toggle showing breeding chicken
+            {
+            	AnimalInfo.ToggleShowBreedingChickens();
+            	button.displayString = GetButtonLabel_Boolean("animalinfo.showbreedingchicken", AnimalInfo.ShowBreedingTimerForChickens);
+            }
+            
             
             /////////////////////////////////////////////////////////////////////////
             // Potion Timers

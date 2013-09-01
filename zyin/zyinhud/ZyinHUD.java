@@ -16,7 +16,7 @@ import zyin.zyinhud.keyhandler.DistanceMeasurerKeyHandler;
 import zyin.zyinhud.keyhandler.EatingAidKeyHandler;
 import zyin.zyinhud.keyhandler.EnderPearlAidKeyHandler;
 import zyin.zyinhud.keyhandler.GuiZyinHUDOptionsKeyHandler;
-import zyin.zyinhud.keyhandler.HorseInfoKeyHandler;
+import zyin.zyinhud.keyhandler.AnimalInfoKeyHandler;
 import zyin.zyinhud.keyhandler.PlayerLocatorKeyHandler;
 import zyin.zyinhud.keyhandler.PotionAidKeyHandler;
 import zyin.zyinhud.keyhandler.SafeOverlayKeyHandler;
@@ -29,14 +29,14 @@ import zyin.zyinhud.mods.DurabilityInfo;
 import zyin.zyinhud.mods.EatingAid;
 import zyin.zyinhud.mods.EnderPearlAid;
 import zyin.zyinhud.mods.Fps;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.InfoLine;
 import zyin.zyinhud.mods.PlayerLocator;
 import zyin.zyinhud.mods.PotionAid;
 import zyin.zyinhud.mods.PotionTimers;
 import zyin.zyinhud.mods.SafeOverlay;
 import zyin.zyinhud.mods.WeaponSwapper;
-import zyin.zyinhud.tickhandler.GuiTickHandler;
+import zyin.zyinhud.tickhandler.GUITickHandler;
 import zyin.zyinhud.tickhandler.HUDTickHandler;
 import zyin.zyinhud.tickhandler.RenderTickHandler;
 import zyin.zyinhud.util.Localization;
@@ -53,7 +53,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.5")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.6")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -77,7 +77,7 @@ public class ZyinHUD
     public static final String CATEGORY_EATINGAID = "eatingaid";
     public static final String CATEGORY_WEAPONSWAP = "weaponswap";
     public static final String CATEGORY_FPS = "fps";
-    public static final String CATEGORY_HORSEINFO = "horseinfo";
+    public static final String CATEGORY_ANIMALINFO = "horseinfo";
     public static final String CATEGORY_ENDERPEARLAID = "enderpearlaid";
     public static final String CATEGORY_CLOCK = "clock";
     public static final String CATEGORY_POTIONAID = "potionaid";
@@ -85,27 +85,27 @@ public class ZyinHUD
     public static String SupportedLanguages;
     
     //Key bindings
-    private static KeyBinding[] key_K;
-    private static KeyBinding[] key_L;
-    private static KeyBinding[] key_P;
-    private static KeyBinding[] key_G;
-    private static KeyBinding[] key_F;
-    private static KeyBinding[] key_O;
-    private static KeyBinding[] key_C;
-    private static KeyBinding[] key_V;
-    private static KeyBinding[] key_Z;
+    protected static KeyBinding[] key_K;
+    protected static KeyBinding[] key_L;
+    protected static KeyBinding[] key_P;
+    protected static KeyBinding[] key_G;
+    protected static KeyBinding[] key_F;
+    protected static KeyBinding[] key_O;
+    protected static KeyBinding[] key_C;
+    protected static KeyBinding[] key_V;
+    protected static KeyBinding[] key_Z;
     
     
     //default hotkeys
-    private static String DefaultDistanceMeasurerHotkey = "K";
-    private static String DefaultSafeOverlayHotkey = "L";
-    private static String DefaultPlayerLocatorHotkey = "P";
-    private static String DefaultEatingAidHotkey = "G";
-    private static String DefaultWeaponSwapHotkey = "F";
-    private static String DefaultHorseInfoHotkey = "O";	//also: 0 + L, - + L, + + L
-    private static String DefaultEnderPearlAidHotkey = "C";
-    private static String DefaultPotionAidHotkey = "V";
-    private static String DefaultOptionsHotkey = "Z";	//Ctrl + Alt + Z
+    protected static String DefaultDistanceMeasurerHotkey = "K";
+    protected static String DefaultSafeOverlayHotkey = "L";
+    protected static String DefaultPlayerLocatorHotkey = "P";
+    protected static String DefaultEatingAidHotkey = "G";
+    protected static String DefaultWeaponSwapHotkey = "F";
+    protected static String DefaultAnimalInfoHotkey = "O";	//also: 0 + L, - + L, + + L
+    protected static String DefaultEnderPearlAidHotkey = "C";
+    protected static String DefaultPotionAidHotkey = "V";
+    protected static String DefaultOptionsHotkey = "Z";	//Ctrl + Alt + Z
     
     
     //private static Minecraft mc = Minecraft.getMinecraft();
@@ -140,7 +140,7 @@ public class ZyinHUD
         MinecraftForge.EVENT_BUS.register(RenderTickHandler.instance);	//needed for @ForgeSubscribe method subscriptions
 
         TickRegistry.registerTickHandler(new HUDTickHandler(), Side.CLIENT);
-        TickRegistry.registerTickHandler(new GuiTickHandler(), Side.CLIENT);
+        TickRegistry.registerTickHandler(new GUITickHandler(), Side.CLIENT);
         
         
     	LoadKeyHandlers();
@@ -221,7 +221,7 @@ public class ZyinHUD
         config.addCustomCategoryComment(CATEGORY_EATINGAID, "Eating Aid makes eating food quick and easy.");
         config.addCustomCategoryComment(CATEGORY_WEAPONSWAP, "Weapon Swap allows you to quickly select your sword and bow.");
         config.addCustomCategoryComment(CATEGORY_FPS, "FPS shows your frames per second without having to go into the F3 menu.");
-        config.addCustomCategoryComment(CATEGORY_HORSEINFO, "Horse Info gives you information about horse stats, such as speed and jump height.");
+        config.addCustomCategoryComment(CATEGORY_ANIMALINFO, "Animal Info gives you information about horse stats, such as speed and jump height.");
         config.addCustomCategoryComment(CATEGORY_ENDERPEARLAID, "Ender Pearl Aid makes it easier to quickly throw ender pearls.");
         config.addCustomCategoryComment(CATEGORY_CLOCK, "Clock shows you time relevant to Minecraft time.");
         config.addCustomCategoryComment(CATEGORY_POTIONAID, "Potion Aid helps you quickly drink potions based on your circumstance.");
@@ -509,41 +509,90 @@ public class ZyinHUD
         	p.set(Fps.Enabled);
         
         
-        //CATEGORY_HORSEINFO
-        p = config.get(CATEGORY_HORSEINFO, "EnableHorseInfo", false);
-        p.comment = "Enable/Disable Horse Info.";
+        //CATEGORY_ANIMALINFO
+        p = config.get(CATEGORY_ANIMALINFO, "EnableAnimalInfo", true);
+        p.comment = "Enable/Disable Animal Info.";
         if(loadSettings)
-        	HorseInfo.Enabled = p.getBoolean(false);
+        	AnimalInfo.Enabled = p.getBoolean(true);
         else
-        	p.set(HorseInfo.Enabled);
+        	p.set(AnimalInfo.Enabled);
         
-        p = config.get(CATEGORY_HORSEINFO, "HorseInfoHotkey", DefaultHorseInfoHotkey);
-        p.comment = "Default: "+DefaultHorseInfoHotkey;
+        p = config.get(CATEGORY_ANIMALINFO, "AnimalInfoHotkey", DefaultAnimalInfoHotkey);
+        p.comment = "Default: "+DefaultAnimalInfoHotkey;
         if(loadSettings)
-        	HorseInfo.Hotkey = p.getString();
+        	AnimalInfo.Hotkey = p.getString();
         else
         	p.set(Keyboard.getKeyName(key_O[0].keyCode));
         
-        p = config.get(CATEGORY_HORSEINFO, "ShowHorseStatsOnF3Menu", true);
+        p = config.get(CATEGORY_ANIMALINFO, "ShowHorseStatsOnF3Menu", true);
         p.comment = "Enable/Disable showing the stats of the horse you're riding on the F3 screen.";
         if(loadSettings)
-        	HorseInfo.ShowHorseStatsOnF3Menu = p.getBoolean(true);
+        	AnimalInfo.ShowHorseStatsOnF3Menu = p.getBoolean(true);
         else
-        	p.set(HorseInfo.ShowHorseStatsOnF3Menu);
+        	p.set(AnimalInfo.ShowHorseStatsOnF3Menu);
         
-        p = config.get(CATEGORY_HORSEINFO, "HorseInfoMaxViewDistance", 8);
-        p.comment = "How far away horse stats will be rendered on the screen (distance measured in blocks).";
+        p = config.get(CATEGORY_ANIMALINFO, "ShowHorseStatsOverlay", true);
+        p.comment = "Enable/Disable showing the stats of horses on screen.";
         if(loadSettings)
-        	HorseInfo.viewDistanceCutoff = p.getInt(8);
+        	AnimalInfo.ShowHorseStatsOverlay = p.getBoolean(true);
         else
-        	p.set(HorseInfo.viewDistanceCutoff);
+        	p.set(AnimalInfo.ShowHorseStatsOverlay);
         
-        p = config.get(CATEGORY_HORSEINFO, "HorseInfoNumberOfDecimalsDisplayed", 1);
+        p = config.get(CATEGORY_ANIMALINFO, "AnimalInfoMaxViewDistance", 8);
+        p.comment = "How far away animal info will be rendered on the screen (distance measured in blocks).";
+        if(loadSettings)
+        	AnimalInfo.viewDistanceCutoff = p.getInt(8);
+        else
+        	p.set(AnimalInfo.viewDistanceCutoff);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "HorseInfoNumberOfDecimalsDisplayed", 1);
         p.comment = "How many decimal places will be used when displaying horse stats.";
         if(loadSettings)
-        	HorseInfo.SetNumberOfDecimalsDisplayed(p.getInt(1));
+        	AnimalInfo.SetNumberOfDecimalsDisplayed(p.getInt(1));
         else
-        	p.set(HorseInfo.GetNumberOfDecimalsDisplayed());
+        	p.set(AnimalInfo.GetNumberOfDecimalsDisplayed());
+
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForHorses", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a horse can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForHorses = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForHorses);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForVillagers", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a villager can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForVillagers = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForVillagers);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForCows", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a cow can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForCows = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForCows);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForSheep", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a sheep can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForSheep = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForSheep);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForPigs", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a pig can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForPigs = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForPigs);
+        
+        p = config.get(CATEGORY_ANIMALINFO, "ShowBreedingTimerForChickens", true);
+        p.comment = "Enable/Disable showing a timer that tells you how long until a chicken can breed again.";
+        if(loadSettings)
+        	AnimalInfo.ShowBreedingTimerForChickens = p.getBoolean(true);
+        else
+        	p.set(AnimalInfo.ShowBreedingTimerForChickens);
         
         
         //CATEGORY_ENDERPEARLAID
@@ -635,11 +684,11 @@ public class ZyinHUD
         key_F = new KeyBinding[] {new KeyBinding(WeaponSwapper.HotkeyDescription, 	hotkey)};
         KeyBindingRegistry.registerKeyBinding(new WeaponSwapperKeyHandler(key_F, repeatFalse));
 
-        hotkey = GetKeyboardKeyFromString(HorseInfo.Hotkey);
-        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultHorseInfoHotkey) : hotkey;
-        key_O = new KeyBinding[] {new KeyBinding(HorseInfo.HotkeyDescription, hotkey)};
-        KeyBindingRegistry.registerKeyBinding(new HorseInfoKeyHandler(key_O, repeatFalse));
-
+        hotkey = GetKeyboardKeyFromString(AnimalInfo.Hotkey);
+        hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultAnimalInfoHotkey) : hotkey;
+        key_O = new KeyBinding[] {new KeyBinding(AnimalInfo.HotkeyDescription, hotkey)};
+        KeyBindingRegistry.registerKeyBinding(new AnimalInfoKeyHandler(key_O, repeatFalse));
+        
         hotkey = GetKeyboardKeyFromString(EnderPearlAid.Hotkey);
         hotkey = (hotkey == 0) ? Keyboard.getKeyIndex(DefaultEnderPearlAidHotkey) : hotkey;
         key_C = new KeyBinding[] {new KeyBinding(EnderPearlAid.HotkeyDescription, hotkey)};

@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import zyin.zyinhud.helper.EntityTrackerHelper;
 import zyin.zyinhud.mods.DurabilityInfo;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.InfoLine;
 import zyin.zyinhud.mods.PlayerLocator;
 import zyin.zyinhud.mods.PotionTimers;
@@ -75,7 +75,7 @@ public class HUDTickHandler implements ITickHandler
         InfoLine.RenderOntoHUD();
         DurabilityInfo.RenderOntoHUD();
         PotionTimers.RenderOntoHUD();
-        HorseInfo.RenderOntoDebugMenu();
+        AnimalInfo.RenderOntoDebugMenu();
         EntityTrackerHelper.RenderAllEntityOverlays();	//PlayerLocator.RenderEntityOverlay(), HorseInfo.RenderEntityOverlay()
         renderTickCount++;
     }

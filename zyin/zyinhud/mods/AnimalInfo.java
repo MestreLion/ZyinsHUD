@@ -1,15 +1,23 @@
 package zyin.zyinhud.mods;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityChicken;
+import net.minecraft.entity.passive.EntityCow;
 import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.entity.passive.EntitySheep;
+import net.minecraft.entity.passive.EntityVillager;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.lwjgl.opengl.GL11;
@@ -20,7 +28,7 @@ import zyin.zyinhud.util.Localization;
 /**
  * Shows information about horses in the F3 menu.
  */
-public class HorseInfo
+public class AnimalInfo
 {
 	/** Enables/Disables this Mod */
 	public static boolean Enabled;
@@ -35,7 +43,7 @@ public class HorseInfo
     	return Enabled;
     }
     public static String Hotkey;
-    public static final String HotkeyDescription = "ZyinHUD: Horse Info";
+    public static final String HotkeyDescription = "ZyinHUD: Animal Info";
     
 	/**
 	 * 0=off<br>
@@ -45,8 +53,15 @@ public class HorseInfo
     
     /** The maximum number of modes that is supported */
     public static int NumberOfModes = 2;
-    
+
     public static boolean ShowHorseStatsOnF3Menu;
+    public static boolean ShowHorseStatsOverlay;
+    public static boolean ShowBreedingTimerForVillagers;
+    public static boolean ShowBreedingTimerForHorses;
+    public static boolean ShowBreedingTimerForCows;
+    public static boolean ShowBreedingTimerForSheep;
+    public static boolean ShowBreedingTimerForPigs;
+    public static boolean ShowBreedingTimerForChickens;
     
     /** Sets the number of decimal places that will be rendered when displaying horse stats */
     public static int numberOfDecimalsDisplayed = 1;
@@ -75,12 +90,13 @@ public class HorseInfo
     
     private static final int verticalSpaceBetweenLines = 10;	//space between the overlay lines (because it is more than one line)
     
-    /** Horses that are farther away than this will not have their info shown */
+    /** Animals that are farther away than this will not have their info shown */
     public static int viewDistanceCutoff = 8;		//how far away we will render the overlay
     public static int minViewDistanceCutoff = 0;
     public static int maxViewDistanceCutoff = 120;
-    
+
     private static DecimalFormat decimalFormat = GetDecimalFormat();
+    private static DecimalFormat twoDigitFormat = new DecimalFormat("00");
     
     
     /**
@@ -127,7 +143,7 @@ public class HorseInfo
         //if the player is in the world
         //and not in a menu
         //and F3 is shown
-        if (HorseInfo.Enabled && ShowHorseStatsOnF3Menu &&
+        if (AnimalInfo.Enabled && ShowHorseStatsOnF3Menu &&
                 (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && mc.gameSettings.showDebugInfo)
         {
@@ -135,19 +151,19 @@ public class HorseInfo
 
             if (riddenEntity instanceof EntityHorse)
             {
-            	//Localization.get("horseinfo.debug"),
                 EntityHorse horse = (EntityHorse) riddenEntity;
-                String horseSpeedMessage = Localization.get("horseinfo.debug.speed") + " " + GetHorseSpeedText(horse) + " m/s";
-                String horseJumpMessage = Localization.get("horseinfo.debug.jump") + " " + GetHorseJumpText(horse) + " blocks";
-                String horseHPMessage = Localization.get("horseinfo.debug.hp") + " " + GetHorseHPText(horse);
+                String horseSpeedMessage = Localization.get("animalinfo.debug.speed") + " " + GetHorseSpeedText(horse) + " m/s";
+                String horseJumpMessage = Localization.get("animalinfo.debug.jump") + " " + GetHorseJumpText(horse) + " blocks";
+                String horseHPMessage = Localization.get("animalinfo.debug.hp") + " " + GetHorseHPText(horse);
 
                 String coloring = GetHorseColoringText(horse);
                 String marking = GetHorseMarkingText(horse);
+                
                 if(marking.isEmpty())	//no markings
                 	marking = "None";
                 
-                String horseColor = Localization.get("horseinfo.debug.color") + " " + coloring;
-                String horseMarking = Localization.get("horseinfo.debug.markings") + " " + marking;
+                String horseColor = Localization.get("animalinfo.debug.color") + " " + coloring;
+                String horseMarking = Localization.get("animalinfo.debug.markings") + " " + marking;
                 
                 mc.fontRenderer.drawStringWithShadow(horseSpeedMessage, 1, 130, 0xffffff);
                 mc.fontRenderer.drawStringWithShadow(horseJumpMessage, 1, 140, 0xffffff);
@@ -171,7 +187,7 @@ public class HorseInfo
      */
     public static void RenderEntityOverlay(Entity entity, int x, int y, boolean isEntityBehindUs)
     {
-        if (!(entity instanceof EntityHorse))
+        if (!(entity instanceof EntityAgeable))
         {
             return;    //we only care about horses
         }
@@ -179,7 +195,7 @@ public class HorseInfo
         //if the player is in the world
         //and not looking at a menu
         //and F3 not pressed
-        if (HorseInfo.Enabled && Mode == 1 &&
+        if (AnimalInfo.Enabled && Mode == 1 &&
                 (mc.inGameHasFocus || mc.currentScreen == null || mc.currentScreen instanceof GuiChat)
                 && !mc.gameSettings.showDebugInfo)
         {
@@ -187,17 +203,17 @@ public class HorseInfo
             {
                 return;
             }
+            
+            //EntityHorse horse = (EntityHorse)entity;
+            EntityAgeable animal = (EntityAgeable)entity;
 
-            me = mc.thePlayer;
-            EntityHorse horse = (EntityHorse)entity;
-
-            if (horse.riddenByEntity instanceof EntityClientPlayerMP)
+            if (animal.riddenByEntity instanceof EntityClientPlayerMP)
             {
                 return;    //don't render stats of the horse we are currently riding
             }
 
             //only show entities that are close by
-            double distanceFromMe = me.getDistanceToEntity(horse);
+            double distanceFromMe = mc.thePlayer.getDistanceToEntity(animal);
 
             if (distanceFromMe > maxViewDistanceCutoff
                     || distanceFromMe > viewDistanceCutoff)
@@ -205,7 +221,10 @@ public class HorseInfo
                 return;
             }
 
-            String[] multilineOverlayMessage = GetMultilineOverlayMessage(horse);
+            String[] multilineOverlayMessage = GetMultilineOverlayMessage(animal);
+            
+            if(multilineOverlayMessage == null)
+            	return;
             
             //calculate the width of the longest string in the multi-lined overlay message
             int overlayMessageWidth = 0;
@@ -248,8 +267,8 @@ public class HorseInfo
     }
 
     /**
-     * Gets the status of the Horse Info
-     * @return the string "horse" if the Horse Info is enabled, otherwise "".
+     * Gets the status of the Animal Info
+     * @return the string "animals" if the Animal Info is enabled, otherwise "".
      */
     public static String CalculateMessageForInfoLine()
     {
@@ -259,7 +278,7 @@ public class HorseInfo
         }
         else if (Mode == 1)	//on
         {
-            return FontCodes.WHITE + "horse" + InfoLine.SPACER;
+            return FontCodes.WHITE + Localization.get("animalinfo.infoline") + InfoLine.SPACER;
         }
         else
         {
@@ -267,63 +286,159 @@ public class HorseInfo
         }
     }
 
-    private static String[] GetMultilineOverlayMessage(EntityHorse horse)
+    protected static String[] GetMultilineOverlayMessage(EntityAgeable animal)
     {
-        float horseGrowingAge = horse.func_110254_bY();	//horse age, 0.5 (baby) to 1 (adult)
-
         /*
-        int field_110278_bp = horse.field_110278_bp;	//tail rotation
-        int field_110279_bq = horse.field_110279_bq;
-        float func_110258_o = horse.func_110258_o(1f);	//head rotation
-        float bodyRotation = horse.func_110223_p(1f);	//standing up rotation (i.e. when jumping)
-        float func_110201_q = horse.func_110201_q(1f);	//flickers for... idk
+         * TESTING DATA
+         * 
+        //float horseGrowingAge = horse.func_110254_bY();	//horse age, 0.5 (baby) to 1 (adult)
+        
+        int field_110278_bp = horse.field_110278_bp;		//tail rotation
+        int field_110279_bq = horse.field_110279_bq;		//
+        float func_110258_o = horse.func_110258_o(1f);		//head rotation
+        float func_110223_p = horse.func_110223_p(1f);		//standing up rotation (i.e. when jumping)
+        float func_110201_q = horse.func_110201_q(1f);		//flickers for... idk
+        boolean func_110248_bS = horse.func_110248_bS();	//tamed
+        int getGrowingAge = horse.getGrowingAge();			//baby age if negative, breed-ready if 0, bred if positive
+        boolean func_110256_cu = horse.func_110256_cu();	//is zombie/skeleton horse
+        int func_110265_bP = horse.func_110265_bP();		//type of horse (0=horse, 1=donkey, 2=mule, 3=zombie, 4=skeleton)
 
         int love = horse.inLove;	//countdown timer starting at ~600 when fed a breeding item
         //horse.breeding;	//countdown from 60 after breeding initiated
-
+        
+        
         mc.fontRenderer.drawStringWithShadow("tail rotation:"+field_110278_bp, 1, 40, 0xFFFFFF);
         mc.fontRenderer.drawStringWithShadow("field_110279_bq:"+field_110279_bq, 1, 50, 0xFFFFFF);
         mc.fontRenderer.drawStringWithShadow("age:"+horseAge, 1, 60, 0xFFFFFF);
         mc.fontRenderer.drawStringWithShadow("head rotation:"+func_110258_o, 1, 70, 0xFFFFFF);
-        mc.fontRenderer.drawStringWithShadow("func_110223_p:"+bodyRotation, 1, 80, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("body rotation:"+func_110223_p, 1, 80, 0xFFFFFF);
         mc.fontRenderer.drawStringWithShadow("func_110201_q:"+func_110201_q, 1, 90, 0xFFFFFF);
         mc.fontRenderer.drawStringWithShadow("love:"+love, 1, 100, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("tamed:"+func_110248_bS, 1, 110, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("getGrowingAge:"+getGrowingAge, 1, 120, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("is zombie/skeleton?:"+func_110256_cu, 1, 130, 0xFFFFFF);
+        mc.fontRenderer.drawStringWithShadow("horse type:"+func_110265_bP, 1, 140, 0xFFFFFF);
         */
-
-        if (horseGrowingAge < 1f)
+    	
+        int animalGrowingAge = animal.getGrowingAge();
+        
+        if((animal instanceof EntityVillager && ShowBreedingTimerForVillagers) ||
+        		(animal instanceof EntityCow && ShowBreedingTimerForCows) ||
+        		(animal instanceof EntitySheep && ShowBreedingTimerForSheep) ||
+        		(animal instanceof EntityPig && ShowBreedingTimerForPigs) ||
+        		(animal instanceof EntityChicken && ShowBreedingTimerForChickens))
         {
-            String[] multilineOverlayMessage =
+            if (animalGrowingAge > 0)
             {
-                GetHorseAgeAsPercent(horse) + "%",
-                "",
-                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.overlay.speed"),
-                GetHorseHPText(horse) + " " + Localization.get("horseinfo.overlay.hp"),
-                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.overlay.jump")
-            };
-            return multilineOverlayMessage;
+                String[] multilineOverlayMessage =
+                {
+                    GetTimeUntilBreedAgain(animal)
+                };
+                return multilineOverlayMessage;
+            }
+            else
+            	return null;
         }
-        else
+        else if(animal instanceof EntityHorse)
         {
-        	String[] multilineOverlayMessage =
+        	EntityHorse horse = (EntityHorse)animal;
+        	
+        	ArrayList multilineOverlayArrayList = new ArrayList(4);
+        	
+        	if(ShowHorseStatsOverlay)
+        	{
+        		multilineOverlayArrayList.add(GetHorseSpeedText(horse) + " " + Localization.get("animalinfo.overlay.speed"));
+        		multilineOverlayArrayList.add(GetHorseHPText(horse) + " " + Localization.get("animalinfo.overlay.hp"));
+        		multilineOverlayArrayList.add(GetHorseJumpText(horse) + " " + Localization.get("animalinfo.overlay.jump"));
+        		
+        		if (animalGrowingAge < 0)
+            		multilineOverlayArrayList.add(GetHorseBabyGrowingAgeAsPercent(horse) + "%");
+        	}
+        	if(ShowBreedingTimerForHorses && animalGrowingAge > 0)
+        		multilineOverlayArrayList.add(GetTimeUntilBreedAgain(horse));
+        	
+        	String[] multilineOverlayMessage = new String[4];
+        	
+        	return (String[])multilineOverlayArrayList.toArray(multilineOverlayMessage);
+        	/*
+            if (animalGrowingAge < 0)
             {
-                GetHorseSpeedText(horse) + " " + Localization.get("horseinfo.overlay.speed"),
-                GetHorseHPText(horse) + " " + Localization.get("horseinfo.overlay.hp"),
-                GetHorseJumpText(horse) + " " + Localization.get("horseinfo.overlay.jump")
-            };
-            return multilineOverlayMessage;
+                String[] multilineOverlayMessage =
+                {
+                    GetHorseSpeedText(horse) + " " + Localization.get("animalinfo.overlay.speed"),
+                    GetHorseHPText(horse) + " " + Localization.get("animalinfo.overlay.hp"),
+                    GetHorseJumpText(horse) + " " + Localization.get("animalinfo.overlay.jump"),
+                    GetHorseBabyGrowingAgeAsPercent(horse) + "%"
+                };
+                return multilineOverlayMessage;
+            }
+            else if (animalGrowingAge > 0)
+            {
+            	if(ShowBreedingTimerForHorses)
+            	{
+                    String[] multilineOverlayMessage =
+                    {
+                        GetHorseSpeedText(horse) + " " + Localization.get("animalinfo.overlay.speed"),
+                        GetHorseHPText(horse) + " " + Localization.get("animalinfo.overlay.hp"),
+                        GetHorseJumpText(horse) + " " + Localization.get("animalinfo.overlay.jump"),
+                        GetTimeUntilBreedAgain(horse)
+                    };
+                    return multilineOverlayMessage;
+            	}
+            	else
+            	{
+                    String[] multilineOverlayMessage =
+                    {
+                        GetHorseSpeedText(horse) + " " + Localization.get("animalinfo.overlay.speed"),
+                        GetHorseHPText(horse) + " " + Localization.get("animalinfo.overlay.hp"),
+                        GetHorseJumpText(horse) + " " + Localization.get("animalinfo.overlay.jump")
+                    };
+                    return multilineOverlayMessage;
+            	}
+            }
+            else //if (horseGrowingAge == 0)
+            {
+            	String[] multilineOverlayMessage =
+                {
+                    GetHorseSpeedText(horse) + " " + Localization.get("animalinfo.overlay.speed"),
+                    GetHorseHPText(horse) + " " + Localization.get("animalinfo.overlay.hp"),
+                    GetHorseJumpText(horse) + " " + Localization.get("animalinfo.overlay.jump")
+                };
+                return multilineOverlayMessage;
+            }*/
         }
+        
+        return null;
     }
 
     /**
-     * Gets the horses age ranging from 0 to 100.
+     * Gets the baby horses age ranging from 0 to 100.
      * @param horse
      * @return
      */
-    private static int GetHorseAgeAsPercent(EntityHorse horse)
+    private static int GetHorseBabyGrowingAgeAsPercent(EntityHorse horse)
     {
         float horseGrowingAge = horse.func_110254_bY();	//horse age ranges from 0.5 to 1
         return (int)((horseGrowingAge - 0.5f) * 2.0f * 100f);
     }
+    
+	/**
+	 * Gets the time remaining before this horse can breed again
+	 * @param horse
+	 * @return null if the horse ready to breed or is a baby, otherwise "#:##" formatted string
+	 */
+	private static String GetTimeUntilBreedAgain(EntityAgeable horse)
+	{
+	    int horseBreedingTime = horse.getGrowingAge();
+	    
+	    if(horseBreedingTime <= 0)
+	    	return null;
+	    
+	    int seconds = horseBreedingTime / 20;
+	    int minutes = seconds / 60;
+	    
+	    return minutes + ":" + twoDigitFormat.format(seconds % 60);
+	}
 
     /**
      * Gets a horses speed, colored based on how good it is.
@@ -409,7 +524,7 @@ public class HorseInfo
     /**
      * Gets a horses primary coloring
      * @param horse
-     * @return
+     * @return empty string if there is no coloring (for donkeys)
      */
     private static String GetHorseColoringText(EntityHorse horse)
     {
@@ -429,7 +544,7 @@ public class HorseInfo
     /**
      * Gets a horses secondary coloring
      * @param horse
-     * @return
+     * @return empty string if there is no secondary coloring (for donkeys)
      */
     private static String GetHorseMarkingText(EntityHorse horse)
     {
@@ -518,18 +633,87 @@ public class HorseInfo
     {
         //Steve has a movement speed of 0.1 and walks 4.3 blocks per second,
         //so multiply this result by 43 to convert to blocks per second
-        //testing data:
-        //0.174999	~7.69 m/s
-        //0.19427	~8.333 m/s
-        //0.1		~4.3-4.5 m/s
         return entity.func_110148_a(SharedMonsterAttributes.field_111263_d).func_111125_b() * 43;
     }
-    
+
+    /**
+     * Toggle showing horse stats on the F3 menu
+     * @return the new F3 render boolean
+     */
+    public static boolean ToggleShowHorseStatsOnF3Menu()
+    {
+    	ShowHorseStatsOnF3Menu = !ShowHorseStatsOnF3Menu;
+    	return ShowHorseStatsOnF3Menu;
+    }
+    /**
+     * Toggle showing horse stats on the overlay
+     * @return the new overlay render boolean
+     */
+    public static boolean ToggleShowHorseStatsOverlay()
+    {
+    	ShowHorseStatsOverlay = !ShowHorseStatsOverlay;
+    	return ShowHorseStatsOverlay;
+    }
+
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingHorses()
+    {
+    	ShowBreedingTimerForHorses = !ShowBreedingTimerForHorses;
+    	return ShowBreedingTimerForHorses;
+    }
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingVillagers()
+    {
+    	ShowBreedingTimerForVillagers = !ShowBreedingTimerForVillagers;
+    	return ShowBreedingTimerForVillagers;
+    }
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingCows()
+    {
+    	ShowBreedingTimerForCows = !ShowBreedingTimerForCows;
+    	return ShowBreedingTimerForCows;
+    }
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingSheep()
+    {
+    	ShowBreedingTimerForSheep = !ShowBreedingTimerForSheep;
+    	return ShowBreedingTimerForSheep;
+    }
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingPigs()
+    {
+    	ShowBreedingTimerForPigs = !ShowBreedingTimerForPigs;
+    	return ShowBreedingTimerForPigs;
+    }
+    /**
+     * Toggles showing the breeding of this type of entity
+     * @return the new boolean
+     */
+    public static boolean ToggleShowBreedingChickens()
+    {
+    	ShowBreedingTimerForChickens = !ShowBreedingTimerForChickens;
+    	return ShowBreedingTimerForChickens;
+    }
 
     
     /**
-     * Increments the Clock mode
-     * @return The new Clock mode
+     * Increments the Animal Info mode
+     * @return The new Animal Info mode
      */
     public static int ToggleMode()
     {

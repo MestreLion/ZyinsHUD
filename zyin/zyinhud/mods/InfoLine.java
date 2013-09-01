@@ -55,7 +55,7 @@ public class InfoLine
             String fps = Fps.CalculateMessageForInfoLine();
             String safe = SafeOverlay.CalculateMessageForInfoLine();
             String players = PlayerLocator.CalculateMessageForInfoLine();
-            String horse = HorseInfo.CalculateMessageForInfoLine();
+            String horse = AnimalInfo.CalculateMessageForInfoLine();
             
             String message = clock + coordinates + compass + distance + fps + safe + players + horse;
             mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);

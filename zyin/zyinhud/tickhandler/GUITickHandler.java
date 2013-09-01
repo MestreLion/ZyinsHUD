@@ -5,7 +5,7 @@ import java.util.EnumSet;
 import zyin.zyinhud.gui.GuiOptionsOverride;
 import zyin.zyinhud.helper.EntityTrackerHelper;
 import zyin.zyinhud.mods.DurabilityInfo;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.InfoLine;
 import zyin.zyinhud.mods.PlayerLocator;
 import zyin.zyinhud.mods.PotionTimers;
@@ -20,11 +20,11 @@ import net.minecraft.client.gui.achievement.GuiStats;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 
-public class GuiTickHandler implements ITickHandler
+public class GUITickHandler implements ITickHandler
 {
     private static Minecraft mc = Minecraft.getMinecraft();
 
-    public GuiTickHandler()
+    public GUITickHandler()
     {
     }
 

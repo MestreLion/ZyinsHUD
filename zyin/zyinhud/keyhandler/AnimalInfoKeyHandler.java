@@ -3,7 +3,7 @@ package zyin.zyinhud.keyhandler;
 import java.util.EnumSet;
 
 import zyin.zyinhud.ZyinHUD;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.InfoLine;
 
 import net.minecraft.client.Minecraft;
@@ -11,12 +11,12 @@ import net.minecraft.client.settings.KeyBinding;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
 
-public class HorseInfoKeyHandler extends KeyHandler
+public class AnimalInfoKeyHandler extends KeyHandler
 {
     private Minecraft mc = Minecraft.getMinecraft();
     private EnumSet tickTypes = EnumSet.of(TickType.CLIENT);
 
-    public HorseInfoKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
+    public AnimalInfoKeyHandler(KeyBinding[] keyBindings, boolean[] repeatings)
     {
         super(keyBindings, repeatings);
     }
@@ -24,7 +24,7 @@ public class HorseInfoKeyHandler extends KeyHandler
     @Override
     public String getLabel()
     {
-        return "Horse Info Key Handler";
+        return "Animal Info Key Handler";
     }
 
     @Override
@@ -40,8 +40,8 @@ public class HorseInfoKeyHandler extends KeyHandler
             return;    //don't activate if the user is looking at a GUI
         }
         
-        if(HorseInfo.Enabled)
-        	HorseInfo.ToggleMode();
+        if(AnimalInfo.Enabled)
+        	AnimalInfo.ToggleMode();
     }
 
     @Override

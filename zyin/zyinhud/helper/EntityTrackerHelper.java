@@ -5,10 +5,16 @@ import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityChicken;
+import net.minecraft.entity.passive.EntityCow;
 import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.entity.passive.EntitySheep;
+import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.util.Vec3;
 import zyin.zyinhud.ZyinHUD;
-import zyin.zyinhud.mods.HorseInfo;
+import zyin.zyinhud.mods.AnimalInfo;
 import zyin.zyinhud.mods.PlayerLocator;
 
 /**
@@ -34,7 +40,12 @@ public class EntityTrackerHelper
         //EntityCow.class,	//for single player testing
         //EntityClientPlayerMP.class,	//this is us
         EntityOtherPlayerMP.class,
-        EntityHorse.class
+        EntityVillager.class,
+        EntityHorse.class,
+        EntityCow.class,
+        EntitySheep.class,
+        EntityChicken.class,
+        EntityPig.class
     };
 
     /**
@@ -50,7 +61,7 @@ public class EntityTrackerHelper
     private static void RenderEntityOverlays(Entity entity, int x, int y, boolean isEntityBehindUs)
     {
         PlayerLocator.RenderEntityOverlay(entity, x, y, isEntityBehindUs);
-        HorseInfo.RenderEntityOverlay(entity, x, y, isEntityBehindUs);
+        AnimalInfo.RenderEntityOverlay(entity, x, y, isEntityBehindUs);
     }
 
     /**
@@ -58,7 +69,7 @@ public class EntityTrackerHelper
      */
     public static void RenderAllEntityOverlays()
     {
-        if ((PlayerLocator.Mode == 1 || HorseInfo.Mode == 1)
+        if ((PlayerLocator.Mode == 1 || AnimalInfo.Mode == 1)
                 && mc.inGameHasFocus)
         {
             me = mc.thePlayer;
