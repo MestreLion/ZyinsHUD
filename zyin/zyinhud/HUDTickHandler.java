@@ -9,7 +9,7 @@ import cpw.mods.fml.common.TickType;
 
 public class HUDTickHandler implements ITickHandler
 {
-
+	public static int renderTickCount = 0;
     private static Minecraft mc = Minecraft.getMinecraft();
     
     public HUDTickHandler()
@@ -70,6 +70,9 @@ public class HUDTickHandler implements ITickHandler
         DurabilityInfo.Render();
         PotionTimers.Render();
         PlayerLocator.Render();
+        HorseInfo.Render();
+        
+        renderTickCount++;
     }
 
     protected void onTickInGame()

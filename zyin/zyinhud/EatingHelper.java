@@ -6,11 +6,33 @@ import java.awt.event.InputEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockAnvil;
+import net.minecraft.block.BlockBed;
+import net.minecraft.block.BlockButton;
+import net.minecraft.block.BlockCake;
+import net.minecraft.block.BlockChest;
+import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockLever;
+import net.minecraft.block.BlockRedstoneLogic;
+import net.minecraft.block.BlockRedstoneRepeater;
+import net.minecraft.block.BlockTrapDoor;
+import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItemFrame;
+import net.minecraft.entity.passive.EntityHorse;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraftforge.event.Event.Result;
+import net.minecraftforge.event.ForgeSubscribe;
 
 /**
  * Eating Helper allows the player to eat food on their hotbar by calling its Eat() method.
@@ -22,7 +44,6 @@ public class EatingHelper
     
     private Robot r = null;
     private boolean isCurrentlyEating;
-    private int previouslySelectedHotbarSlotIndex;
     
     /**
      * Use this instance for all method calls.
@@ -48,7 +69,33 @@ public class EatingHelper
     public void Eat()
     {
         //currentItemStack.onFoodEaten(mc.theWorld, mc.thePlayer);	//INSTANT EATING
-        
+    	
+    	//make sure we're not about to click on a right-clickable thing
+        MovingObjectPosition objectMouseOver = mc.thePlayer.rayTrace(5, 1);
+        if (objectMouseOver != null && objectMouseOver.typeOfHit == EnumMovingObjectType.TILE)
+        {
+        	int blockId = mc.theWorld.getBlockId(objectMouseOver.blockX, objectMouseOver.blockY, objectMouseOver.blockZ);
+        	Block block = Block.blocksList[blockId];
+        	
+        	//couldn't find a way to see if a block is 'right click-able' without running the onBlockActivation() method
+        	//which we don't want to do
+        	if(block instanceof BlockContainer	//chests, hoppers, dispenser, jukebox, beacon, etc.
+    			|| block instanceof BlockButton
+    			|| block instanceof BlockLever
+    			|| block instanceof BlockRedstoneLogic
+    			|| block instanceof BlockDoor
+    			|| block instanceof BlockAnvil
+    			|| block instanceof BlockBed
+    			|| block instanceof BlockCake
+    			|| block instanceof BlockFenceGate
+    			|| block instanceof BlockTrapDoor
+    			|| block instanceof BlockWorkbench)
+        	{
+        		return;
+        	}
+        }
+
+    	
         if(isCurrentlyEating)
         {
         	r.mouseRelease(InputEvent.BUTTON3_MASK); //release right click
@@ -59,6 +106,12 @@ public class EatingHelper
         }
         else
         {
+        	if(!mc.thePlayer.getFoodStats().needFood())
+        	{
+        		//if we're not hungry then don't do anything
+        		return;
+        	}
+        	
         	int foodItemSlot = GetFoodItemSlotFromHotbar();
         	if(foodItemSlot < 0)
         	{
@@ -66,7 +119,7 @@ public class EatingHelper
         		return;
         	}
         	
-        	previouslySelectedHotbarSlotIndex = mc.thePlayer.inventory.currentItem;
+        	int previouslySelectedHotbarSlotIndex = mc.thePlayer.inventory.currentItem;
         	mc.thePlayer.inventory.currentItem = foodItemSlot;
 
             r.mousePress(InputEvent.BUTTON3_MASK); //perform a right click
@@ -150,5 +203,34 @@ public class EatingHelper
     	
     }
 	
+    
+    
+    
+    /*@ForgeSubscribe
+    public void EntityInteractEvent(net.minecraftforge.event.entity.player.EntityInteractEvent event)
+    {
+    	System.out.println("EntityInteractEvent");
+    	Entity target = event.target;
+    	
+    	if(target instanceof EntityItemFrame)
+    	{
+    		InfoLine.DisplayNotification("EntityItemFrame");
+    		return;
+    	}
+    	if(target instanceof EntityPig)
+    	{
+
+    		EntityPig pig = (EntityPig)event.target;
+    		InfoLine.DisplayNotification("pig");
+    		if(pig.getSaddled())
+    		{
+    			event.setResult(Result.DENY);
+        		InfoLine.DisplayNotification("pig saddled");
+    			return;
+    		}
+    	}
+    }*/
+    
+    
 	
 }

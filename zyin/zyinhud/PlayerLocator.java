@@ -8,9 +8,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.ResourceLocation;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.passive.EntityCow;
@@ -22,6 +24,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Icon;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.client.event.RenderPlayerEvent.SetArmorModel;
 
 /**
  * The Player Locator checks for nearby players and displays their name on screen wherever they are.
@@ -51,7 +54,9 @@ public class PlayerLocator
     public static int maxViewDistance = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
     
     
-    
+    /**
+     * Renders nearby players's names on the screen.
+     */
 	public static void Render()
 	{
         //if the player is in the world
@@ -71,7 +76,6 @@ public class PlayerLocator
             	 if(i > maxOverlayMessagesRendered)
             		 break;
             	 
-            	 
             	 if((object instanceof EntityClientPlayerMP) || !(object instanceof EntityPlayer))
             	 //if(!((Entity)object instanceof EntityCow))	//for single player testing/debugging!
             		 continue;	//we only care about other players
@@ -80,9 +84,13 @@ public class PlayerLocator
             	 //EntityCow otherPlayer = (EntityCow)object;	//for single player testing/debugging!
             	 
             	 
+
+            	 double my_db = otherPlayer.func_110148_a(SharedMonsterAttributes.field_111263_d).func_111125_b();
+        		 System.out.println("my_db:"+my_db);
+            	 
+            	 
             	 //only show entities that are close by
-                 double distanceFromMe = me.getDistanceToEntity(otherPlayer);		//expensive sqrt operation
-                 //double distanceFromMeSq = me.getDistanceSqToEntity(otherPlayer);	//not an expensive operation
+                 double distanceFromMe = me.getDistanceToEntity(otherPlayer);
             	 if(distanceFromMe > maxViewDistance
         			 || distanceFromMe == 0) //don't render ourself!
             		 return;
@@ -268,22 +276,18 @@ public class PlayerLocator
      */
     public static String CalculateMessageForInfoLine()
     {
-        String safeOverlayString = "";
-
         if (ZyinHUD.PlayerLocatorMode == 0)	//off
         {
-            safeOverlayString = FontCodes.WHITE + "";
+        	return FontCodes.WHITE + "";
         }
         else if (ZyinHUD.PlayerLocatorMode == 1)	//on
         {
-            safeOverlayString = FontCodes.WHITE + "players";
+        	return FontCodes.WHITE + "players" + InfoLine.SPACER;
         }
         else
         {
-            safeOverlayString = FontCodes.WHITE + "???";
+        	return FontCodes.WHITE + "???" + InfoLine.SPACER;
         }
-
-        return safeOverlayString + InfoLine.SPACER;
     }
 }
 

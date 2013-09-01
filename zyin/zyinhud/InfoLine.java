@@ -44,8 +44,9 @@ public class InfoLine
             String distance = DistanceMeasurer.CalculateMessageForInfoLine();
             String safe = SafeOverlay.CalculateMessageForInfoLine();
             String locator = PlayerLocator.CalculateMessageForInfoLine();
+            String fps = Fps.CalculateMessageForInfoLine();
             
-            String message = coordinates + compass + distance + safe + locator;
+            String message = coordinates + compass + distance + safe + locator + fps;
             mc.fontRenderer.drawStringWithShadow(message, 1, 1, 0xffffff);
         }
         

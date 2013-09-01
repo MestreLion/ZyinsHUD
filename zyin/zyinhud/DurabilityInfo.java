@@ -29,18 +29,18 @@ import org.lwjgl.opengl.GL11;
  */
 public class DurabilityInfo
 {
-    public static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation("textures/durability_icons.png");
+    protected static final ResourceLocation RESOURCE_DURABILITY_ICONS_PNG = new ResourceLocation("textures/durability_icons.png");
 
     //U and V is the top left part of the image
     //X and Y is the width and height of the image
-    public static int armorDurabilityU = 0;
-    public static int armorDurabilityV = 0;
-    public static int armorDurabilityX = 1 * 16;
-    public static int armorDurabilityY = 2 * 16;
+    protected static int armorDurabilityU = 0;
+    protected static int armorDurabilityV = 0;
+    protected static int armorDurabilityX = 1 * 16;
+    protected static int armorDurabilityY = 2 * 16;
 
     //the height/width of the tools being rendered
-    public static int toolX = 1 * 16;
-    public static int toolY = 1 * 16;
+    protected static int toolX = 1 * 16;
+    protected static int toolY = 1 * 16;
 
     //where the armor icon is rendered
     public static int durabalityLocX = ZyinHUD.DurabilityLocationHorizontal;
@@ -54,8 +54,8 @@ public class DurabilityInfo
 	private static Minecraft mc = Minecraft.getMinecraft();
 	private static ArrayList<ItemStack> damagedItemsList = new ArrayList<ItemStack>(13);	//used to push items into the list of broken equipment to render
     private static final RenderItem itemRenderer = new RenderItem();
-    private static GuiIngame gig = new GuiIngame(mc);
-    private static TextureManager textureManager = mc.func_110434_K();
+    private static final GuiIngame gig = new GuiIngame(mc);
+    private static final TextureManager textureManager = mc.func_110434_K();
     
     private static int renderTickCount = 0;
     
@@ -107,7 +107,7 @@ public class DurabilityInfo
                         
                         //bind texture
                         textureManager.func_110577_a(RESOURCE_DURABILITY_ICONS_PNG);
-                        
+                        GL11.glColor4f(255f, 255f, 255f, 255f);	//fixes transparency issue when a InfoLine Notification is displayed
                         gig.drawTexturedModalRect(durabalityLocX, durabalityLocY, armorDurabilityU, armorDurabilityV, armorDurabilityX, armorDurabilityY);
                     }
                 }

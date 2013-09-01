@@ -2,7 +2,7 @@
  * IDEAS
  * =====
  * //Ctrl + click item to move it into the crafting area (cant figure out how to get right click hook)
- * //FPS display (no public variable in Minecraft for this)
+ * dont render other player's armor (or just helmet?) in multiplayer
  */
 
 package zyin.zyinhud;
@@ -34,7 +34,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.6.0")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.7.0")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {
@@ -47,7 +47,9 @@ public class ZyinHUD
     public static final String CATEGORY_PLAYERLOCATOR = "player locator";
     public static final String CATEGORY_EATINGHELPER = "eating helper";
     public static final String CATEGORY_WEAPONSWAP = "weapon swap";
-
+    public static final String CATEGORY_FPS = "fps";
+    public static final String CATEGORY_HORSEINFO = "horse info";
+    
     //Configurable values - info line
     public static boolean ShowInfoLine;
 
@@ -88,6 +90,12 @@ public class ZyinHUD
     public static boolean EnableWeaponSwap;
     public static boolean ScanHotbarForWeaponsFromLeftToRight;
     
+    //Configurable values - fps
+    public static boolean ShowFPS;
+    
+    //Configurable values - fps
+    public static boolean ShowHorseInfo;
+    
     
     
     public static int PlayerLocatorMode = 0;	//0=off, 1=on
@@ -122,6 +130,7 @@ public class ZyinHUD
         
         //needed for @ForgeSubscribe method subscriptions
         MinecraftForge.EVENT_BUS.register(SafeOverlay.instance);
+        //MinecraftForge.EVENT_BUS.register(EatingHelper.instance);
         
         
         LoadTickHandlers();
@@ -282,6 +291,18 @@ public class ZyinHUD
         p = config.get(CATEGORY_WEAPONSWAP, "ScanHotbarForWeaponsFromLeftToRight", true);
         p.comment = "Set to false to scan the hotbar for swords and bows from right to left. Only matters if you have multiple swords/bows in your hotbar.";
         ScanHotbarForWeaponsFromLeftToRight = p.getBoolean(true);
+        
+        
+        //CATEGORY_FPS
+        p = config.get(CATEGORY_FPS, "ShowFPS", false);
+        p.comment = "Enable/Disable showing your FPS at the end of the Info Line.";
+        ShowFPS = p.getBoolean(false);
+        
+        
+        //CATEGORY_HORSEINFO
+        p = config.get(CATEGORY_HORSEINFO, "ShowHorseInfo", true);
+        p.comment = "Enable/Disable showing your horse's stats on the F3 screen.";
+        ShowHorseInfo = p.getBoolean(true);
 
         
     }

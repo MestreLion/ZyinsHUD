@@ -23,8 +23,7 @@ public class DistanceMeasurer
     {
         if (ZyinHUD.DistanceMeasurerMode > 0)
         {
-            MovingObjectPosition objectMouseOver;
-            objectMouseOver = mc.thePlayer.rayTrace(300, 1);
+            MovingObjectPosition objectMouseOver = mc.thePlayer.rayTrace(300, 1);
             String distanceMeasurerString = "";
 
             if (objectMouseOver != null && objectMouseOver.typeOfHit == EnumMovingObjectType.TILE)

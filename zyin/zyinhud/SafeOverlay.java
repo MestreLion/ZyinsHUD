@@ -131,7 +131,7 @@ public class SafeOverlay
     
     protected SafeOverlay()
     {
-        mc = Minecraft.getMinecraft();;
+        mc = Minecraft.getMinecraft();
         renderGlobal = mc.renderGlobal;
         renderBlocks = renderGlobal.globalRenderBlocks;
         player = mc.thePlayer;
@@ -625,22 +625,18 @@ public class SafeOverlay
      */
     public static String CalculateMessageForInfoLine()
     {
-        String safeOverlayString = "";
-
         if (ZyinHUD.SafeOverlayMode == 0)	//off
         {
-            safeOverlayString = FontCodes.WHITE + "";
+        	return FontCodes.WHITE + "";
         }
         else if (ZyinHUD.SafeOverlayMode == 1)	//on
         {
-            safeOverlayString = FontCodes.WHITE + "safe";
+        	return FontCodes.WHITE + "safe" + InfoLine.SPACER;
         }
         else
         {
-            safeOverlayString = FontCodes.WHITE + "???";
+        	return FontCodes.WHITE + "???" + InfoLine.SPACER;
         }
-
-        return safeOverlayString + InfoLine.SPACER;
     }
     
 

@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import zyin.zyinhud.WeaponSwap;
+import zyin.zyinhud.WeaponSwapper;
 import zyin.zyinhud.ZyinHUD;
 import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
 import cpw.mods.fml.common.TickType;
@@ -40,7 +40,7 @@ public class WeaponSwapKeyHandler extends KeyHandler
         }
         
         if(ZyinHUD.EnableWeaponSwap)
-        	WeaponSwap.SwapWeapons();
+        	WeaponSwapper.SwapWeapons();
     }
 
     @Override

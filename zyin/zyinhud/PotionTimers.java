@@ -21,6 +21,9 @@ public class PotionTimers
 	private static final int[] blinkingSpeed = {5, 10, 20};					//how often the blinking occurs
 	private static final int[] blinkingDuration = {2, 3, 3};					//how long the blink lasts
     
+	/**
+	 * Renders the duration any potion effects that the player currently has on the left side of the screen.
+	 */
     public static void Render()
     {
     	//if the player is in the world
