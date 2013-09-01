@@ -125,28 +125,10 @@ public class DurabilityInfo
                         }
 
                         //render the item with enchant effect
-                        //itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);	//1.5.2
-                        itemRenderer.func_110797_b(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer);
-                        
-                        
-                        //renders item without enchant effect
-                        //itemRenderer.func_110795_a(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer);
-                        
-                        //renders item with enchant effect
-                        //itemRenderer.func_110797_b(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer);
-                        
-                        //renders the durability bar
-                        //itemRenderer.func_110794_c(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer);
-                        
-                        //renders a string in the background...?
-                        //itemRenderer.func_110793_a(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer, "TESTING");
-                        
-                        
-                        
+                        itemRenderer.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
                         
                         //render the item's durability bar
-                        //itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);	//1.5.2
-                        itemRenderer.func_110794_c(mc.fontRenderer, textureManager, toolStack, horizontalPosition, verticalSpacer);
+                        itemRenderer.renderItemOverlayIntoGUI(mc.fontRenderer, mc.renderEngine, toolStack, horizontalPosition, verticalSpacer);
                         
                         String damage = "" + (toolStack.getMaxDamage() - toolStack.getItemDamage());
                         int damageX = (horizontalPosition) + toolX / 2;

@@ -59,20 +59,20 @@ public class SafeOverlay
      * <p>
      * Examples:
      * <br>drawDistance = 2, updateFrequency = 100ms
-     * <br>drawDistance = 20, updateFrequency = 575ms
-     * <br>drawDistance = 80, updateFrequency = 2000ms
+     * <br>drawDistance = 20, updateFrequency = ~1000ms
+     * <br>drawDistance = 175, updateFrequency = 8000ms
      */
-    private int updateFrequency;
+	protected int updateFrequency;
     /**
      * The fastest the update frequency should be set to, in milliseconds.
      * It will be set to this value when the drawDistance = minDrawDistance.
      */
-    private static final  int updateFrequencyMin = 100;
+	protected static final  int updateFrequencyMin = 100;
     /**
      * The slowest the update frequency should be set to, in milliseconds.
      * It will be set to this value when the drawDistance = maxDrawDistance.
      */
-    private static final int updateFrequencyMax = 8000;
+	protected static final int updateFrequencyMax = 8000;
 
     /**
      * USE THE Getter/Setter METHODS FOR THIS!!
@@ -85,12 +85,14 @@ public class SafeOverlay
      * <br>
      * drawDistance = 20 = 64,000 blocks (default)
      * <br>
-     * drawDistance = 80 = 4,096,000 blocks (max)
+     * drawDistance = 80 = 4,096,000 blocks
+     * <br>
+     * drawDistance = 175 = 42,875,000 blocks (max)
      */
-    private int drawDistance;
+	protected int drawDistance;
 	public static final int defaultDrawDistance = 20;
 	public static final int minDrawDistance = 2;	//can't go lower than 2. setting this to 1 dispays nothing
-    public static final int maxDrawDistance = 175;	//175 is the edge of the map
+    public static final int maxDrawDistance = 175;	//175 is the edge of the visible map on far
 
     /**
      * The transprancy of the "X" marks when rendered, between (0.1 and 1]
@@ -114,21 +116,45 @@ public class SafeOverlay
     private RenderBlocks renderBlocks;
     private EntityPlayer player;
     
-
-    public static boolean recalculateUnsafePositionsFlag = false;
-    List<Thread> threads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
+    /**
+     * When this flag is set to true Safe Overlay will recalculate the unsafe position cache.
+     */
+    private static boolean recalculateUnsafePositionsFlag = false;
+    private List<Thread> safeCalculatorThreads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
+    
+	/**
+	 * Use this instance of the Safe Overlay for method calls.
+	 */
+    public static SafeOverlay instance = new SafeOverlay();
     
     
     
+    protected SafeOverlay()
+    {
+        mc = Minecraft.getMinecraft();;
+        renderGlobal = mc.renderGlobal;
+        renderBlocks = renderGlobal.globalRenderBlocks;
+        player = mc.thePlayer;
+        playerPosition = new Position();
+        
+        //Don't let multiple threads access this list at the same time by making it a Synchronized List
+        unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());	
+        
+        //grab configuration settings
+        setDrawDistance(ZyinHUD.SafeOverlayDrawDistance);
+        setSeeUnsafePositionsThroughWalls(ZyinHUD.SafeOverlaySeeThroughWalls);
+        unsafeOverlayTransparency = (float)ZyinHUD.SafeOverlayTransparency;	//must be between (0.1, 1]
+        unsafeOverlayTransparency = (unsafeOverlayTransparency <= 0.1f) ? 0.101f : unsafeOverlayTransparency;	//check lower bounds
+        unsafeOverlayTransparency = (unsafeOverlayTransparency >= 1f) ? 1f : unsafeOverlayTransparency;	//check upper bounds
+        displayInNether = ZyinHUD.SafeOverlayDisplayInNether;
+    }
     
-    
-    
-
     
     
     /**
      * Event fired when the world gets rendered.
-     * We render any things that need to be rendered into the game world in this method.
+     * We render any things that need to be rendered into the game world in this method
+     * (basically just the unsafe marks).
      * @param event
      */
     @ForgeSubscribe
@@ -153,8 +179,8 @@ public class SafeOverlay
     	int z = event.z;
 
     	int blockClickedId = mc.theWorld.getBlockId(x, y, z);
-    	System.out.println("block clicked at ("+x+","+y+","+z+")");
-    	System.out.println("block clicked ID:"+blockClickedId);
+    	//System.out.println("block clicked at ("+x+","+y+","+z+")");
+    	//System.out.println("block clicked ID:"+blockClickedId);
     	
     	int blockFace = event.face;	// Bottom = 0, Top = 1, Sides = 2-5
     	if(blockFace == 0)
@@ -171,8 +197,8 @@ public class SafeOverlay
     		x++;
     	
     	int blockPlacedId = mc.theWorld.getBlockId(x, y, z);
-    	System.out.println("block placed at ("+x+","+y+","+z+")");
-    	System.out.println("block placed ID:"+blockPlacedId);
+    	//System.out.println("block placed at ("+x+","+y+","+z+")");
+    	//System.out.println("block placed ID:"+blockPlacedId);
     	
     	if(blockPlacedId != 0)	//if it's not an Air block
     		onBlockPlaced(blockPlacedId, x, y ,z);
@@ -191,9 +217,6 @@ public class SafeOverlay
     {
     	if(Block.lightValue[blockId] > 0)
     		onLightEmittingBlockPlaced(blockId, x, y, z);
-    	
-    	//do whatever
-    	//Block block = Block.blocksList[blockId];
     }
 
     /**
@@ -207,87 +230,12 @@ public class SafeOverlay
      */
     public void onLightEmittingBlockPlaced(int blockId, int x, int y, int z)
     {
-    	//do whatever
-    	//Block block = Block.blocksList[blockId];
-    	
     	RecalculateUnsafePositions();
     }
     
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-	/**
-	 * Use this instance of the Safe Overlay for method calls.
-	 */
-    public static SafeOverlay instance = new SafeOverlay();
-
-    protected SafeOverlay()
-    {
-        mc = Minecraft.getMinecraft();;
-        renderGlobal = mc.renderGlobal;
-        renderBlocks = renderGlobal.globalRenderBlocks;
-        player = mc.thePlayer;
-        playerPosition = new Position();
-        
-        //Don't let multiple threads access this list at the same time by making it a Synchronized List
-        unsafePositionCache = Collections.synchronizedList(new ArrayList<Position>());	
-        
-        //grab configuration settings
-        setDrawDistance(ZyinHUD.SafeOverlayDrawDistance);
-        setSeeUnsafePositionsThroughWalls(ZyinHUD.SafeOverlaySeeThroughWalls);
-        unsafeOverlayTransparency = (float)ZyinHUD.SafeOverlayTransparency;	//must be between (0.1, 1]
-        unsafeOverlayTransparency = (unsafeOverlayTransparency <= 0.1f) ? 0.101f : unsafeOverlayTransparency;	//check lower bounds
-        unsafeOverlayTransparency = (unsafeOverlayTransparency >= 1f) ? 1f : unsafeOverlayTransparency;	//check upper bounds
-        displayInNether = ZyinHUD.SafeOverlayDisplayInNether;
-    }
-    
-    //With default settings (range=20)
-	//13% CPU
-	//0.4 ms with no calculations
-	//6 ms with calculations
-	
-	//With max settings (range=80)  (68-100 fps)
-	//24% CPU
-	//7 ms with no calculations
-	//305 ms with calculations
-    //SafeOverlay.instance.RenderAllUnsafePositions(event.partialTicks);
-
-	
-	
-	
-	
-	
-	
-	//With default settings (range=20)
-	//%10-19 CPU
-	//0.6 ms with no calculations
-	//1-4 ms with calculations
-	
-	//With max settings (range=80) (85-100 fps)
-	//25-35% CPU
-	//7 ms with no calculations
-	//85-102 ms with calculations
-
     
     /**
      * This thead will calculate unsafe positions around the player given a Y coordinate.
@@ -337,91 +285,7 @@ public class SafeOverlay
     }
     
     
-    
-    
-    
-    
-    public void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
-    {
-    	if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
-        {
-            return;
-        }
 
-        player = mc.thePlayer;
-
-        if (!displayInNether && player.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
-        {
-            return;
-        }
-        
-        long frameTime = System.currentTimeMillis();
-        double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
-        double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
-        double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTickTime;
-        playerPosition = new Position((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
-
-        /*if (unsafePositionCache.size() == 0
-                || !playerPosition.equals(cachePosition)
-                || frameTime - lastGenerate > updateFrequency)*/
-        if (recalculateUnsafePositionsFlag
-        	//|| !playerPosition.equals(cachePosition)
-	        || frameTime - lastGenerate > updateFrequency)
-        {
-        	CalculateUnsafePositionsMultithreaded();
-        }
-
-        GL11.glTranslated(-x, -y, -z);		//go from cartesian x,y,z coordinates to in-world x,y,z coordinates
-        GL11.glDisable(GL11.GL_TEXTURE_2D);	//fixes color rendering bug (we aren't rendering textures)
-        
-        //allows for color transparency
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        if (renderUnsafePositionsThroughWalls)
-        {
-            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);    //allows this unsafe position to be rendered through other blocks
-        }
-        else
-        {
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-        }
-        
-        GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
-        
-        
-
-        
-
-        for(Thread t : threads)
-        {
-        	try 
-        	{
-				t.join();
-			} 
-        	catch (InterruptedException e) 
-        	{
-				e.printStackTrace();
-			}
-        }
-        
-
-        //render unsafe areas
-        for (Position position : unsafePositionCache)
-        {
-            RenderUnsafeMarker(position);
-        }
-
-        GL11.glEnd();
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
-        
-    }
-    
-    
-    
-    
-    
     
 
 	/**
@@ -431,7 +295,7 @@ public class SafeOverlay
      */
     //SINGLE THREADED VERSION
     @Deprecated
-    public void RenderAllUnsafePositions(float partialTickTime)
+    protected void RenderAllUnsafePositions(float partialTickTime)
     {
         if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
         {
@@ -487,6 +351,84 @@ public class SafeOverlay
         GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
         
     }
+    
+    
+
+	/**
+     * Renders all unsafe areas around the player.
+     * It will only recalculate the unsafe areas once every [updateFrequency] milliseconds
+     * @param partialTickTime
+     */
+    protected void RenderAllUnsafePositionsMultithreaded(float partialTickTime)
+    {
+    	if (ZyinHUD.SafeOverlayMode == 0)	//0 = off, 1 = on
+        {
+            return;
+        }
+
+        player = mc.thePlayer;
+
+        if (!displayInNether && player.dimension == -1)	//turn off in the nether, mobs can spawn no matter what
+        {
+            return;
+        }
+        
+        long frameTime = System.currentTimeMillis();
+        double x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTickTime;
+        double y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTickTime;
+        double z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTickTime;
+        playerPosition = new Position((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+        
+        if (recalculateUnsafePositionsFlag || frameTime - lastGenerate > updateFrequency)
+        {
+        	CalculateUnsafePositionsMultithreaded();
+        }
+
+        GL11.glTranslated(-x, -y, -z);		//go from cartesian x,y,z coordinates to in-world x,y,z coordinates
+        GL11.glDisable(GL11.GL_TEXTURE_2D);	//fixes color rendering bug (we aren't rendering textures)
+        
+        //allows for color transparency
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        if (renderUnsafePositionsThroughWalls)
+            GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);    //allows this unsafe position to be rendered through other blocks
+        else
+            GL11.glEnable(GL11.GL_DEPTH_TEST);
+        
+        GL11.glBegin(GL11.GL_LINES);	//begin drawing lines defined by 2 vertices
+        
+        
+        //wait for all the threads to finish calculation before rendering the unsafe positions
+        for(Thread t : safeCalculatorThreads)
+        {
+        	try 
+        	{
+				t.join();
+			} 
+        	catch (InterruptedException e) 
+        	{
+				e.printStackTrace();
+			}
+        }
+        
+
+        //render unsafe areas
+        for (Position position : unsafePositionCache)
+        {
+            RenderUnsafeMarker(position);
+        }
+
+        GL11.glEnd();
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ZERO);	//puts blending back to normal, fixes bad HD texture rendering
+        
+    }
+    
+    
+    
+    
+    
 
     /**
      * Renders an unsafe marker ("X" icon) at the position with colors depending on the Positions light levels.
@@ -600,7 +542,7 @@ public class SafeOverlay
      */
     //SINGLE THREADED VERSION
     @Deprecated
-    public void CalculateUnsafePositions()
+    protected void CalculateUnsafePositions()
     {
         unsafePositionCache.clear();
         Position pos = new Position();
@@ -637,14 +579,14 @@ public class SafeOverlay
      * if the drawDistance=20, then a 40*40*40 cube is analyzed, which means we make
      * 40 new threads to help calculate unsafe areas.
      */
-    private void CalculateUnsafePositionsMultithreaded()
+    protected void CalculateUnsafePositionsMultithreaded()
     {
         unsafePositionCache.clear();
         //List<Thread> threads = Collections.synchronizedList(new ArrayList<Thread>(drawDistance*2+1));
         
 		for (int y = -drawDistance; y < drawDistance; y++)
         {
-			threads.add(new SafeCalculatorThread(y));
+			safeCalculatorThreads.add(new SafeCalculatorThread(y));
         }
         
 		/*
@@ -728,15 +670,12 @@ public class SafeOverlay
 		double percent = (double)newDrawDistance / maxDrawDistance;
 		updateFrequency = (int) ((double)(updateFrequencyMax-updateFrequencyMin) * percent  + updateFrequencyMin);
 		
+		RecalculateUnsafePositions();
 		
-		//for some reason when we call this here it freezes on t.join();
-		//CalculateUnsafePositionsMultithreaded();
-		
-
         //save the new draw distance
         Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlayDrawDistance", 20);
+        p.comment = "How far away unsafe spots should be rendered around the player measured in blocks. This can be changed in game.";
         p.set(drawDistance);
-        ZyinHUD.config.save();
 		
 		return drawDistance;
 	}
@@ -795,8 +734,8 @@ public class SafeOverlay
 
         //save this new setting
         Property p = ZyinHUD.config.get(ZyinHUD.CATEGORY_SAFEOVERLAY, "SafeOverlaySeeThroughWalls", 20);
+        p.comment = "Enable/Disable showing unsafe areas through walls. Toggle in game with Ctrl + L.";
         p.set(renderUnsafePositionsThroughWalls);
-        ZyinHUD.config.save();
         
 		return renderUnsafePositionsThroughWalls;
 	}

@@ -21,7 +21,7 @@ public class InfoLine
     public static final String SPACER = " ";
     
     
-    private static int notificationDuration = 90;
+    private static int notificationDuration = 95;
     private static int notificationTimer = 0;
     private static String notificationMessage = "";
     
