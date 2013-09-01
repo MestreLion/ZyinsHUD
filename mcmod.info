@@ -1,0 +1,21 @@
+[
+{
+    "modid": "ZyinMod",
+    "name": "Zyin's HUD",
+    "description": "Displays your coordinates, breaking equipment, and measures distances",
+    "mcversion": "1.5.2",
+    "version": "0.3.0",
+    "url": "http://www.minecraftforum.net/topic/1851472-152forgesspsmp-zyins-hud/",
+    "updateUrl": "",
+    "authors": [
+        "Zyin"
+    ],
+    "credits": "",
+    "logoFile": "/zyin/images/Durability.png",
+    "screenshots": [
+    ],
+    "parent":"",
+    "dependencies": [
+    ]
+}
+]
