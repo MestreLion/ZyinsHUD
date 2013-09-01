@@ -60,24 +60,26 @@ public class PlayerLocator
     private static final TextureManager textureManager = mc.func_110434_K();
     private static EntityClientPlayerMP me;
 
-    private static final Icon saddleIcon = new ItemStack(Item.saddle).getIconIndex();
-    private static final Icon minecartIcon = new ItemStack(Item.minecartEmpty).getIconIndex();
-    private static final Icon boatIcon = new ItemStack(Item.boat).getIconIndex();
+    private static Icon saddleIcon = GetSaddleIcon();
+    private static Icon minecartIcon = GetMinecartIcon();
+    private static Icon boatIcon = GetBoatIcon();
 
-    private static final ResourceLocation saddleResource = textureManager.func_130087_a(new ItemStack(Item.saddle).getItemSpriteNumber());
-    private static final ResourceLocation minecartResource = textureManager.func_130087_a(new ItemStack(Item.minecartEmpty).getItemSpriteNumber());
-    private static final ResourceLocation boatResource = textureManager.func_130087_a(new ItemStack(Item.boat).getItemSpriteNumber());
+    private static ResourceLocation saddleResource = GetSaddleResourceLocation();
+    private static ResourceLocation minecartResource = GetMinecartResourceLocation();
+    private static ResourceLocation boatResource = GetBoatResourceLocation();
 
     private static final double pi = Math.PI;
 
     private static final String SprintingMessagePrefix = "";
     private static final String SneakingMessagePrefix = FontCodes.ITALICS;
-    private static final String RidingMessagePrefix = "     ";	//space for the saddle/minecart/boat icon
+    private static final String RidingMessagePrefix = "    ";	//space for the saddle/minecart/boat icon
 
     /** Don't render players that are closer than this */
     public static int viewDistanceCutoff = 10;
     public static int minViewDistanceCutoff = 0;
     public static int maxViewDistanceCutoff = 120;	//realistic max distance the game will render entities: up to ~115 blocks away
+    
+
 
     /**
      * Renders nearby players's names on the screen.
@@ -127,11 +129,11 @@ public class PlayerLocator
             {
                 overlayMessage = SprintingMessagePrefix + overlayMessage;	//nothing
             }
-            else if (otherPlayer.isSneaking())
+            if (otherPlayer.isSneaking())
             {
-                overlayMessage = SneakingMessagePrefix + overlayMessage;	//"italics"
+                overlayMessage = SneakingMessagePrefix + overlayMessage;	//italics
             }
-            else if (otherPlayer.isRiding())
+            if (otherPlayer.isRiding())	//this doesn't work on some servers
             {
                 overlayMessage = RidingMessagePrefix + overlayMessage;		//space for the saddle icon
             }
@@ -157,6 +159,7 @@ public class PlayerLocator
             alpha = alpha << 24;	//turns it into the format: 0x##000000
             int rgb = 0xFFFFFF;
             int color = rgb + alpha;	//alpha:r:g:b
+            
             //render the overlay message
             GL11.glDisable(GL11.GL_LIGHTING);
             mc.fontRenderer.drawStringWithShadow(overlayMessage, x, y, color);
@@ -165,16 +168,31 @@ public class PlayerLocator
             if (otherPlayer.ridingEntity instanceof EntityHorse
                     || otherPlayer.ridingEntity instanceof EntityPig)
             {
+            	if(saddleResource == null)
+            		saddleResource = GetSaddleResourceLocation();
+            	if(saddleIcon == null)
+            		saddleIcon = GetSaddleIcon();
+            	
                 textureManager.func_110577_a(saddleResource);	//bind texture
                 itemRenderer.renderIcon(x, y - 2, saddleIcon, 12, 12);
             }
             else if (otherPlayer.ridingEntity instanceof EntityMinecart)
             {
+            	if(minecartResource == null)
+            		minecartResource = GetMinecartResourceLocation();
+            	if(minecartIcon == null)
+            		minecartIcon = GetMinecartIcon();
+            	
                 textureManager.func_110577_a(minecartResource);	//bind texture
                 itemRenderer.renderIcon(x, y - 2, minecartIcon, 12, 12);
             }
             else if (otherPlayer.ridingEntity instanceof EntityBoat)
             {
+            	if(boatResource == null)
+            		boatResource = GetBoatResourceLocation();
+            	if(boatIcon == null)
+            		boatIcon = GetBoatIcon();
+            	
                 textureManager.func_110577_a(boatResource);	//bind texture
                 itemRenderer.renderIcon(x, y - 2, boatIcon, 12, 12);
             }
@@ -252,5 +270,30 @@ public class PlayerLocator
     {
     	ShowDistanceToPlayers = !ShowDistanceToPlayers;
     	return ShowDistanceToPlayers;
+    }
+
+    private static ResourceLocation GetSaddleResourceLocation()
+    {
+    	return textureManager.func_130087_a(new ItemStack(Item.saddle).getItemSpriteNumber());
+    }
+    private static Icon GetSaddleIcon()
+    {
+    	return new ItemStack(Item.saddle).getIconIndex();
+    }
+    private static ResourceLocation GetMinecartResourceLocation()
+    {
+    	return textureManager.func_130087_a(new ItemStack(Item.minecartEmpty).getItemSpriteNumber());
+    }
+    private static Icon GetMinecartIcon()
+    {
+    	return new ItemStack(Item.minecartEmpty).getIconIndex();
+    }
+    private static ResourceLocation GetBoatResourceLocation()
+    {
+    	return textureManager.func_130087_a(new ItemStack(Item.boat).getItemSpriteNumber());
+    }
+    private static Icon GetBoatIcon()
+    {
+    	return new ItemStack(Item.boat).getIconIndex();
     }
 }

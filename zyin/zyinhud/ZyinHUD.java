@@ -53,7 +53,7 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.3")
+@Mod(modid = "ZyinHUD", name = "Zyin's HUD", version = "0.11.4")
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class ZyinHUD
 {

@@ -200,7 +200,7 @@ public class HorseInfo
             double distanceFromMe = me.getDistanceToEntity(horse);
 
             if (distanceFromMe > maxViewDistanceCutoff
-                    || distanceFromMe < viewDistanceCutoff)
+                    || distanceFromMe > viewDistanceCutoff)
             {
                 return;
             }
